@@ -15,7 +15,8 @@ for i = 1:n,j = 1:n
 end
 
 
-P = CoVParameters(T = location_matrix,ρ = ρ,β = 2.5/3.6,τ =0.)
+P = CoVParameters(T = location_matrix,ρ = ρ,β = 2.5/3.6,τ =0.
+                ,Î=zeros(n),N̂=zeros(n),λ_urb=zeros(n),λ_rur = zeros(n) )
 """
 States:
 1 -> S
