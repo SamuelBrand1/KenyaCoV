@@ -10,9 +10,9 @@
 # end
 @with_kw mutable struct CoVParameters
     β::Float64 = 0.7676
-    γ::Float64 = 1/6
-    σ::Float64 = 1/5
-    δ::Float64 = 0.1#Proportion of symptomatic/diseased vs non-symptomatic cases
+    γ::Float64 = 1/3.6
+    σ::Float64 = 1/2.
+    δ::Float64 = 0.05#Proportion of symptomatic/diseased vs non-symptomatic cases
     τ::Float64 = 1/6. #treatment/isolation rate for symptomatics
     μ₁::Float64 = 0.01#Excess mortality due to disease
     ρ::Float64 = 0.01 #spatial coupling

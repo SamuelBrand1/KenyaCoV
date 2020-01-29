@@ -1,6 +1,8 @@
-push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
-using DifferentialEquations,Plots,DataFrames,Parameters,LinearAlgebra,Distributions,Distributed
-include("kenya_data.jl");
+@everywhere using DifferentialEquations,Plots,DataFrames,Parameters,LinearAlgebra,Distributions,Distributed
+@everywhere p
+@everywhere push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
+
+@everywhere include("kenya_data.jl");
 include("types.jl");
 include("gravity_model.jl");
 ρ = 0.01
@@ -44,7 +46,7 @@ N̂ = location_matrix*N_urb + N_rural
 u0[30,2,1] += 1#One exposed in Nairobi
 
 include("events.jl");
-prob = DiscreteProblem(u0,(0.0,60.0),P)
+prob = DiscreteProblem(u0,(0.0,30.0),P)
 jump_prob = JumpProblem(prob,DirectFW(),jump_urb_trans,
                                     jump_rural_trans,
                                     jump_incubation,
@@ -54,8 +56,7 @@ jump_prob = JumpProblem(prob,DirectFW(),jump_urb_trans,
                                     save_positions=(false,false))
 @time sol = solve(jump_prob,FunctionMap(),saveat = 1.)
 # integ = init(jump_prob,FunctionMap(),saveat = 7.)
-sol[:,end][30,:,1]
 
 CoVensemble_prob = EnsembleProblem(jump_prob)
-# addprocs(3)
-CoVensemble = solve(CoVensemble_prob,FunctionMap(),EnsembleThreads(),trajectories = 100)
+addprocs(3)
+CoVensemble = solve(CoVensemble_prob,FunctionMap(),EnsembleDistributed(),trajectories = 10)
