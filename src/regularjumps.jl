@@ -2,6 +2,17 @@
 For this code to work the 3-dim representation should
 be unpacked as a vector
 
+This is row major unpacked so
+first 1,...,n entries are susceptibles in urban areas 1,...,n
+then n+1,...,2n are exposeds in urban areas 1,...,n
+.
+.
+.
+then n*num_states + 1, ..., n*num_states + n entries are susceptibles in rural areas 1,...,n
+.
+.
+.
+
 States:
 1 -> S
 2 -> E
@@ -13,9 +24,29 @@ States:
 8 -> Cumulative I_dis
 9 -> Cumulative Dead
 
+Events for each location/county:
+
+1-> Urban transmission
+2-> Rural transmission
+3-> #urban E->A
+4-> rural E->A
+5-> urban E->D
+6-> rural E->D
+7-> urban D->H
+8-> rural D->H
+9-> urban H->R
+10-> rural H->R
+11-> urban D->R
+12-> rural D->R
+13-> urban A->R
+14-> rural A->R
+15-> urban H->death
+16-> rural H->death
+
 """
-n_t = 16 #number of events per location
-n_s = 9 #number of states
+dc = zeros(n*n_s*2,n_t*n)
+
+
 function calculate_infection_rates!(u,p::CoVParameters)
     I_urb_A = @view u[((3-1)*n + 1):((3-1)*n + n)]
     I_urb_D = @view u[((4-1)*n + 1):((4-1)*n + n)]
@@ -23,8 +54,8 @@ function calculate_infection_rates!(u,p::CoVParameters)
     I_rur_D = @view u[((4-1)*n + n_s*n + 1):((4-1)*n + n_s*n + n)]
     mul!(p.Î,p.T,I_urb_A .+ I_urb_D  )
     p.Î .+=  I_rur_A .+ I_rur_D
-    mul!(p.λ_urb,p.T',p.β .*(p.Î ./N̂))
-    p.λ_rur .= p.β .*(p.Î ./N̂)
+    mul!(p.λ_urb,p.T',p.β .*(p.Î ./p.N̂))
+    p.λ_rur .= p.β .*(p.Î ./p.N̂)
     return nothing
 end
 
@@ -50,7 +81,7 @@ function rates(out,u,p::CoVParameters,t)
         out[(i-1)*n_t+16] =  μ₁*u[(5-1)*n + n_s*n + i] #rural H->death
     end
 end
-dc = zeros(length(u0[:]),n_t*n)
+
 
 function change_matrix(dc,u,p,t,mark)
     for i = 1:n
@@ -92,4 +123,4 @@ function change_matrix(dc,u,p,t,mark)
         dc[(9-1)*n + n_s*n + i,(i-1)*n_t+16] = 1#change due to rural H->death
     end
 end
-reg_jump = RegularJump(rates,change_matrix,dc;constant_c=true)
+reg_jumps_forKenyaCoV = RegularJump(rates,change_matrix,dc;constant_c=true)
