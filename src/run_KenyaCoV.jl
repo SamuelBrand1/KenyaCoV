@@ -1,4 +1,5 @@
 push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
+<<<<<<< Updated upstream
 using DifferentialEquations,Plots,DataFrames,Parameters,LinearAlgebra,Distributions,Distributed
 include("kenya_data.jl");
 include("types.jl");
@@ -81,3 +82,17 @@ plot!(sol_tl.t,infecteds_D,lab ="I_D")
 plot!(sol_tl.t,recovereds,lab="R")
 plot!(sol_tl.t,infecteds_D,lab ="I_D")
 plot!(sol_tl.t,cum_infecteds,lab ="cum. I")
+=======
+using Plots,Parameters,Distributions
+using KenyaCoV
+#Load data and completely susceptible Population
+u0,P,transport_matrix = model_ingredients_from_data("./src/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv",0.01)
+#This method modifies the parameter set for changing the movement structure
+KenyaCoV.transportstructure_params!(P,0.001,transport_matrix)
+#Then you can modify other parameters
+P.τ = 1/1. #e.g. increased treatment rate
+#Define initial conditions by modifying the completely susceptible population
+u0[30,3,1] += 1#One asymptomatic in Nairobi
+jump_prob_tl = create_KenyaCoV_prob(u0,(0.,365.),P)
+@time sol_tl = solve_KenyaCoV_prob(u0,(0.,365.),P)
+>>>>>>> Stashed changes
