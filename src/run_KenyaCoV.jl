@@ -3,7 +3,7 @@ using DifferentialEquations,Plots,DataFrames,Parameters,LinearAlgebra,Distributi
 include("kenya_data.jl");
 include("types.jl");
 include("gravity_model.jl");
-ρ = 0.01
+ρ = 0.0
 location_matrix = similar(transport_matrix)
 
 for i = 1:n,j = 1:n
@@ -42,7 +42,7 @@ N_rural = [sum(u0[i,:,2]) for i = 1:n]
 N̂ = location_matrix*N_urb + N_rural
 
 
-u0[30,2,1] += 1#One exposed in Nairobi
+u0[30,3,1] += 1#One asymptomatic in Nairobi
 
 # include("events.jl");
 # prob = DiscreteProblem(u0,(0.0,60.0),P)
@@ -60,10 +60,24 @@ u0[30,2,1] += 1#One exposed in Nairobi
 # CoVensemble_prob = EnsembleProblem(jump_prob)
 # # addprocs(3)
 # CoVensemble = solve(CoVensemble_prob,FunctionMap(),EnsembleThreads(),trajectories = 100)
-
+include("regularjumps.jl");
 u0_vec = u0[:]
 # reshape(u0_vec,n,n_s,2)  #Reverse operation vector -> array form
 
-prob_tl = DiscreteProblem(u0_vec,(0.,21.))
+prob_tl = DiscreteProblem(u0_vec,(0.,365.),P)
 jump_prob_tl = JumpProblem(prob_tl,Direct(),reg_jump)
-sol_tl = solve(jump_prob_tl,SimpleTauLeaping();dt = 1.)
+@time sol_tl = solve(jump_prob_tl,SimpleTauLeaping();dt = 1.)
+sol_tl.u
+ũ = [reshape(u,n,n_s,2) for u in sol_tl.u]
+susceptibles = [sum(u[:,1,:])/sum(u) for u in ũ ]
+infecteds_A = [sum(u[:,3,:]) for u in ũ ]
+infecteds_D = [sum(u[:,4,:]) for u in ũ ]
+recovereds = [sum(u[:,5,:])/sum(u) for u in ũ ]
+cum_infecteds =  [sum(u[:,7:8,:])/sum(u) for u in ũ ]
+
+plot(sol_tl.t,susceptibles,lab="S")
+plot(sol_tl.t,infecteds_A,lab ="I_A")
+plot!(sol_tl.t,infecteds_D,lab ="I_D")
+plot!(sol_tl.t,recovereds,lab="R")
+plot!(sol_tl.t,infecteds_D,lab ="I_D")
+plot!(sol_tl.t,cum_infecteds,lab ="cum. I")

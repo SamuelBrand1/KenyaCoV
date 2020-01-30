@@ -28,12 +28,12 @@ function calculate_infection_rates!(u,p::CoVParameters)
     return nothing
 end
 
-function rates(out,u,p,t)
-    @unpack β,γ,σ,δ,τ,μ₁ = p
+function rates(out,u,p::CoVParameters,t)
+    @unpack λ_urb,λ_rur,β,γ,σ,δ,τ,μ₁ = p
     calculate_infection_rates!(u,p)
     for i = 1:n
-        out[(i-1)*n_t+1] = p.λ_urb[i]*u[(1-1)*n + i] #urban transmission
-        out[(i-1)*n_t+2] =  p.λ_rur[i]*u[(1-1)*n + n_s*n + i] #rural transmission
+        out[(i-1)*n_t+1] = λ_urb[i]*u[(1-1)*n + i] #urban transmission
+        out[(i-1)*n_t+2] =  λ_rur[i]*u[(1-1)*n + n_s*n + i] #rural transmission
         out[(i-1)*n_t+3] = (1-δ)*σ*u[(2-1)*n + i] #urban E->A
         out[(i-1)*n_t+4] =  (1-δ)*σ*u[(2-1)*n + n_s*n + i] #rural E->A
         out[(i-1)*n_t+5] = δ*σ*u[(2-1)*n + i] #urban E->D
@@ -45,7 +45,7 @@ function rates(out,u,p,t)
         out[(i-1)*n_t+11] = γ*u[(4-1)*n + i] #urban D->R
         out[(i-1)*n_t+12] =  γ*u[(4-1)*n + n_s*n + i] #rural D->R
         out[(i-1)*n_t+13] = γ*u[(3-1)*n + i] #urban A->R
-        out[(i-1)*n_t+14] =  γ*u[(5-1)*n + n_s*n + i] #rural A->R
+        out[(i-1)*n_t+14] =  γ*u[(3-1)*n + n_s*n + i] #rural A->R
         out[(i-1)*n_t+15] = μ₁*u[(5-1)*n + i] #urban H->death
         out[(i-1)*n_t+16] =  μ₁*u[(5-1)*n + n_s*n + i] #rural H->death
     end
@@ -59,13 +59,17 @@ function change_matrix(dc,u,p,t,mark)
         dc[(1-1)*n + n_s*n + i,(i-1)*n_t+2] = -1
         dc[(2-1)*n + n_s*n + i,(i-1)*n_t+2] = 1 #change due to rural transmission
         dc[(2-1)*n + i,(i-1)*n_t+3] = -1
-        dc[(3-1)*n + i,(i-1)*n_t+3] = 1 #change due to urban E->A
+        dc[(3-1)*n + i,(i-1)*n_t+3] = 1
+        dc[(7-1)*n + i,(i-1)*n_t+3] = 1#change due to urban E->A
         dc[(2-1)*n + n_s*n + i,(i-1)*n_t+4] = -1
-        dc[(3-1)*n + n_s*n + i,(i-1)*n_t+4] = 1 #change due to rural E->A
+        dc[(3-1)*n + n_s*n + i,(i-1)*n_t+4] = 1
+        dc[(7-1)*n + n_s*n + i,(i-1)*n_t+4] = 1 #change due to rural E->A
         dc[(2-1)*n + i,(i-1)*n_t+5] = -1
-        dc[(4-1)*n + i,(i-1)*n_t+5] = 1 #change due to urban E->D
+        dc[(4-1)*n + i,(i-1)*n_t+5] = 1
+        dc[(8-1)*n + i,(i-1)*n_t+5] = 1 #change due to urban E->D
         dc[(2-1)*n + n_s*n + i,(i-1)*n_t+6] = -1
-        dc[(4-1)*n + n_s*n + i,(i-1)*n_t+6] = 1 #change due to rural E->D
+        dc[(4-1)*n + n_s*n + i,(i-1)*n_t+6] = 1
+        dc[(8-1)*n + n_s*n + i,(i-1)*n_t+6] = 1 #change due to rural E->D
         dc[(4-1)*n + i,(i-1)*n_t+7] = -1
         dc[(5-1)*n + i,(i-1)*n_t+7] = 1 #change due to urban D->H
         dc[(4-1)*n + n_s*n + i,(i-1)*n_t+8] = -1
@@ -82,8 +86,10 @@ function change_matrix(dc,u,p,t,mark)
         dc[(6-1)*n + i,(i-1)*n_t+13] = 1 #change due to urban A->R
         dc[(3-1)*n + n_s*n + i,(i-1)*n_t+14] = -1
         dc[(6-1)*n + n_s*n + i,(i-1)*n_t+14] = 1 #change due to rural A->R
-        dc[(5-1)*n + i,(i-1)*n_t+15] = -1#change due to urban H->death
-        dc[(5-1)*n + n_s*n + i,(i-1)*n_t+16] = -1#change due to rural H->death
+        dc[(5-1)*n + i,(i-1)*n_t+15] = -1
+        dc[(9-1)*n + i,(i-1)*n_t+15] = 1#change due to urban H->death
+        dc[(5-1)*n + n_s*n + i,(i-1)*n_t+16] = -1
+        dc[(9-1)*n + n_s*n + i,(i-1)*n_t+16] = 1#change due to rural H->death
     end
 end
 reg_jump = RegularJump(rates,change_matrix,dc;constant_c=true)
