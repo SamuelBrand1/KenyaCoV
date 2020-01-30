@@ -1,6 +1,7 @@
 
 
 function transportstructure_params!(P::CoVParameters,ρ,transport_matrix)
+    P.ρ = ρ
     #Put in the correct location matrix
     for i = 1:n,j = 1:n
         if i != j
