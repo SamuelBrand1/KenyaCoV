@@ -3,7 +3,7 @@ using DifferentialEquations,Plots,DataFrames,Parameters,LinearAlgebra,Distributi
 include("kenya_data.jl");
 include("types.jl");
 include("gravity_model.jl");
-ρ = 0.0
+ρ = 0.001
 location_matrix = similar(transport_matrix)
 
 for i = 1:n,j = 1:n
