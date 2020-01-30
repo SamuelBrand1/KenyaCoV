@@ -38,7 +38,7 @@ end
 D_01Nai = load("vary_beta_rho_0.01.jld2")["data"]
 D_001Nai = load("vary_beta_rho_0.001.jld2")["data"]
 # quantile(data[6][2].u,[0.05, 0.25, 0.5, 0.75, 0.95])
-plotlyjs()
+gr()
 p1 = plot()
 for (i,β) in enumerate(β_range)
     if i == 1
@@ -52,7 +52,7 @@ for (i,β) in enumerate(β_range)
 end
 plot!(p1,xticks = (1.5:2:11.5,round.(collect(β_range)/P.γ,digits = 3 )),
         yscale = :log10,
-        title = "Cumulative cases by 60 days (rho = $(P.ρ))")#,legend = :topleft)
+        title = "Cumulative cases by 60 days (rho = $(P.ρ))",legend = :bottomright)
 display(p1)
 p2 = plot()
 for (i,β) in enumerate(β_range)
