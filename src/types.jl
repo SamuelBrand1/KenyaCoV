@@ -8,9 +8,9 @@
     τ::Float64 = 1/6. #treatment/isolation rate for symptomatics
     μ₁::Float64 = 0.01#Excess mortality due to disease
     ρ::Float64 = 0.01 #spatial coupling
-    T::Matrix{Float64} #transmission matrix
-    Î::Vector{Float64} #For inplace calculations
-    N̂::Vector{Float64} #For inplace calculations
-    λ_urb::Vector{Float64} #For inplace calculations
-    λ_rur::Vector{Float64} #For inplace calculations
+    T::Matrix{Float64} = zeros(n,n)#transmission matrix
+    Î::Vector{Float64} = zeros(n) #For inplace calculations
+    N̂::Vector{Float64} = zeros(n)#For inplace calculations
+    λ_urb::Vector{Float64} = zeros(n)#For inplace calculations
+    λ_rur::Vector{Float64} = zeros(n)#For inplace calculations
 end

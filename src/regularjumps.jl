@@ -44,8 +44,9 @@ Events for each location/county:
 16-> rural H->death
 
 """
-n_t = 16 #number of events per location
-n_s = 9 #number of states
+dc = zeros(n*n_s*2,n_t*n)
+
+
 function calculate_infection_rates!(u,p::CoVParameters)
     I_urb_A = @view u[((3-1)*n + 1):((3-1)*n + n)]
     I_urb_D = @view u[((4-1)*n + 1):((4-1)*n + n)]
@@ -53,8 +54,8 @@ function calculate_infection_rates!(u,p::CoVParameters)
     I_rur_D = @view u[((4-1)*n + n_s*n + 1):((4-1)*n + n_s*n + n)]
     mul!(p.Î,p.T,I_urb_A .+ I_urb_D  )
     p.Î .+=  I_rur_A .+ I_rur_D
-    mul!(p.λ_urb,p.T',p.β .*(p.Î ./N̂))
-    p.λ_rur .= p.β .*(p.Î ./N̂)
+    mul!(p.λ_urb,p.T',p.β .*(p.Î ./p.N̂))
+    p.λ_rur .= p.β .*(p.Î ./p.N̂)
     return nothing
 end
 
@@ -80,7 +81,7 @@ function rates(out,u,p::CoVParameters,t)
         out[(i-1)*n_t+16] =  μ₁*u[(5-1)*n + n_s*n + i] #rural H->death
     end
 end
-dc = zeros(length(u0[:]),n_t*n)
+
 
 function change_matrix(dc,u,p,t,mark)
     for i = 1:n
@@ -122,4 +123,4 @@ function change_matrix(dc,u,p,t,mark)
         dc[(9-1)*n + n_s*n + i,(i-1)*n_t+16] = 1#change due to rural H->death
     end
 end
-reg_jump = RegularJump(rates,change_matrix,dc;constant_c=true)
+reg_jumps_forKenyaCoV = RegularJump(rates,change_matrix,dc;constant_c=true)
