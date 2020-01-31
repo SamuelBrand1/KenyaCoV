@@ -2,7 +2,7 @@ push!(LOAD_PATH, "C:/Users/Joseph Hilton/Documents/GitHub/KenyaCoV/src")
 using Plots,Parameters,Distributions
 using KenyaCoV
 #Load data and completely susceptible Population
-u0,P,transport_matrix = model_ingredients_from_data("./src/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv",0.01)
+u0,P,transport_matrix = model_ingredients_from_data("./src/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv","./src/flight_numbers.csv","./src/projected_global_prevelance.csv",0.01)
 #This method modifies the parameter set for changing the movement structure
 KenyaCoV.transportstructure_params!(P,0.001,transport_matrix)
 #Then you can modify other parameters

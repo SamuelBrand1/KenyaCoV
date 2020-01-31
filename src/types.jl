@@ -13,6 +13,7 @@
     N̂::Vector{Float64} = zeros(n)#For inplace calculations
     λ_urb::Vector{Float64} = zeros(n)#For inplace calculations
     λ_rur::Vector{Float64} = zeros(n)#For inplace calculations
-    ϵ_mom::Float64 = 1e-3
-    ϵ_nai::Float64 = 1e-2
+    into_mom::Vector{Int}#Number of people flying into Mombassa each day
+    into_nai::Vector{Int}#Number of people flying into Nairobi each day
+    global_prev::Vector{Float64}
 end
