@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
+push!(LOAD_PATH, "C:/Users/Joseph Hilton/Documents/GitHub/KenyaCoV/src")
 using Plots,Parameters,Distributions
 using KenyaCoV
 #Load data and completely susceptible Population

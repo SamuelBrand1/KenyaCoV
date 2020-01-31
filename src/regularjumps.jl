@@ -60,7 +60,7 @@ function calculate_infection_rates!(u,p::CoVParameters)
 end
 
 function rates(out,u,p::CoVParameters,t)
-    @unpack λ_urb,λ_rur,β,γ,σ,δ,τ,μ₁ = p
+    @unpack λ_urb,λ_rur,β,γ,σ,δ,τ,μ₁,ϵ_mom,ϵ_nai = p
     calculate_infection_rates!(u,p)
     for i = 1:n
         out[(i-1)*n_t+1] = λ_urb[i]*u[(1-1)*n + i] #urban transmission
@@ -80,6 +80,8 @@ function rates(out,u,p::CoVParameters,t)
         out[(i-1)*n_t+15] = μ₁*u[(5-1)*n + i] #urban H->death
         out[(i-1)*n_t+16] =  μ₁*u[(5-1)*n + n_s*n + i] #rural H->death
     end
+    out[(29-1)*n_t+1] = ϵ_mom*u[(1-1)*n + 29]
+    out[(31-1)*n_t+1] = ϵ_nai*u[(1-1)*n + 31]
 end
 
 
