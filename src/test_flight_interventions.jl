@@ -19,9 +19,9 @@ P.τ = 1/1. #e.g. increased treatment rate
 u0[30,3,1] += 1#One asymptomatic in Nairobi
 
 #Create a JumpProblem which you can solve --- needs DifferentialEquations module for the solvers
-jump_prob_tl = create_KenyaCoV_prob(u0,(0.,30.),P)
+jump_prob_tl = create_KenyaCoV_prob(u0,(0.,360.),P)
 #Go straight to solution using solver compiled in the KenyaCoV module
-@time sol_tl_no_controls = solve_KenyaCoV_prob(u0,(0.,30.),P,0.25)
+@time sol_tl_no_controls = solve_KenyaCoV_prob(u0,(0.,360.),P,0.25)
 
 # Now do no flights whatsoever:
 u0,P,transport_matrix = model_ingredients_from_data("./src/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv","./src/flight_numbers_complete_shutdown.csv","./src/projected_global_prevelance.csv",0.01)
@@ -33,9 +33,9 @@ P.τ = 1/1. #e.g. increased treatment rate
 u0[30,3,1] += 1#One asymptomatic in Nairobi
 
 #Create a JumpProblem which you can solve --- needs DifferentialEquations module for the solvers
-jump_prob_tl = create_KenyaCoV_prob(u0,(0.,30.),P)
+jump_prob_tl = create_KenyaCoV_prob(u0,(0.,360.),P)
 #Go straight to solution using solver compiled in the KenyaCoV module
-@time sol_tl_complete_shutdown = solve_KenyaCoV_prob(u0,(0.,30.),P,0.25)
+@time sol_tl_complete_shutdown = solve_KenyaCoV_prob(u0,(0.,360.),P,0.25)
 
 # Flights halved after one week:
 u0,P,transport_matrix = model_ingredients_from_data("./src/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv","./src/flight_numbers_halved_after_week.csv","./src/projected_global_prevelance.csv",0.01)
@@ -47,9 +47,9 @@ P.τ = 1/1. #e.g. increased treatment rate
 u0[30,3,1] += 1#One asymptomatic in Nairobi
 
 #Create a JumpProblem which you can solve --- needs DifferentialEquations module for the solvers
-jump_prob_tl = create_KenyaCoV_prob(u0,(0.,30.),P)
+jump_prob_tl = create_KenyaCoV_prob(u0,(0.,360.),P)
 #Go straight to solution using solver compiled in the KenyaCoV module
-@time sol_tl_halved_after_week = solve_KenyaCoV_prob(u0,(0.,30.),P,0.25)
+@time sol_tl_halved_after_week = solve_KenyaCoV_prob(u0,(0.,360.),P,0.25)
 
 # Flights quartered after one week:
 u0,P,transport_matrix = model_ingredients_from_data("./src/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv","./src/flight_numbers_quartered_after_week.csv","./src/projected_global_prevelance.csv",0.01)
@@ -61,9 +61,9 @@ P.τ = 1/1. #e.g. increased treatment rate
 u0[30,3,1] += 1#One asymptomatic in Nairobi
 
 #Create a JumpProblem which you can solve --- needs DifferentialEquations module for the solvers
-jump_prob_tl = create_KenyaCoV_prob(u0,(0.,30.),P)
+jump_prob_tl = create_KenyaCoV_prob(u0,(0.,360.),P)
 #Go straight to solution using solver compiled in the KenyaCoV module
-@time sol_tl_quartered_after_week = solve_KenyaCoV_prob(u0,(0.,30.),P,0.25)
+@time sol_tl_quartered_after_week = solve_KenyaCoV_prob(u0,(0.,360.),P,0.25)
 
 # Flights stopped completely after one week:
 u0,P,transport_matrix = model_ingredients_from_data("./src/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv","./src/flight_numbers_shutdown_after_week.csv","./src/projected_global_prevelance.csv",0.01)
@@ -75,6 +75,6 @@ P.τ = 1/1. #e.g. increased treatment rate
 u0[30,3,1] += 1#One asymptomatic in Nairobi
 
 #Create a JumpProblem which you can solve --- needs DifferentialEquations module for the solvers
-jump_prob_tl = create_KenyaCoV_prob(u0,(0.,30.),P)
+jump_prob_tl = create_KenyaCoV_prob(u0,(0.,360.),P)
 #Go straight to solution using solver compiled in the KenyaCoV module
-@time sol_tl_shutdown_after_week = solve_KenyaCoV_prob(u0,(0.,30.),P,0.25)
+@time sol_tl_shutdown_after_week = solve_KenyaCoV_prob(u0,(0.,360.),P,0.25)

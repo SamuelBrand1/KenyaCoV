@@ -98,8 +98,8 @@ function rates(out,u,p::CoVParameters,t)
         out[(i-1)*n_t+15] = μ₁*u[(5-1)*n + i] #urban H->death
         out[(i-1)*n_t+16] =  μ₁*u[(5-1)*n + n_s*n + i] #rural H->death
     end
-    out[(29-1)*n_t+1] = β*import_rate_mom(t,into_mom,global_prev)*u[(1-1)*n + 29]
-    out[(31-1)*n_t+1] = β*import_rate_nai(t,into_mom,global_prev)*u[(1-1)*n + 31]
+    out[(28-1)*n_t+1] += β*import_rate_mom(t,into_mom,global_prev)*u[(1-1)*n + 28]
+    out[(30-1)*n_t+1] += β*import_rate_nai(t,into_mom,global_prev)*u[(1-1)*n + 30]
 end
 
 

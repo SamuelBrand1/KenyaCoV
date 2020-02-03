@@ -18,4 +18,4 @@ plot!(sol_tl_shutdown_after_week.t,cum_I_shutdown_after_week,lab="All flights st
 plot!(sol_tl_complete_shutdown.t,cum_I_complete_shutdown,lab="All flights stopped immediately")
 xlabel!("Day")
 ylabel!("Cumulative incidence")
-title!("External prevalence 1e-6")
+title!("External prevalence 1e-7")
