@@ -5,7 +5,8 @@ module KenyaCoV
 using DifferentialEquations,
     DataFrames,
     Parameters,
-    LinearAlgebra
+    LinearAlgebra,
+    JLD2
 
 export n,n_t,n_s,
         model_ingredients_from_data,
