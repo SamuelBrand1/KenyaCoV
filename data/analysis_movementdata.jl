@@ -21,6 +21,8 @@ for i = 1:47
         T.Urban[i] = 0
     end
 end
+CSV.write("data/combined_population_estimates.csv",T)
+
 #Get movement matrix data
 # matread("data/movements.mat")
 # mv_data = matopen("data/movements.mat")
