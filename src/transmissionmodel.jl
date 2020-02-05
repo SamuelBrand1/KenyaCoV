@@ -47,10 +47,10 @@ function model_ingredients_from_data(filename,ρ)
 
 end
 
-function model_ingredients_from_data(datatablename,locationmatrixname,travelmatrixname)
+function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrixname)
     KenyaTbl = readtable(datatablename)
     n_data, = size(KenyaTbl)
-    @load locationmatrixname T_opt ρ_county
+    @load mixingmatrixname T_opt ρ_county
     @load travelmatrixname P_opt
     if n_data != n
         println("ERROR: difference between number of areas in data, and definition.")
