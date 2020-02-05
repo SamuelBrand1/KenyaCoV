@@ -26,4 +26,4 @@ u0[30,3,1] += 1#One asymptomatic in Nairobi
 #Create a JumpProblem which you can solve --- needs DifferentialEquations module for the solvers
 jump_prob_tl = create_KenyaCoV_prob(u0,(0.,365.),P)
 #Go straight to solution using solver compiled in the KenyaCoV module
-@time sol_tl = solve_KenyaCoV_prob(u0,(0.,60.),P,0.5)
+@time sol_tl = solve_KenyaCoV_prob(u0,(0.,365.),P,1.)
