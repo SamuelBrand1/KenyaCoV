@@ -13,7 +13,7 @@ function transportstructure_params!(P::CoVParameters,ρ,transport_matrix)
     return nothing
 end
 
-function model_ingredients_from_data(filename,ρ)
+function model_ingredients_from_data(filename,flight_filename,prev_filename,ρ)
     KenyaTbl,n_data = get_Kenyadata(filename)
     if n_data != n
         println("ERROR: difference between number of areas in data, and definition.")
@@ -39,9 +39,17 @@ function model_ingredients_from_data(filename,ρ)
     N_urb = [sum(suspop_kenya[i,:,1]) for i = 1:n]
     N_rural = [sum(suspop_kenya[i,:,2]) for i = 1:n]
     N̂ = location_matrix*N_urb + N_rural
+
+    global_prev = get_prevdata(prev_filename)
+    into_mom, into_nai = get_flightdata(flight_filename)
+    # Now get flight numbers and global prevalence
+
+
     #Parameter definition
     P = CoVParameters(T = location_matrix,ρ = ρ,
-                    Î=zeros(n),N̂=N̂,λ_urb=zeros(n),λ_rur = zeros(n) )
+                    Î=zeros(n),N̂=N̂,λ_urb=zeros(n),λ_rur = zeros(n),
+                    into_mom = into_mom, into_nai = into_nai,
+                    global_prev = global_prev )
     #Matrix for in-place tau-leap calculations
     return suspop_kenya,P,transport_matrix
 

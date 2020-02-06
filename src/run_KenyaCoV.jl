@@ -1,3 +1,4 @@
+
 push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames
 using Revise
@@ -9,7 +10,8 @@ Also, load a default parameter set including the optimised mixing matrix (T), an
 The mixing matrix is related to the transport matrix by the choice of ρ, so I also load transport_matrix
 so different choices of ρ can be tested
 """
-
+#Load data and completely susceptible Population
+u0,P,transport_matrix = model_ingredients_from_data("./src/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv","./src/flight_numbers.csv","./src/projected_global_prevelance.csv",0.01)
 #Load data completely susceptible Population
 u0,P,transport_matrix = KenyaCoV.model_ingredients_from_data("data/combined_population_estimates.csv","data/optimal_transition_matrix.jld2","data/optimal_movement_matrix.jld2" )
 """
