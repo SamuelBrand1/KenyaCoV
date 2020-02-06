@@ -73,8 +73,8 @@ function calculate_infection_rates!(u,p::CoVParameters)
     mul!(p.Î,p.T,I_urb_A .+ I_urb_D  )
     p.Î .+=  I_rur_A .+ I_rur_D
     mul!(p.λ_urb,p.T',p.β .*(p.Î ./p.N̂))
-    p.λ_urb[28] += β*import_rate_mom(t,into_mom,global_prev)
-    p.λ_rb[30] += β*import_rate_nai(t,into_mom,global_prev)
+    p.λ_urb[28] += p.β*import_rate_mom(t,into_mom,global_prev)
+    p.λ_rb[30] += p.β*import_rate_nai(t,into_mom,global_prev)
     p.λ_rur .= p.β .*(p.Î ./p.N̂)
     return nothing
 end
