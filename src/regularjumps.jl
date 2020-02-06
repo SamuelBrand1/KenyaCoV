@@ -52,9 +52,11 @@ function calculate_infection_rates!(u,p::CoVParameters)
     I_urb_D = @view u[((4-1)*n + 1):((4-1)*n + n)]
     I_rur_A = @view u[((3-1)*n + n_s*n + 1):((3-1)*n + n_s*n + n)]
     I_rur_D = @view u[((4-1)*n + n_s*n + 1):((4-1)*n + n_s*n + n)]
-    mul!(p.Î,p.T,I_urb_A .+ I_urb_D  )
-    p.Î .+=  I_rur_A .+ I_rur_D
+    mul!(p.Î,p.T,p.ϵ*I_urb_A .+ I_urb_D  )
+    p.Î .+=  p.ϵ*I_rur_A .+ I_rur_D
     mul!(p.λ_urb,p.T',p.β .*(p.Î ./p.N̂))
+    p.λ_urb[ind_mombasa] += p.ext_mom #External introduction --- Mombasa
+    p.λ_urb[ind_nairobi] += p.ext_nai #External introduction --- Nairobi
     p.λ_rur .= p.β .*(p.Î ./p.N̂)
     return nothing
 end

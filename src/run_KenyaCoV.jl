@@ -19,8 +19,8 @@ Example of methods that modify underlying parameters
 # KenyaCoV.transportstructure_params!(P,[0.001 for i = 1:KenyaCoV.n],transport_matrix)
 #You can modify other parameters directly
 P.τ = 0. #e.g. no treatment rate
-
 #Define initial conditions by modifying the completely susceptible population
+
 u0[30,3,1] += 1#One asymptomatic in Nairobi
 
 #Create a JumpProblem which you can solve --- needs DifferentialEquations module for the solvers
