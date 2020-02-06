@@ -1,4 +1,7 @@
-function test_no_infecteds
+
+#Test --- if ϵ (infectiousness of asymptomatics is zero) and external rates are zero then nothing should happen despite 1000 initial asymptomatics
+
+function test_no_infecteds()
     #Load data completely susceptible Population
     u0,P,transport_matrix = KenyaCoV.model_ingredients_from_data("data/combined_population_estimates.csv","data/optimal_transition_matrix.jld2","data/optimal_movement_matrix.jld2" )
     """
@@ -12,7 +15,6 @@ function test_no_infecteds
     P.ext_mom = 0.
     P.ext_nai = 0.
     #Define initial conditions by modifying the completely susceptible population
-    #Slight test --- if ϵ (infectiousness of asymptomatics is zero) and external rates are zero then nothing should happen despite 1000 initial asymptomatics
     u0[30,3,1] += 1000#One asymptomatic in Nairobi
 
     #Create a JumpProblem which you can solve --- needs DifferentialEquations module for the solvers
