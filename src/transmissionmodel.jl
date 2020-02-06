@@ -1,13 +1,26 @@
 
+function transportstructure_params!(P::CoVParameters,ρ::Vector{Float64},transport_matrix)
+   #Put in the correct location matrix
+   for i = 1:n,j = 1:n
+       if i != j
+           P.T[i,j] = P.ρ[j]*transport_matrix[i,j]
+           P.T[i,j] = P.ρ*transport_matrix[i,j]
+       else
+           P.T[i,j] = 1-P.ρ[j]
+           P.T[i,j] = 1-P.ρ
+       end
+   end
+   return nothing
+end
 
-function transportstructure_params!(P::CoVParameters,ρ,transport_matrix)
+function transportstructure_params!(P::CoVParameters,ρ::Float64,transport_matrix)
     P.ρ = ρ
     #Put in the correct location matrix
     for i = 1:n,j = 1:n
         if i != j
-            P.T[i,j] = P.ρ[j]*transport_matrix[i,j]
+            P.T[i,j] = P.ρ*transport_matrix[i,j]
         else
-            P.T[i,j] = 1-P.ρ[j]
+            P.T[i,j] = 1-P.ρ
         end
     end
     return nothing
@@ -55,6 +68,7 @@ function model_ingredients_from_data(filename,flight_filename,prev_filename,ρ)
 
 end
 
+
 function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrixname)
     KenyaTbl = readtable(datatablename)
     n_data, = size(KenyaTbl)
@@ -81,6 +95,9 @@ function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrix
     return suspop_kenya,P,P_opt
 
 end
+
+
+
 
 function create_KenyaCoV_prob(u0,tspan,P::CoVParameters)
     u0_vec = u0[:]
