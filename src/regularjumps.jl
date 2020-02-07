@@ -103,6 +103,7 @@ function rates(out,u,p::CoVParameters,t)
 end
 
 
+
 function change_matrix(dc,u,p,t,mark)
     for i = 1:n
         dc[(1-1)*n + i,(i-1)*n_t+1] = -1
@@ -143,4 +144,48 @@ function change_matrix(dc,u,p,t,mark)
         dc[(9-1)*n + n_s*n + i,(i-1)*n_t+16] = 1#change due to rural H->death
     end
 end
+
 reg_jumps_forKenyaCoV = RegularJump(rates,change_matrix,dc;constant_c=true)
+
+#This generates the underlying Poisson drivers according to the rate function
+#THis method will fail if we have negative rates
+function PP_drivers(dN::Vector{Int64},rates,p)
+    for i = 1:length(dN)
+        if rates[i] >= 0.
+            dN[i] = rand(Poisson(p.dt*rates[i]))
+        else
+            dN[i] = 0
+        end
+    end
+end
+
+#This caps the Poisson processes at causing no more transitions than the group being effected
+function max_change(out,u)
+    for i = 1:n
+        out[(i-1)*n_t+1] = min(out[(i-1)*n_t+1],u[(1-1)*n + i] )#urban transmission
+        out[(i-1)*n_t+2] =  min(out[(i-1)*n_t+1],u[(1-1)*n + n_s*n + i] )#rural transmission
+        out[(i-1)*n_t+3] = min(out[(i-1)*n_t+1],u[(2-1)*n + i] )#urban E->A
+        out[(i-1)*n_t+4] =  min(out[(i-1)*n_t+1],u[(2-1)*n + n_s*n + i] )#rural E->A
+        out[(i-1)*n_t+5] = min(out[(i-1)*n_t+1],u[(2-1)*n + i] )#urban E->D
+        out[(i-1)*n_t+6] =  min(out[(i-1)*n_t+1],u[(2-1)*n + n_s*n + i] )#rural E->D
+        out[(i-1)*n_t+7] = min(out[(i-1)*n_t+1],u[(4-1)*n + i] )#urban D->H
+        out[(i-1)*n_t+8] =  min(out[(i-1)*n_t+1],u[(4-1)*n + n_s*n + i] )#rural D->H
+        out[(i-1)*n_t+9] = min(out[(i-1)*n_t+1],u[(5-1)*n + i] )#urban H->R
+        out[(i-1)*n_t+10] = min(out[(i-1)*n_t+1],u[(5-1)*n + n_s*n + i] )#rural H->R
+        out[(i-1)*n_t+11] = min(out[(i-1)*n_t+1],u[(4-1)*n + i] )#urban D->R
+        out[(i-1)*n_t+12] =  min(out[(i-1)*n_t+1],u[(4-1)*n + n_s*n + i] )#rural D->R
+        out[(i-1)*n_t+13] = min(out[(i-1)*n_t+1],u[(3-1)*n + i] )#urban A->R
+        out[(i-1)*n_t+14] =  min(out[(i-1)*n_t+1],u[(3-1)*n + n_s*n + i] )#rural A->R
+        out[(i-1)*n_t+15] = min(out[(i-1)*n_t+1],u[(5-1)*n + i] )#urban H->death
+        out[(i-1)*n_t+16] =  min(out[(i-1)*n_t+1],u[(5-1)*n + n_s*n + i] )#rural H->death
+    end
+end
+
+function nonneg_tauleap(du,u,p,t)
+    @unpack dc,dN,poi_rates = p
+    rates(poi_rates,u,p,t) #calculate rates of underlying Poisson processes
+    PP_drivers(dN,poi_rates,p)#Generate Poisson rvs with rates scaled by time step dt
+    max_change(dN,u)#Cap the size of the Poisson rvs to maintain non-negativity
+    mul!(du,dc,dN)#Calculates the effect on the state in the inplace du vector
+    du .+= u #Calculates how the state should change
+end
