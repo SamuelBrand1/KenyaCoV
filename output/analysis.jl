@@ -46,7 +46,7 @@ for i = 1:500,j=1:47
     y = forecasts[i][j,:]
     peaktimes_by_county[i,j] = times[argmax(y)]
 end
-
+@save "output/peaktimes_by_county.jld2" peaktimes_by_county
 
 
 # β_range = range(1.5*(P.γ),4.5*(P.γ),length = 6)
