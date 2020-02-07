@@ -40,6 +40,7 @@ for i = 1:500
     total_peaktimes[i] = times[argmax(y)]
 end
 @save "output/total_peaktimes.jld2" total_peaktimes
+matwrite("output/total_peaktimes.mat",Dict("total_peaktimes"=>total_peaktimes))
 
 peaktimes_by_county = zeros(500,47)
 for i = 1:500,j=1:47
@@ -47,9 +48,7 @@ for i = 1:500,j=1:47
     peaktimes_by_county[i,j] = times[argmax(y)]
 end
 @save "output/peaktimes_by_county.jld2" peaktimes_by_county
-
-@@load "output/total_peaktimes.jld2" total_peaktimes
-@load "output/peaktimes_by_county.jld2" peaktimes_by_county
+matwrite("output/peaktimes_by_county.mat",Dict("peaktimes_by_county"=>peaktimes_by_county))
 
 
 # β_range = range(1.5*(P.γ),4.5*(P.γ),length = 6)
