@@ -1,6 +1,6 @@
 
 push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
-using Plots,Parameters,Distributions,KenyaCoV,DifferentialEquations,StatsPlots,JLD2,FileIO
+using Plots,Parameters,Distributions,KenyaCoV,DifferentialEquations,StatsPlots,JLD2,FileIO,MAT,RecursiveArrayTools
 
 u0,P,transport_matrix = KenyaCoV.model_ingredients_from_data("data/combined_population_estimates.csv",
                                                              "data/optimal_transition_matrix.jld2",
@@ -12,24 +12,42 @@ u0,P,transport_matrix = KenyaCoV.model_ingredients_from_data("data/combined_popu
 Current estimates from Read and Jewell --- assuming that ascertainment is a decent estimate for symptomatic rate
 
 SCENARIO 1: scenario where asymptomatics are just as infectious as symptomatics, this broadly matches Jewell/Read where
-undetected infecteds are just as infectious. No need for R₀ matching.
+undetected infecteds are just as infectious. No need for real-time growth rate matching.
+After the first infected assume no more introductions
 """
 
-P.τ = 0. #No treatment
-P.σ = 1/4 #Latent period mean 4 days
-P.γ = 1/1.61 #Fast infectious duration
-P.β = 1.94
-P.ϵ = 1.
+P.τ = 0.;#No treatment
+P.σ = 1/4; #Latent period mean 4 days
+P.γ = 1/1.61; #Fast infectious duration
+P.β = 1.94;
+P.ϵ = 1.;
+P.ext_inf_rate = 0.;
 u0[30,3,1] += 1#One asymptomatic in Nairobi
 jump_prob_tl = create_KenyaCoV_prob(u0,(0.,365.),P)
-@time sol = solve(jump_prob_tl,SimpleTauLeaping(),dt = 1.)
+
 function output_infecteds_by_county(sol,i)
     [sum(reshape(u,n,n_s,2)[:,3:4,1:2,],dims=[2,3])[:,1,1] for u in sol.u],false
 end
+
 CoV_ens_prob = EnsembleProblem(jump_prob_tl,output_func = output_infecteds_by_county)
-sim = solve(CoV_ens_prob,SimpleTauLeaping(),dt = 1.,trajectories = 500)
-forecasts = [u for u in sim.u]
-@save "output/forecasts.jld2" forecasts
+sim = solve(CoV_ens_prob,SimpleTauLeaping(),dt = 0.25,trajectories = 500)
+forecasts = [VectorOfArray(sim.u[i]) for i = 1:length(sim.u)]
+# @save "output/forecasts.jld2" forecasts
+times = collect(0:0.25:365.)
+total_peaktimes = [0. for i = 1:500]
+for i = 1:500
+    y = sum(forecasts[i][:,:],dims =1)[:]
+    total_peaktimes[i] = times[argmax(y)]
+end
+@save "output/total_peaktimes.jld2" total_peaktimes
+
+peaktimes_by_county = zeros(500,47)
+for i = 1:500,j=1:47
+    y = forecasts[i][j,:]
+    peaktimes_by_county[i,j] = times[argmax(y)]
+end
+
+
 
 # β_range = range(1.5*(P.γ),4.5*(P.γ),length = 6)
 # data = []
