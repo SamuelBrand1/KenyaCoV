@@ -16,6 +16,8 @@ export n,n_t,n_s,
 n = 47 #global defining number of areas
 n_s = 9 #global defining number of state
 n_t = 16 #global defining number of events per location
+ind_mombasa = 28
+ind_nairobi = 30
 
 include("kenya_data.jl");
 include("gravity_model.jl");

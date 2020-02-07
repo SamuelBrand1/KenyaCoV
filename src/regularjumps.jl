@@ -47,21 +47,41 @@ Events for each location/county:
 dc = zeros(n*n_s*2,n_t*n)
 
 
-function calculate_infection_rates!(u,p::CoVParameters)
+function import_rate_mom(t,into_mom,global_prev)
+    if t+1>min(length(into_mom),length(global_prev))
+        t_int=min(length(into_mom),length(global_prev))
+    else
+        t_int=Int(floor(t))+1
+    end
+    return into_mom[t_int]*global_prev[t_int]
+end
+
+function import_rate_nai(t,into_nai,global_prev)
+    if t+1>min(length(into_nai),length(global_prev))
+        t_int=min(length(into_nai),length(global_prev))
+    else
+        t_int=Int(floor(t))+1
+    end
+    return into_nai[t_int]*global_prev[t_int]
+end
+
+function calculate_infection_rates!(u,p::CoVParameters,t)
     I_urb_A = @view u[((3-1)*n + 1):((3-1)*n + n)]
     I_urb_D = @view u[((4-1)*n + 1):((4-1)*n + n)]
     I_rur_A = @view u[((3-1)*n + n_s*n + 1):((3-1)*n + n_s*n + n)]
     I_rur_D = @view u[((4-1)*n + n_s*n + 1):((4-1)*n + n_s*n + n)]
-    mul!(p.Î,p.T,I_urb_A .+ I_urb_D  )
-    p.Î .+=  I_rur_A .+ I_rur_D
+    mul!(p.Î,p.T,p.ϵ*I_urb_A .+ I_urb_D  )
+    p.Î .+=  p.ϵ*I_rur_A .+ I_rur_D
     mul!(p.λ_urb,p.T',p.β .*(p.Î ./p.N̂))
+    p.λ_urb[ind_mombasa] += p.β*import_rate_mom(t,p.into_mom,p.global_prev)
+    p.λ_urb[ind_nairobi] += p.β*import_rate_nai(t,p.into_mom,p.global_prev)
     p.λ_rur .= p.β .*(p.Î ./p.N̂)
     return nothing
 end
 
 function rates(out,u,p::CoVParameters,t)
-    @unpack λ_urb,λ_rur,β,γ,σ,δ,τ,μ₁ = p
-    calculate_infection_rates!(u,p)
+    @unpack λ_urb,λ_rur,β,γ,σ,δ,τ,μ₁,into_mom,into_nai,global_prev = p
+    calculate_infection_rates!(u,p,t)
     for i = 1:n
         out[(i-1)*n_t+1] = λ_urb[i]*u[(1-1)*n + i] #urban transmission
         out[(i-1)*n_t+2] =  λ_rur[i]*u[(1-1)*n + n_s*n + i] #rural transmission

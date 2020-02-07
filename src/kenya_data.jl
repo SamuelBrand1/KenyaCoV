@@ -23,3 +23,16 @@ function get_Kenyadata(filename)
     end
     return KenyaTbl,n
 end
+
+function get_flightdata(filename)
+    flights=readtable(filename)
+    into_mombassa=convert(Vector,flights[:,1])
+    into_nairobi=convert(Vector,flights[:,2])
+    return into_mombassa,into_nairobi
+end
+
+function get_prevdata(filename)
+    prev_table=readtable(filename)
+    global_prev=convert(Vector,prev_table[:,1])
+    return global_prev
+end

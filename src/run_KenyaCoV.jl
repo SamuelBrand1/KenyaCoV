@@ -1,21 +1,33 @@
+
 push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames
 using Revise
 using KenyaCoV
 
-@load "data/optimal_transition_matrix.jld2" T_opt
-@load "data/optimal_movement_matrix.jld2" P_opt
-sum(P_opt)
-#Load data and completely susceptible Population
-u0,P,transport_matrix = KenyaCoV.model_ingredients_from_data("data/combined_population_estimates.csv","data/optimal_transition_matrix.jld2","data/optimal_movement_matrix.jld2" )
-#This method modifies the parameter set for changing the movement structure
-KenyaCoV.transportstructure_params!(P,[0.001 for i = 1:KenyaCoV.n],transport_matrix)
-#Then you can modify other parameters
-P.τ = 1/1. #e.g. increased treatment rate
+"""
+Load a completely susceptible population differentiated by county and urban/rural.
+Also, load the optimised mixing matrix for spatial transmission
+"""
+# #Load data and completely susceptible Population
+# u0,P,transport_matrix = model_ingredients_from_data("./src/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv",
+#Load data completely susceptible Population
+u0,P,transport_matrix = KenyaCoV.model_ingredients_from_data("data/combined_population_estimates.csv",
+                                                             "data/optimal_transition_matrix.jld2",
+                                                            "data/optimal_movement_matrix.jld2",
+                                                            "data/flight_numbers.csv",
+                                                            "data//projected_global_prevelance.csv")
+"""
+Example of methods that modify underlying parameters
+"""
+#This method modifies the parameter set for changing the mixing structure
+# KenyaCoV.transportstructure_params!(P,[0.001 for i = 1:KenyaCoV.n],transport_matrix)
+#You can modify other parameters directly
+P.τ = 0. #e.g. no treatment rate
 #Define initial conditions by modifying the completely susceptible population
-u0[30,3,1] += 1#One asymptomatic in Nairobi
+
+u0[30,4,1] += 1#One diseased in Nairobi
 
 #Create a JumpProblem which you can solve --- needs DifferentialEquations module for the solvers
 jump_prob_tl = create_KenyaCoV_prob(u0,(0.,365.),P)
 #Go straight to solution using solver compiled in the KenyaCoV module
-@time sol_tl = solve_KenyaCoV_prob(u0,(0.,60.),P,0.5)
+@time sol_tl = solve_KenyaCoV_prob(u0,(0.,365.),P,1.)

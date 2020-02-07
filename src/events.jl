@@ -122,3 +122,27 @@ function affect_death!(integrator)
     u[area,9,urb_vs_rural] +=1
 end
 jump_death = ConstantRateJump(death,affect_death!)
+
+function nairobi_import(u,p,t)
+    return sum(p*u[31,1,1])
+end
+
+function affect_nairobi_import!(integrator)
+    @unpack ϵ_nai = integrator.p
+    u = integrator.u
+    u[31,1,1] -= 1
+    u[31,2,1] += 1
+end
+jump_nairobi_trans = ConstantRateJump(nairobi_transmission,affect_nairobi_transmission!)
+
+function mombassa_import(u,p,t)
+    return sum(p*u[29,1,1])
+end
+
+function affect_mombassa_import!(integrator)
+    @unpack ϵ_mom = integrator.p
+    u = integrator.u
+    u[29,1,1] -= 1
+    u[29,2,1] += 1
+end
+jump_mombassa_trans = ConstantRateJump(mombassa_transmission,affect_mombassa_transmission!)

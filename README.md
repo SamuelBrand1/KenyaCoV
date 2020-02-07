@@ -12,3 +12,5 @@ States enumeration:
 * 7 -> Cumulative I_sub
 * 8 -> Cumulative I_dis
 * 9 -> Cumulative Dead
+
+src/run_KenyaCoV.jl demonstrates basic methods for running a KenyaCoV simulation
