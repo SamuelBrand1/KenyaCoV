@@ -48,6 +48,9 @@ for i = 1:500,j=1:47
 end
 @save "output/peaktimes_by_county.jld2" peaktimes_by_county
 
+@@load "output/total_peaktimes.jld2" total_peaktimes
+@load "output/peaktimes_by_county.jld2" peaktimes_by_county
+
 
 # β_range = range(1.5*(P.γ),4.5*(P.γ),length = 6)
 # data = []
