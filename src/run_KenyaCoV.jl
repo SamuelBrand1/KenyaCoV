@@ -15,7 +15,7 @@ u0,P,transport_matrix = KenyaCoV.model_ingredients_from_data("data/combined_popu
                                                              "data/optimal_transition_matrix.jld2",
                                                             "data/optimal_movement_matrix.jld2",
                                                             "data/flight_numbers.csv",
-                                                            "data//projected_global_prevelance.csv")
+                                                            "data/projected_global_prevelance.csv")
 """
 Example of methods that modify underlying parameters
 """
