@@ -19,7 +19,7 @@ function test_no_infecteds()
     #Go straight to solution using solver compiled in the KenyaCoV module
     sol_tl = KenyaCoV.solve_KenyaCoV_prob(u0,(0.,365.),P,1.)
 
-    return ~any([sum(reshape(sol_tl[end],n,n_s,2)[i,7:8,1:2]) for i = 1:47] .!= 0)
+    return ~any([sum(reshape(sol_tl[end],KenyaCoV.n,KenyaCoV.n_s,2)[i,7:8,1:2]) for i = 1:47] .!= 0)
 end
 
 function stays_nonnegative()
@@ -33,7 +33,7 @@ function stays_nonnegative()
         P.global_prev[i] = 0.
     end
     # P.global_prev
-    P.μ₁ = 0.
+    P.μ₁ = 10.
     P.ϵ = 1.
     P.β = 2.2*P.γ
     #Define initial conditions by modifying the completely susceptible population
