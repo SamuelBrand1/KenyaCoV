@@ -14,8 +14,12 @@
     into_mom::Vector{Int}#Number of people flying into Mombassa each day
     into_nai::Vector{Int}#Number of people flying into Nairobi each day
     global_prev::Vector{Float64}
+    dt::Float64 = 1. #Useful for the non-negative method
     Î::Vector{Float64} = zeros(n) #For inplace calculations
     N̂::Vector{Float64} = zeros(n)#For inplace calculations
     λ_urb::Vector{Float64} = zeros(n)#For inplace calculations
     λ_rur::Vector{Float64} = zeros(n)#For inplace calculations
+    dN::Vector{Int64} = zeros(Int64,n*n_t)#For inplace calculations
+    poi_rates::Vector{Float64} = zeros(n*n_t)#For inplace calculations
+    dc::Matrix{Int64} = zeros(n*n_s*2,n*n_t)#For inplace calculations
 end
