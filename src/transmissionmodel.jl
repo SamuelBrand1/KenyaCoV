@@ -91,12 +91,13 @@ function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrix
 
     global_prev = get_prevdata(prev_filename)
     into_mom, into_nai = get_flightdata(flight_filename)
+    change_matrix(dc,1,1,1,1)
     # Now get flight numbers and global prevalence
     #Parameter definition
     P = CoVParameters(T = T_opt,ρ = ρ_county,
                         into_mom = into_mom, into_nai = into_nai,
                         global_prev = global_prev,
-                        Î=zeros(n),N̂=N̂,λ_urb=zeros(n),λ_rur = zeros(n) )
+                        N̂=N̂,dc = dc)
     #Matrix for in-place tau-leap calculations
     return suspop_kenya,P,P_opt
 
@@ -114,4 +115,14 @@ end
 function solve_KenyaCoV_prob(u0,tspan,P::CoVParameters,dt=1.)
     jump_prob_tl = create_KenyaCoV_prob(u0,tspan,P)
     return solve(jump_prob_tl,SimpleTauLeaping();dt = dt)
+end
+
+function create_KenyaCoV_non_neg_prob(u0,tspan,P::CoVParameters)
+    u0_vec = u0[:]
+    return prob = DiscreteProblem(nonneg_tauleap,u0_vec,tspan,P)
+end
+
+function create_KenyaCoV_ode_prob(u0,tspan,P::CoVParameters)
+    _u0 = convert.(Float64,u0)
+    return prob = ODEProblem(ode_model,_u0,tspan,P)
 end

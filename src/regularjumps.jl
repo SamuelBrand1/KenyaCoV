@@ -103,6 +103,7 @@ function rates(out,u,p::CoVParameters,t)
 end
 
 
+
 function change_matrix(dc,u,p,t,mark)
     for i = 1:n
         dc[(1-1)*n + i,(i-1)*n_t+1] = -1
@@ -143,4 +144,89 @@ function change_matrix(dc,u,p,t,mark)
         dc[(9-1)*n + n_s*n + i,(i-1)*n_t+16] = 1#change due to rural H->death
     end
 end
+
 reg_jumps_forKenyaCoV = RegularJump(rates,change_matrix,dc;constant_c=true)
+
+#This generates the underlying Poisson drivers according to the rate function
+
+function PP_drivers(dN::Vector{Int64},rates,p)
+    for i = 1:length(dN)
+        if rates[i] >= 0.
+            dN[i] = rand(Poisson(p.dt*rates[i]))
+        else
+            dN[i] = 0
+        end
+    end
+end
+
+#This caps the Poisson processes at causing no more transitions than the group being effected
+function max_change(out,u,p::CoVParameters)
+    for i = 1:n
+        out[(i-1)*n_t+1] = min(out[(i-1)*n_t+1],u[(1-1)*n + i] )#urban transmission
+        out[(i-1)*n_t+2] =  min(out[(i-1)*n_t+2],u[(1-1)*n + n_s*n + i] )#rural transmission
+        # out[(i-1)*n_t+3] = min(out[(i-1)*n_t+3],u[(2-1)*n + i] )#urban E->A
+        # out[(i-1)*n_t+4] =  min(out[(i-1)*n_t+4],u[(2-1)*n + n_s*n + i] )#rural E->A
+        # out[(i-1)*n_t+5] = min(out[(i-1)*n_t+5],u[(2-1)*n + i] )#urban E->D
+        # out[(i-1)*n_t+6] =  min(out[(i-1)*n_t+6],u[(2-1)*n + n_s*n + i] )#rural E->D
+        # out[(i-1)*n_t+7] = min(out[(i-1)*n_t+7],u[(4-1)*n + i] )#urban D->H
+        # out[(i-1)*n_t+8] =  min(out[(i-1)*n_t+8],u[(4-1)*n + n_s*n + i] )#rural D->H
+        out[(i-1)*n_t+9] = min(out[(i-1)*n_t+9],u[(5-1)*n + i] )#urban H->R
+        out[(i-1)*n_t+10] = min(out[(i-1)*n_t+10],u[(5-1)*n + n_s*n + i] )#rural H->R
+        # out[(i-1)*n_t+11] = min(out[(i-1)*n_t+11],u[(4-1)*n + i] )#urban D->R
+        # out[(i-1)*n_t+12] =  min(out[(i-1)*n_t+12],u[(4-1)*n + n_s*n + i] )#rural D->R
+        out[(i-1)*n_t+13] = min(out[(i-1)*n_t+13],u[(3-1)*n + i] )#urban A->R
+        out[(i-1)*n_t+14] =  min(out[(i-1)*n_t+14],u[(3-1)*n + n_s*n + i] )#rural A->R
+        out[(i-1)*n_t+15] = min(out[(i-1)*n_t+15],u[(5-1)*n + i] )#urban H->death
+        out[(i-1)*n_t+16] =  min(out[(i-1)*n_t+16],u[(5-1)*n + n_s*n + i] )#rural H->death
+        if out[(i-1)*n_t+3] + out[(i-1)*n_t+5] > u[(2-1)*n + i] #More incubations than actual urban E population
+            out[(i-1)*n_t+3] = rand(Binomial(u[(2-1)*n + i],p.δ)) #Binomially distributed the urban incubations between Asympotomatic and symptomatic
+            out[(i-1)*n_t+5] = u[(2-1)*n + i] - out[(i-1)*n_t+3]
+        end
+        if out[(i-1)*n_t+4] + out[(i-1)*n_t+6] > u[(2-1)*n + n_s*n + i]  #More incubations than actual rural E population
+            out[(i-1)*n_t+4] = rand(Binomial(u[(2-1)*n + n_s*n + i],p.δ)) #Binomially distributed the rural incubations between Asympotomatic and symptomatic
+            out[(i-1)*n_t+6] = u[(2-1)*n + n_s*n + i] - out[(i-1)*n_t+4]
+        end
+        if out[(i-1)*n_t+7] + out[(i-1)*n_t+11] > u[(4-1)*n + i] # More end of infection events than urban symptomatic infecteds
+            out[(i-1)*n_t+7] = rand(Binomial(u[(4-1)*n + i],p.τ/(p.τ + p.γ))) #Binomially distributed the urban end of infections between hospitalisation and recovery
+            out[(i-1)*n_t+11] = u[(4-1)*n + i] - out[(i-1)*n_t+7]
+        end
+        if out[(i-1)*n_t+8] + out[(i-1)*n_t+12] > u[(4-1)*n + n_s*n + i] # More end of infection events than rural symptomatic infecteds
+            out[(i-1)*n_t+8] = rand(Binomial(u[(4-1)*n + n_s*n + i],p.τ/(p.τ + p.γ))) #Binomially distributed the rural end of infections between hospitalisation and recovery
+            out[(i-1)*n_t+12] = u[(4-1)*n + n_s*n + i] - out[(i-1)*n_t+7]
+        end
+    end
+end
+
+function nonneg_tauleap(du,u,p,t)
+    @unpack dc,dN,poi_rates = p
+    rates(poi_rates,u,p,t) #calculate rates of underlying Poisson processes
+    PP_drivers(dN,poi_rates,p)#Generate Poisson rvs with rates scaled by time step dt
+    max_change(dN,u,p)#Cap the size of the Poisson rvs to maintain non-negativity
+    mul!(du,dc,dN)#Calculates the effect on the state in the inplace du vector
+    du .+= u #Calculates how the state should change
+end
+
+function ode_model(du,u,p,t)
+    @unpack λ_urb,λ_rur,β,γ,σ,δ,τ,μ₁,into_mom,into_nai,global_prev = p
+    calculate_infection_rates!(u,p,t)
+    for i = 1:n
+        du[i,1,1] = (-1)*λ_urb[i]*u[i,1,1]
+        du[i,2,1] = λ_urb[i]*u[i,1,1] - σ*u[i,2,1]
+        du[i,3,1] = (1-δ)*σ*u[i,2,1] - γ*u[i,3,1]
+        du[i,4,1] = δ*σ*u[i,2,1] - γ*u[i,4,1] - τ*u[i,4,1]
+        du[i,5,1] = τ*u[i,4,1] - γ*u[i,5,1] - μ₁*u[i,5,1]
+        du[i,6,1] = γ*(u[i,3,1] + u[i,4,1] + u[i,5,1])
+        du[i,7,1] = (1-δ)*σ*u[i,2,1]
+        du[i,8,1] = δ*σ*u[i,2,1]
+        du[i,9,1] = μ₁*u[i,5,1]
+        du[i,1,2] = (-1)*λ_rur[i]*u[i,1,2]
+        du[i,2,2] = λ_rur[i]*u[i,1,2] - σ*u[i,2,2]
+        du[i,3,2] = (1-δ)*σ*u[i,2,2] - γ*u[i,3,2]
+        du[i,4,2] = δ*σ*u[i,2,2] - γ*u[i,4,2] - τ*u[i,4,2]
+        du[i,5,2] = τ*u[i,4,2] - γ*u[i,5,2] - μ₁*u[i,5,2]
+        du[i,6,2] = γ*(u[i,3,2] + u[i,4,2] + u[i,5,2])
+        du[i,7,2] = (1-δ)*σ*u[i,2,2]
+        du[i,8,2] = δ*σ*u[i,2,2]
+        du[i,9,2] = μ₁*u[i,5,2]
+     end
+end

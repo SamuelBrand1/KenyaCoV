@@ -7,11 +7,26 @@ u0,P,transport_matrix = KenyaCoV.model_ingredients_from_data("data/combined_popu
                                                             "data/optimal_movement_matrix.jld2",
                                                             "data/flight_numbers.csv",
                                                             "data/projected_global_prevelance.csv")
+"""
+Output functions: Target the peak timing for each county, cases by each county,
+timing of total peak and total cases
+"""
+function output_infecteds_by_county(sol,i)
+    [sum(reshape(u,n,n_s,2)[:,3:4,1:2,],dims=[2,3])[:,1,1] for u in sol.u],false
+end
+
+function output_infecteds_and_cum_by_county(sol,i)
+    z = [sum(reshape(u,n,n_s,2)[:,[3,4,7,8],1:2,],dims=[3])[:,:,1] for u in sol.u]
+    l = length(sol.u)
+    (sol.t[1:4:l],z[1:4:l]),false#Thin output to daily
+end
 
 """
+SCENARIO 1: R/J estimates no intervention
+
 Current estimates from Read and Jewell --- assuming that ascertainment is a decent estimate for symptomatic rate
 
-SCENARIO 1: scenario where asymptomatics are just as infectious as symptomatics, this broadly matches Jewell/Read where
+scenario where asymptomatics are just as infectious as symptomatics, this broadly matches Jewell/Read where
 undetected infecteds are just as infectious. No need for real-time growth rate matching.
 After the first infected assume no more introductions
 """
@@ -23,18 +38,14 @@ P.β = 1.94;
 P.ϵ = 1.;
 P.ext_inf_rate = 0.;
 u0[30,3,1] += 1#One asymptomatic in Nairobi
-jump_prob_tl = create_KenyaCoV_prob(u0,(0.,365.),P)
+jump_prob_tl = create_KenyaCoV_prob(u0,(0.,180.),P)
 
-function output_infecteds_by_county(sol,i)
-    [sum(reshape(u,n,n_s,2)[:,3:4,1:2,],dims=[2,3])[:,1,1] for u in sol.u],false
-end
+CoV_ens_prob = EnsembleProblem(jump_prob_tl,output_func = output_infecteds_and_cum_by_county)
+sim = solve(CoV_ens_prob,SimpleTauLeaping(),dt = 0.25,trajectories = 1000)
 
-CoV_ens_prob = EnsembleProblem(jump_prob_tl,output_func = output_infecteds_by_county)
-sim = solve(CoV_ens_prob,SimpleTauLeaping(),dt = 0.25,trajectories = 500)
-forecasts = [VectorOfArray(sim.u[i]) for i = 1:length(sim.u)]
-# @save "output/forecasts.jld2" forecasts
-times = collect(0:0.25:365.)
-total_peaktimes = [0. for i = 1:500]
+sim[1]
+
+
 for i = 1:500
     y = sum(forecasts[i][:,:],dims =1)[:]
     total_peaktimes[i] = times[argmax(y)]

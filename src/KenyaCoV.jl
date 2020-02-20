@@ -6,7 +6,8 @@ using DifferentialEquations,
     DataFrames,
     Parameters,
     LinearAlgebra,
-    JLD2
+    JLD2,
+    Distributions
 
 export n,n_t,n_s,
         model_ingredients_from_data,
