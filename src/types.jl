@@ -21,5 +21,5 @@
     λ_rur::Vector{Float64} = zeros(n)#For inplace calculations
     dN::Vector{Int64} = zeros(Int64,n*n_t)#For inplace calculations
     poi_rates::Vector{Float64} = zeros(n*n_t)#For inplace calculations
-    dc::Matrix{Int64} = zeros(n*n_s*2,n*n_t)#For inplace calculations
+    dc::SparseMatrixCSC{Int64,Int64} = sparse(zeros(Int64,n*n_s*2,n*n_t))#For inplace calculations
 end
