@@ -44,7 +44,7 @@ Events for each location/county:
 16-> rural H->death
 
 """
-dc = zeros(n*n_s*2,n_t*n)
+dc = zeros(Int64,n*n_s*2,n_t*n)
 
 
 function import_rate_mom(t,into_mom,global_prev)
