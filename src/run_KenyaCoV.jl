@@ -44,4 +44,4 @@ prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 # sol_ode = solve(prob_ode,Tsit5())
 # @time sol_tl = solve(prob_tl,SimpleTauLeaping(),dt = P.dt)
 
-@tXime sol = solve(prob,FunctionMap(),dt = P.dt)
+@time sol = solve(prob,FunctionMap(),dt = P.dt)
