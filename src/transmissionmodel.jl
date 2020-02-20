@@ -121,3 +121,8 @@ function create_KenyaCoV_non_neg_prob(u0,tspan,P::CoVParameters)
     u0_vec = u0[:]
     return prob = DiscreteProblem(nonneg_tauleap,u0_vec,tspan,P)
 end
+
+function create_KenyaCoV_ode_prob(u0,tspan,P::CoVParameters)
+    _u0 = convert.(Float64,u0)
+    return prob = ODEProblem(ode_model,_u0,tspan,P)
+end

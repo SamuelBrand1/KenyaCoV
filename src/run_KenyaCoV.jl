@@ -6,6 +6,7 @@ import KenyaCoV
 
 
 
+
 """
 Load a completely susceptible population differentiated by county and urban/rural.
 Also, load the optimised mixing matrix for spatial transmission
@@ -15,9 +16,9 @@ Also, load the optimised mixing matrix for spatial transmission
 #Load data completely susceptible Population
 u0,P,transport_matrix = KenyaCoV.model_ingredients_from_data("data/combined_population_estimates.csv",
                                                              "data/optimal_transition_matrix.jld2",
-                                                            "data/optimal_movement_matrix.jld2",
-                                                            "data/flight_numbers.csv",
-                                                            "data//projected_global_prevelance.csv")
+                                                             "data/optimal_movement_matrix.jld2",
+                                                             "data/flight_numbers.csv",
+                                                             "data/projected_global_prevelance.csv")
 """
 Example of methods that modify underlying parameters
 """
@@ -28,17 +29,30 @@ P.τ = 0. #e.g. no treatment rate
 for (i,p) in enumerate(P.global_prev)
     P.global_prev[i] = 0.
 end
-P.global_prev
+# P.global_prev
 P.μ₁ = 0.
+P.ϵ = 1.
+P.β = 2.2*P.γ
 #Define initial conditions by modifying the completely susceptible population
-P.dt = 1.
-u0[30,4,1] += 1#One diseased in Nairobi
+P.dt = 0.25
+discrete_mean_infectious_period = (P.dt/(1-exp(-P.dt*P.γ)) - (1/P.γ))*P.γ
+
+
+
+u0[30,4,1] += 10#One diseased in Nairobi
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 prob_tl = KenyaCoV.create_KenyaCoV_prob(u0,(0.,365.),P)
+prob_ode = KenyaCoV.create_KenyaCoV_ode_prob(u0,(0.,365.),P)
+sol_ode = solve(prob_ode,Tsit5())
 @time sol_tl = solve(prob_tl,SimpleTauLeaping(),dt = P.dt)
 
 @time sol = solve(prob,FunctionMap(),dt = P.dt)
+x = reshape(sol[end],KenyaCoV.n,KenyaCoV.n_s,2)
+p = x[:,1,1]./u0[:,1,1]
+x = reshape(sol_tl[end],KenyaCoV.n,KenyaCoV.n_s,2)
+_p = x[:,1,1]./u0[:,1,1]
+bar!(_p)
 
 f = findall(sol.u[end] .< 0 )
 f_tl = findall(sol_tl.u[end] .<0)

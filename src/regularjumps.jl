@@ -205,3 +205,28 @@ function nonneg_tauleap(du,u,p,t)
     mul!(du,dc,dN)#Calculates the effect on the state in the inplace du vector
     du .+= u #Calculates how the state should change
 end
+
+function ode_model(du,u,p,t)
+    @unpack λ_urb,λ_rur,β,γ,σ,δ,τ,μ₁,into_mom,into_nai,global_prev = p
+    calculate_infection_rates!(u,p,t)
+    for i = 1:n
+        du[i,1,1] = (-1)*λ_urb[i]*u[i,1,1]
+        du[i,2,1] = λ_urb[i]*u[i,1,1] - σ*u[i,2,1]
+        du[i,3,1] = (1-δ)*σ*u[i,2,1] - γ*u[i,3,1]
+        du[i,4,1] = δ*σ*u[i,2,1] - γ*u[i,4,1] - τ*u[i,4,1]
+        du[i,5,1] = τ*u[i,4,1] - γ*u[i,5,1] - μ₁*u[i,5,1]
+        du[i,6,1] = γ*(u[i,3,1] + u[i,4,1] + u[i,5,1])
+        du[i,7,1] = (1-δ)*σ*u[i,2,1]
+        du[i,8,1] = δ*σ*u[i,2,1]
+        du[i,9,1] = μ₁*u[i,5,1]
+        du[i,1,2] = (-1)*λ_rur[i]*u[i,1,2]
+        du[i,2,2] = λ_rur[i]*u[i,1,2] - σ*u[i,2,2]
+        du[i,3,2] = (1-δ)*σ*u[i,2,2] - γ*u[i,3,2]
+        du[i,4,2] = δ*σ*u[i,2,2] - γ*u[i,4,2] - τ*u[i,4,2]
+        du[i,5,2] = τ*u[i,4,2] - γ*u[i,5,2] - μ₁*u[i,5,2]
+        du[i,6,2] = γ*(u[i,3,2] + u[i,4,2] + u[i,5,2])
+        du[i,7,2] = (1-δ)*σ*u[i,2,2]
+        du[i,8,2] = δ*σ*u[i,2,2]
+        du[i,9,2] = μ₁*u[i,5,2]
+     end
+end
