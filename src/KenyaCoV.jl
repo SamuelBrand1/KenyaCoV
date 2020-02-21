@@ -15,10 +15,11 @@ export n,n_t,n_s,n_a,
         transportstructure_params!,
         create_KenyaCoV_prob,
         solve_KenyaCoV_prob
-n = 47 #global defining number of areas
+n = 47 #global defining number of counties
 n_s = 9 #global defining number of state
 n_t = 16 #global defining number of events per location
 n_a = 16 #global defining number of age categories
+n_wa = 20 #global defining number of wider area groupings
 
 ind_mombasa = 28
 ind_nairobi = 30
