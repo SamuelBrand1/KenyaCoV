@@ -97,7 +97,7 @@ function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrix
     P = CoVParameters(T = T_opt,ρ = ρ_county,
                         into_mom = into_mom, into_nai = into_nai,
                         global_prev = global_prev,
-                        N̂=N̂,dc = dc)
+                        N̂=N̂,dc = sparse(dc))
     #Matrix for in-place tau-leap calculations
     return suspop_kenya,P,P_opt
 

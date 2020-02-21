@@ -7,9 +7,10 @@ using DifferentialEquations,
     Parameters,
     LinearAlgebra,
     JLD2,
-    Distributions
+    Distributions,
+    SparseArrays
 
-export n,n_t,n_s,
+export n,n_t,n_s,n_a,
         model_ingredients_from_data,
         transportstructure_params!,
         create_KenyaCoV_prob,
@@ -17,6 +18,8 @@ export n,n_t,n_s,
 n = 47 #global defining number of areas
 n_s = 9 #global defining number of state
 n_t = 16 #global defining number of events per location
+n_a = 16 #global defining number of age categories
+
 ind_mombasa = 28
 ind_nairobi = 30
 
@@ -24,6 +27,7 @@ include("kenya_data.jl");
 include("gravity_model.jl");
 include("types.jl");
 include("regularjumps.jl");
+include("agestructurejumps.jl")
 include("transmissionmodel.jl");
 
 
