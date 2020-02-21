@@ -20,6 +20,7 @@ n_s = 9 #global defining number of state
 n_t = 16 #global defining number of events per location
 n_a = 16 #global defining number of age categories
 n_wa = 20 #global defining number of wider area groupings
+n_ta = 8 #global defining number of events per location and age group
 
 ind_mombasa = 28
 ind_nairobi = 30
