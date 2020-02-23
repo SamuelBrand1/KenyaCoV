@@ -18,3 +18,7 @@ Disease state enumeration:
 * 9 -> Cumulative Dead
 
 *src/run_KenyaCoV_basicmodel.jl* demonstrates basic methods for running a KenyaCoV simulation version 1 (spatial + urban/rural). *src/run_KenyaCoV_basicmodel.jl* demonstrates basic methods for running KenyaCoV simulation version 2 (spatial + age structured).
+
+In both simulation versions the state of the epidemic is represented as a multi-dimensional array:
+* Simulation 1: $X(n,s,u)$ is the number of individuals (discrete) in the $n$th county, in disease state $s$, in urban/rural environment $u$.
+* Simulation 2:
