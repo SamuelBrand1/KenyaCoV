@@ -34,16 +34,16 @@ end
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable infecteds
     ρ::Vector{Float64} = [0.01 for i in 1:n] #Time spent outside of area
     T::Matrix{Float64} = zeros(n,n)#Probability distributions of location for mobile individuals
-    M::zeros(n_a,n_a) #Age mixing matrix
+    M::Matrix{Float64} = zeros(n_a,n_a) #Age mixing matrix
     ext_inf_rate::Float64 = 0. #Scales the contact rate with the infecteds arriving via air
     into_mom::Vector{Int}#Number of people flying into Mombassa each day
     into_nai::Vector{Int}#Number of people flying into Nairobi each day
     global_prev::Vector{Float64}
     dt::Float64 = 1. #Useful for the non-negative method
     Î::Matrix{Float64} = zeros(n_wa,n_a) #For inplace calculations
-    N̂::Vector{Float64} = zeros(n_wa,n_a)#For inplace calculations
-    λ::Vector{Float64} = zeros(n_wa,n_a)#For inplace calculations
-    λ_loc::Vector{Float64} = zeros(n_wa,n_a)#For inplace calculations
+    N̂::Matrix{Float64} = zeros(n_wa,n_a)#For inplace calculations
+    λ::Matrix{Float64} = zeros(n_wa,n_a)#For inplace calculations
+    λ_loc::Matrix{Float64} = zeros(n_wa,n_a)#For inplace calculations
     dN::Vector{Int64} = zeros(Int64,n_wa*n_a*n_ta)#For inplace calculations
     poi_rates::Vector{Float64} = zeros(n_wa*n_a*n_ta)#For inplace calculations
     dc::SparseMatrixCSC{Int64,Int64} = sparse(zeros(Int64,n_wa*n_a*n_s,n_wa*n_a*n_ta))#For inplace calculations

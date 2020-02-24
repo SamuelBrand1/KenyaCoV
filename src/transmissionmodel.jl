@@ -72,13 +72,16 @@ function model_ingredients_from_data(agestructuredata_filename,flight_filename,p
     end
 
     #Estimate effective population size in each area after
-    N_mobile = N_region_age[:,mobile_age_indices]
-    N_immobile = N_region_age[:,immobile_age_indices]
-    N̂ = T*N_mobile + N_immobile
+    # N_mobile = N_region_age[:,mobile_age_indices]
+    # N_immobile = N_region_age[:,immobile_age_indices]
+    N̂ = T*N_region_age
+    N̂[immobile_age_indices] .= N_region_age[immobile_age_indices]
 
     # Now get flight numbers and global prevalence
     global_prev = get_prevdata(prev_filename)
     into_mom, into_nai = get_flightdata(flight_filename)
+
+
     #Parameter definition
     P = CoVParameters_AS(T = T,ρ = ρ,
                         into_mom = into_mom, into_nai = into_nai,
