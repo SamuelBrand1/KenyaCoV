@@ -48,9 +48,9 @@ for i = 1:20,j=1:20
 end
 heatmap(movements_per_person)
 ρ = [sum(movements_per_person,dims = 1)[j]*5/30 for j = 1:20]
-P = zeros(20,20)#probability distribution of destination
+P_dest = zeros(20,20)#probability distribution of destination
 for j = 1:20
-    P[:,j] = LinearAlgebra.normalize(movements_per_person[:,j],1)
+    P_dest[:,j] = LinearAlgebra.normalize(movements_per_person[:,j],1)
 end
 T = zeros(20,20) # combined location density matrix
 for i = 1:20,j=1:20
@@ -64,4 +64,4 @@ heatmap(T,clims = (0.,0.1))
 """
 Save all the data
 """
-@save "data/data_for_age_structuredmodel.jld2" N_region_age agemixingmatrix movements_per_person P ρ T
+@save "data/data_for_age_structuredmodel.jld2" N_region_age agemixingmatrix movements_per_person P_dest ρ T

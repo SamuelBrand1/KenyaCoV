@@ -62,6 +62,34 @@ function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrix
 
 end
 
+function model_ingredients_from_data(agestructuredata_filename,flight_filename,prev_filename)
+    @load agestructuredata_filename N_region_age agemixingmatrix movements_per_person P_dest ρ T
+
+    #Population state array
+    suspop_kenya = zeros(Int64,n_wa,n_a,n_s) #Array by area, age group and disease state
+    for i = 1:n_wa,j=1:n_a
+        suspop_kenya[i,j,1] = N_region_age[i,j]
+    end
+
+    #Estimate effective population size in each area after
+    N_mobile = N_region_age[:,mobile_age_indices]
+    N_immobile = N_region_age[:,immobile_age_indices]
+    N̂ = T*N_mobile + N_immobile
+
+    # Now get flight numbers and global prevalence
+    global_prev = get_prevdata(prev_filename)
+    into_mom, into_nai = get_flightdata(flight_filename)
+    #Parameter definition
+    P = CoVParameters_AS(T = T,ρ = ρ,
+                        into_mom = into_mom, into_nai = into_nai,
+                        global_prev = global_prev,
+                        M = agemixingmatrix,
+                        N̂=N̂)
+    #Matrix for in-place tau-leap calculations
+    return suspop_kenya,P,P_dest
+
+end
+
 
 
 

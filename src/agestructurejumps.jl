@@ -47,8 +47,6 @@ f_diseased_indices = findall(diseased_indices[:])
 asymp_indices = 0;#free memory
 diseased_indices = 0;
 
-mobile_age_indices = 5:11; #This assumes that 16-49 year ols move around and others don't
-immobile_age_indices = [1,2,3,4,12,13,14,15,16]
 function calculate_infection_rates!(u,p::CoVParameters_AS,t)
     I_A = @view u[f_asymp_indices]
     I_D = @view u[f_diseased_indices]
