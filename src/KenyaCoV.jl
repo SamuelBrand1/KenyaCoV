@@ -26,6 +26,8 @@ immobile_age_indices = [1,2,3,4,12,13,14,15,16]
 
 ind_mombasa = 28
 ind_nairobi = 30
+ind_mombasa_as = 12
+ind_nairobi_as = 4
 
 include("kenya_data.jl");
 include("gravity_model.jl");
