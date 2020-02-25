@@ -104,7 +104,7 @@ end
 
 
 
-function change_matrix(dc,u,p::CoVParameters,t,mark)
+function change_matrix(dc,u,p,t,mark)
     for i = 1:n
         dc[(1-1)*n + i,(i-1)*n_t+1] = -1
         dc[(2-1)*n + i,(i-1)*n_t+1] = 1 #change due to urban transmission
