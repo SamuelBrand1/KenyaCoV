@@ -29,6 +29,12 @@ ind_nairobi = 30
 ind_mombasa_as = 12
 ind_nairobi_as = 4
 
+index_as = CartesianIndices((1:n_wa, 1:n_a,1:n_s))
+index_as_events = CartesianIndices((1:n_wa, 1:n_a,1:n_ta))
+linear_as = LinearIndices((1:n_wa, 1:n_a,1:n_s))
+linear_as_events = LinearIndices((1:n_wa, 1:n_a,1:n_ta))
+
+
 include("kenya_data.jl");
 include("gravity_model.jl");
 include("types.jl");

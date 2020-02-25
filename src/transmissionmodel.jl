@@ -81,12 +81,16 @@ function model_ingredients_from_data(agestructuredata_filename,flight_filename,p
     global_prev = get_prevdata(prev_filename)
     into_mom, into_nai = get_flightdata(flight_filename)
 
+    #Define the change matrix
+    dc = sparse(zeros(Int64,n_wa*n_a*n_s,n_wa*n_a*n_ta))
+    change_matrix(dc)
 
     #Parameter definition
     P = CoVParameters_AS(T = T,ρ = ρ,
                         into_mom = into_mom, into_nai = into_nai,
                         global_prev = global_prev,
                         M = agemixingmatrix,
+                        dc=dc,
                         N̂=N̂)
     #Matrix for in-place tau-leap calculations
     return suspop_kenya,P,P_dest
@@ -112,7 +116,16 @@ function create_KenyaCoV_non_neg_prob(u0,tspan,P::CoVParameters)
     return prob = DiscreteProblem(nonneg_tauleap,u0_vec,tspan,P)
 end
 
+function create_KenyaCoV_non_neg_prob(u0,tspan,P::CoVParameters_AS)
+    return prob = DiscreteProblem(nonneg_tauleap,u0,tspan,P)
+end
+
 function create_KenyaCoV_ode_prob(u0,tspan,P::CoVParameters)
+    _u0 = convert.(Float64,u0)
+    return prob = ODEProblem(ode_model,_u0,tspan,P)
+end
+
+function create_KenyaCoV_ode_prob(u0,tspan,P::CoVParameters_AS)
     _u0 = convert.(Float64,u0)
     return prob = ODEProblem(ode_model,_u0,tspan,P)
 end
