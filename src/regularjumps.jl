@@ -197,7 +197,7 @@ function max_change(out,u,p::CoVParameters)
     end
 end
 
-function nonneg_tauleap(du,u,p,t)
+function nonneg_tauleap(du,u,p::CoVParameters,t)
     @unpack dc,dN,poi_rates = p
     rates(poi_rates,u,p,t) #calculate rates of underlying Poisson processes
     PP_drivers(dN,poi_rates,p)#Generate Poisson rvs with rates scaled by time step dt
@@ -206,7 +206,7 @@ function nonneg_tauleap(du,u,p,t)
     du .+= u #Calculates how the state should change
 end
 
-function ode_model(du,u,p,t)
+function ode_model(du,u,p::CoVParameters,t)
     @unpack λ_urb,λ_rur,β,γ,σ,δ,τ,μ₁,into_mom,into_nai,global_prev = p
     calculate_infection_rates!(u,p,t)
     for i = 1:n
