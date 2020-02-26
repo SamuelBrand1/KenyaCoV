@@ -4,10 +4,20 @@ function transportstructure_params!(P::CoVParameters,ρ::Vector{Float64},transpo
    for i = 1:n,j = 1:n
        if i != j
            P.T[i,j] = P.ρ[j]*transport_matrix[i,j]
-           P.T[i,j] = P.ρ*transport_matrix[i,j]
        else
            P.T[i,j] = 1-P.ρ[j]
-           P.T[i,j] = 1-P.ρ
+       end
+   end
+   return nothing
+end
+
+function transportstructure_params!(P::CoVParameters_AS,ρ::Vector{Float64},transport_matrix)
+   #Put in the correct location matrix
+   for i = 1:n_wa,j = 1:n_wa
+       if i != j
+           P.T[i,j] = P.ρ[j]*transport_matrix[i,j]
+       else
+           P.T[i,j] = 1-P.ρ[j]
        end
    end
    return nothing

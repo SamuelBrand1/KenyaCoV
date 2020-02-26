@@ -14,27 +14,27 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
                                             "data/projected_global_prevelance.csv")
 """
 Can adjust β to match a desired R₀ value by evaluating the leading eigenvalue
-The idea is to match to the chinese epidemic -- it might be different in Kenya
+The idea is to match to the chinese epidemic R₀ -- it will be different in Kenya
 """
-M_china_tbl = readtable("data/china_baseline_age_mixing.csv")
-M_china = zeros(16,16)
-for i = 1:16,j=1:16
-    M_china[i,j] = M_china_tbl[i,j]
-end
+
 P.ϵ = 1
-sus_matrix = repeat(P.χ,1,16)
-eigs_china, = eigen((P.δ + (1-P.δ)*P.ϵ)*sus_matrix.*M_china)
-max_eigval_china = Real(eigs_china[end])
 P.β = 2.2*P.γ
 eigs, = eigen((P.β/P.γ)*sus_matrix.*P.M)
-# @time KenyaCoV.rates(P.poi_rates,u0,P,1.)
-#dc = P.dc
-# @time KenyaCoV.nonneg_tauleap(deepcopy(u0),u0,P,0.)
+R₀ = Real(eigs[end])
 
-u0[KenyaCoV.ind_nairobi_as,15,3] += 100#10 diseased
+"""
+Can vary the spatial contact assumptions as well
+"""
+P.ρ = zeros(20)
+KenyaCoV.transportstructure_params!(P,P.ρ,P_dest)
+P.dt = 0.25
+
+
+
+u0[KenyaCoV.ind_nairobi_as,15,3] = 1#10 diseased
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
-@time sol = solve(prob,FunctionMap(),dt = 0.25)
+@time sol = solve(prob,FunctionMap(),dt = P.dt)
 sum(sol[end][:,:,7:8])
 
 prob_ode = KenyaCoV.create_KenyaCoV_ode_prob(u0,(0.,365.),P)
@@ -51,3 +51,22 @@ for i = 2:20
     plot!(plt,sol.t,I_area[i,:],lab = i);
 end
 display(plt)
+
+"""
+Example of adding a constant rate jump to the method
+"""
+#1. Define the jump rate and affect on integrator
+jumprate(u,p,t) = 1.
+function jumpaffect!(integrator)
+    integrator.u[4,5,3] += 1
+end
+#2. Declare the ConstantRateJump
+example_jump = ConstantRateJump(jumprate,jumpaffect!)
+#3. Make a jump problem that BOTH inherits the DiscreteProblem (prob) AND is given an "aggregator" method
+#In this case the aggregator method "Direct()" is the Gillespie alg
+
+Jmp_prob = JumpProblem(prob,Direct(),example_jump)
+
+#Solve the whole problem using FunctionMap() this time steps forward discretely BUT if a ConstantRateJump
+# event occurs in the interval it includes that as well
+sol = solve(Jmp_prob,FunctionMap(),dt = P.dt)
