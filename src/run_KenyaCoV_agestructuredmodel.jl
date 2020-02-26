@@ -4,6 +4,7 @@ using Revise
 import KenyaCoV
 using LinearAlgebra:eigen
 
+
 """
 Load age structured data
 """
@@ -12,9 +13,10 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
 """
-Can adjust β to match a desired R₀ value by evaluating the leading eigenvalue of the age mixing matrix
+Can adjust β to match a desired R₀ value by evaluating the leading eigenvalue
 """
-eigs, = eigen(P.M)
+sus_matrix = repeat(P.χ,1,16)
+eigs, = eigen(sus_matrix.*P.M)
 max_eigval = Real(eigs[end])
 P.β = 2.2*P.γ/max_eigval
 # @time KenyaCoV.rates(P.poi_rates,u0,P,1.)

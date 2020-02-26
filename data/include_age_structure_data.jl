@@ -57,11 +57,17 @@ for i = 1:20,j=1:20
     if i == j
         T[i,j] = 1-ρ[i]
     else
-        T[i,j] = ρ[j]*P[i,j]
+        T[i,j] = ρ[j]*P_dest[i,j]
     end
 end
 heatmap(T,clims = (0.,0.1))
+
+"""
+Load age-specific susceptibility
+"""
+age_specific_tbl = readtable("data/sus_profile_yang.csv")
+age_specific_sus = [age_specific_tbl[i,1] for i = 1:16]
 """
 Save all the data
 """
-@save "data/data_for_age_structuredmodel.jld2" N_region_age agemixingmatrix movements_per_person P_dest ρ T
+@save "data/data_for_age_structuredmodel.jld2" N_region_age agemixingmatrix movements_per_person P_dest ρ T age_specific_sus

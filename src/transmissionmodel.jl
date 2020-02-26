@@ -63,7 +63,7 @@ function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrix
 end
 
 function model_ingredients_from_data(agestructuredata_filename,flight_filename,prev_filename)
-    @load agestructuredata_filename N_region_age agemixingmatrix movements_per_person P_dest ρ T
+    @load agestructuredata_filename N_region_age agemixingmatrix movements_per_person P_dest ρ T age_specific_sus
 
     #Population state array
     suspop_kenya = zeros(Int64,n_wa,n_a,n_s) #Array by area, age group and disease state
@@ -86,7 +86,7 @@ function model_ingredients_from_data(agestructuredata_filename,flight_filename,p
     change_matrix(dc)
 
     #Parameter definition
-    P = CoVParameters_AS(T = T,ρ = ρ,
+    P = CoVParameters_AS(T = T,ρ = ρ,χ = age_specific_sus,
                         into_mom = into_mom, into_nai = into_nai,
                         global_prev = global_prev,
                         M = agemixingmatrix,

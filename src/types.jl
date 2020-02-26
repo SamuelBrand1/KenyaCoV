@@ -32,6 +32,7 @@ end
     τ::Float64 = 1/15. #treatment/isolation rate for symptomatics
     μ₁::Float64 = 0.01#Excess mortality due to disease
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable infecteds
+    χ::Vector{Float64} = ones(n_a)
     ρ::Vector{Float64} = [0.01 for i in 1:n] #Time spent outside of area
     T::Matrix{Float64} = zeros(n,n)#Probability distributions of location for mobile individuals
     M::Matrix{Float64} = zeros(n_a,n_a) #Age mixing matrix

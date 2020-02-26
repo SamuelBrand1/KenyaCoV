@@ -62,12 +62,12 @@ end
 
 
 function rates(out,u,p::CoVParameters_AS,t)
-    @unpack λ,γ,σ,δ,τ,μ₁ = p
+    @unpack λ,γ,σ,δ,τ,μ₁,χ = p
     calculate_infection_rates!(u,p,t)
     for k = 1:length(out)
         i,a,eventtype = Tuple(index_as_events[k])
         if eventtype ==1
-            out[k] = λ[i,a]*u[i,a,1] #Transmission
+            out[k] = χ[a]*λ[i,a]*u[i,a,1] #Transmission
         end
         if eventtype ==2
             out[k] = (1-δ)*σ*u[i,a,2] # E->A
@@ -191,11 +191,11 @@ function nonneg_tauleap(du,u,p::CoVParameters_AS,t)
 end
 
 function ode_model(du,u,p::CoVParameters_AS,t)
-    @unpack λ,γ,σ,δ,τ,μ₁ = p
+    @unpack λ,γ,σ,δ,τ,μ₁,χ = p
     calculate_infection_rates!(u,p,t)
     for i = 1:n_wa,a = 1:n_a
-        du[i,a,1] = (-1)*λ[i,a]*u[i,a,1]
-        du[i,a,2] = λ[i,a]*u[i,a,1] - σ*u[i,a,2]
+        du[i,a,1] = (-1)*χ[a]*λ[i,a]*u[i,a,1]
+        du[i,a,2] = χ[a]*λ[i,a]*u[i,a,1] - σ*u[i,a,2]
         du[i,a,3] = (1-δ)*σ*u[i,a,2] - γ*u[i,a,3]
         du[i,a,4] = δ*σ*u[i,a,2] - γ*u[i,a,4] - τ*u[i,a,4]
         du[i,a,5] = τ*u[i,a,4] - γ*u[i,a,5] - μ₁*u[i,a,5]
