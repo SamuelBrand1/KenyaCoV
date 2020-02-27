@@ -3,6 +3,7 @@ using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,Stats
 # using Revise
 import KenyaCoV
 using LinearAlgebra:eigen
+using Statistics: quantile
 
 gr()
 """
@@ -42,6 +43,9 @@ function cases_from_sims(sims)
     area_diseased = hcat(area_diseased,total_diseased)
     return area_asymptomatics,area_diseased
 end
+
+
+# plot(t,y,ribbon = (σ₋,σ₊),fillalpha=0.3,color=:red,lw = 3)
 
 
 
