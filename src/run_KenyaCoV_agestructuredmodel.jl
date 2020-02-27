@@ -19,6 +19,7 @@ The idea is to match to the chinese epidemic R₀ -- it will be different in Ken
 
 P.ϵ = 1
 P.β = 2.2*P.γ
+sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
 eigs, = eigen((P.β/P.γ)*sus_matrix.*P.M)
 R₀ = Real(eigs[end])
 
@@ -29,7 +30,10 @@ P.ρ = zeros(20)
 KenyaCoV.transportstructure_params!(P,P.ρ,P_dest)
 P.dt = 0.25
 
+"""
+Run model
 
+"""
 
 u0[KenyaCoV.ind_nairobi_as,15,3] = 1#10 diseased
 

@@ -30,7 +30,7 @@ end
     σ::Float64 = 1/2.
     δ::Float64 = 0.05#Proportion of symptomatic/diseased vs non-symptomatic cases
     τ::Float64 = 1/15. #treatment/isolation rate for symptomatics
-    μ₁::Float64 = 0.01#Excess mortality due to disease
+    μ₁::Float64 = 0.0#Excess mortality due to disease
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable infecteds
     χ::Vector{Float64} = ones(n_a)
     ρ::Vector{Float64} = [0.01 for i in 1:n] #Time spent outside of area
