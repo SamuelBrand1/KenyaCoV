@@ -46,7 +46,7 @@ for i = 1:20,(ind,t) in enumerate(sol.t)
     I_area[i,ind] = sum(sol(t)[i,:,3:4])
 end
 # I = [sum(sol(t)[:,:,3:4]) for t in sol.t]
-plt = plot(sol.t,I_area[1,:], lab = 1,xlims = (0.,180));
+plt = plot(sol.t,I_area[1,:], lab = 1,xlims = (0.,30),ylims = (0.,100));
 for i = 2:20
     plot!(plt,sol.t,I_area[i,:],lab = i);
 end
@@ -70,3 +70,4 @@ Jmp_prob = JumpProblem(prob,Direct(),example_jump)
 #Solve the whole problem using FunctionMap() this time steps forward discretely BUT if a ConstantRateJump
 # event occurs in the interval it includes that as well
 sol = solve(Jmp_prob,FunctionMap(),dt = P.dt)
+sol.t
