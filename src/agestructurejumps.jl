@@ -117,7 +117,7 @@ function change_matrix(dc)
             ind_cumD = linear_as[i,a,8]
             dc[ind_E,k] = -1
             dc[ind_D,k] = 1
-            dc[ind_cumD] = 1
+            dc[ind_cumD,k] = 1
         end
         if eventtype ==4# D->H
             ind_D = linear_as[i,a,4]
