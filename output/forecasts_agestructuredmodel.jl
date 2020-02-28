@@ -3,6 +3,7 @@ using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,Stats
 # using Revise
 import KenyaCoV
 using LinearAlgebra:eigen
+using Statistics: median, quantile
 gr()
 """
 Define uncertainty of parameter estimates
@@ -13,8 +14,6 @@ mean(d_incubation)
 d_R₀ = Gamma(100,2.92/100) ##Liu et al
 mean(d_R₀)
 (quantile(d_R₀,0.025),median(d_R₀),quantile(d_R₀,0.975))
-
-
 
 """
 Load age structured data
@@ -43,54 +42,79 @@ function randomise_params(prob,i,repeat)
 end
 
 """
-Analysis functions:
+Simulation functions
 """
-function cases_from_sims(sims)
-    total_asymptomatics = [sum(sim[end][:,:,3]) for sim in sims]
-    total_diseased = [sum(sim[end][:,:,4]) for sim in sims]
-    area_asymptomatics = zeros(1000,KenyaCoV.n_wa)
-    area_diseased = zeros(1000,KenyaCoV.n_wa)
-    for (i,sim) in enumerate(sims)
-        for j in 1:KenyaCoV.n_wa
-            area_asymptomatics[i,j] = sum(sim[end][j,:,3])
-            area_diseased[i,j] = sum(sim[end][j,:,4])
-        end
-    end
-    area_asymptomatics = hcat(area_asymptomatics,total_asymptomatics)
-    area_diseased = hcat(area_diseased,total_diseased)
-    return area_asymptomatics,area_diseased
+function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ)
+    P.τ = τ
+    ensemble_prob = EnsembleProblem(prob,
+                                    prob_func = randomise_params,
+                                    output_func = output_daily_and_final_incidence)
+    return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
 end
 
-
-# plot(t,y,ribbon = (σ₋,σ₊),fillalpha=0.3,color=:red,lw = 3)
-
-
-
+function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates)
+    results = []
+    for τ in treatment_rates
+        sims = run_simulations(P,prob,n_traj,τ)
+        analysisdata = incidence_from_sims(sims)
+        push!(results,analysisdata)
+    end
+    return results
+end
 
 """
-SCENARIO A:
-* Age-specific susceptibilties calculated from Chinese case data
-* Asymptomatics are not infectious
-* 20% of infections are symptomatics
-------------------------------------
-NO INTERVENTION
+Analysis functions:
 """
-P.dt = 0.25;
-P.ext_inf_rate = 0.;
-P.τ = 0.;
-P.ϵ = 0.
-P.δ = 0.2
-P.γ = 1/2.5
-P.σ = 1/5.2
-P.β = 2.6*P.γ/(P.δ + P.ϵ*(1-P.δ))
-sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
-eigs, = eigen((P.δ + P.ϵ*(1-P.δ))*(P.β/P.γ)*sus_matrix.*P.M)
-Kenya_R₀ = Real(eigs[end])#R₀ for Kenya
+function incidence_from_sims(sims)
+    n = length(sims)
+    m = length(sims[1][1])
+    inc_A_data = zeros(21,m-1,n)
+    inc_D_data = zeros(21,m-1,n)
+    final_case_data = zeros(21,16,n)
+    for (k,sim) in enumerate(sims)
+        for i = 1:20,t = 1:(m-1)
+            inc_A_data[i,t,k] = sim[1][t+1][i,1] - sim[1][t][i,1]#Daily incidence rather than cumulative
+            inc_D_data[i,t,k] = sim[1][t+1][i,2] - sim[1][t][i,2]
+        end
+        for t = 1:(m-1)
+            inc_A_data[21,t,k] = sum(sim[1][t+1][:,1] .- sim[1][t][:,1])
+            inc_D_data[21,t,k] = sum(sim[1][t+1][:,2] .- sim[1][t][:,2])
+        end
+        for i =1:20,a=1:16
+            final_case_data[i,a,k] = sum(sim[2][i,a,:])
+        end
+        for a = 1:16
+            final_case_data[21,a,k] = sum(sim[2][:,a,:])
+        end
+    end
+    peak_times = zeros(n,21)
+    inc_A_conf_intvs = zeros(21,m-1,3)
+    inc_D_conf_intvs = zeros(21,m-1,3)
+    final_case_intvs = zeros(21,16,3)
+    for i = 1:21,t = 1:(m-1)
+        inc_A_conf_intvs[i,t,1] = quantile(inc_A_data[i,t,:],0.5)
+        inc_A_conf_intvs[i,t,2] = inc_A_conf_intvs[i,t,1] - quantile(inc_A_data[i,t,:],0.025) #Lower conf. int.
+        inc_A_conf_intvs[i,t,3] =  quantile(inc_A_data[i,t,:],0.975) - inc_A_conf_intvs[i,t,1] #Upper conf. int.
+        inc_D_conf_intvs[i,t,1] = quantile(inc_D_data[i,t,:],0.5)
+        inc_D_conf_intvs[i,t,2] = inc_D_conf_intvs[i,t,1] - quantile(inc_D_data[i,t,:],0.025) #Lower conf. int.
+        inc_D_conf_intvs[i,t,3] =  quantile(inc_D_data[i,t,:],0.975) - inc_D_conf_intvs[i,t,1] #Upper conf. int.
+    end
 
-u0[KenyaCoV.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
-ensemble_prob = EnsembleProblem(prob,output_func = output_daily_prev_and_cum_infections)
-sims = solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = 1000)
+    for i = 1:21, k =1:n
+        peak_times[k,i] = argmax(inc_A_data[i,:,k])
+    end
+
+    for i = 1:21,a=1:16
+        final_case_intvs[i,a,1] = quantile(final_case_data[i,a,:],0.5)
+        final_case_intvs[i,a,2] = quantile(final_case_data[i,a,:],0.5) - quantile(final_case_data[i,a,:],0.025)
+        final_case_intvs[i,a,3] = quantile(final_case_data[i,a,:],0.975) - quantile(final_case_data[i,a,:],0.5)
+    end
+
+
+
+    return inc_A_conf_intvs,inc_D_conf_intvs,peak_times,final_case_intvs
+end
+
 
 
 
@@ -102,30 +126,32 @@ SCENARIO A:
 * Asymptomatics are not infectious
 * 20% of infections are symptomatics
 -----------------------
-21 days intervention on diseased cases
 """
 P.dt = 0.25;
 P.ext_inf_rate = 0.;
-P.τ = 1/21;
+# P.τ = 1/21;
 P.ϵ = 0.
 P.δ = 0.2
 P.γ = 1/2.5
 P.σ = 1/rand(d_incubation)
 P.β = rand(d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
-
-
 u0[KenyaCoV.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
-sol = solve(prob,FunctionMap(),dt = P.dt)
-sol[end][:,:,8]
-ensemble_prob = EnsembleProblem(prob,
-                                prob_func = randomise_params,
-                                output_func = output_daily_and_final_incidence)
-sims_intervention_21 = solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = 10)
 
-sim = VectorOfArray(sims_intervention_21[1][1])
-sim[100]
+treatment_rates = [0.]
+results_A = run_scenario(P,prob,10,treatment_rates)
 
+sims = run_simulations(P,prob,10,0.)
+z = incidence_from_sims(sims)
+sims[1][2]
+
+
+
+
+
+scatter(C_age[:,1],yerror = (C_age[:,2],C_age[:,3]))
+boxplot(peaks[:,:]')
+plot(1:365,B[12,:,1],ribbon = (B[12,:,2],B[12,:,3]))
 
 """
 SCENARIO A:
