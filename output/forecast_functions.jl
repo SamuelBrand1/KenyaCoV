@@ -18,6 +18,14 @@ function randomise_params(prob,i,repeat)
     return remake(prob,p=_P)
 end
 
+function randomise_params_and_infectiousness(prob,i,repeat)
+    _P = deepcopy(prob.p)
+    _P.σ = 1/rand(d_incubation)
+    _P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
+    _P.ϵ = rand(Uniform(0.,0.5))
+    return remake(prob,p=_P)
+end
+
 """
 Simulation functions
 """
@@ -25,6 +33,14 @@ function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ)
     P.τ = τ
     ensemble_prob = EnsembleProblem(prob,
                                     prob_func = randomise_params,
+                                    output_func = output_daily_and_final_incidence)
+    return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
+end
+
+function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,prob_func)
+    P.τ = τ
+    ensemble_prob = EnsembleProblem(prob,
+                                    prob_func = prob_func,
                                     output_func = output_daily_and_final_incidence)
     return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
 end
@@ -38,6 +54,17 @@ function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates)
     end
     return results
 end
+
+function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,prob_func)
+    results = []
+    for τ in treatment_rates
+        sims = run_simulations(P,prob,n_traj,τ,prob_func)
+        analysisdata = incidence_from_sims(sims)
+        push!(results,analysisdata)
+    end
+    return results
+end
+
 
 """
 Analysis functions:
