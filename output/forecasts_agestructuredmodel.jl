@@ -138,8 +138,11 @@ P.β = rand(d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
 u0[KenyaCoV.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 
-treatment_rates = [0.]
-results_A = run_scenario(P,prob,10,treatment_rates)
+treatment_rates = [0.,1/21.,1/14,1/7]
+results_A = run_scenario(P,prob,1000,treatment_rates)
+
+# @save joinpath(homedir(),"Github/KenyaCoVOutputs/results_A.jld2") results_A
+
 
 sims = run_simulations(P,prob,10,0.)
 z = incidence_from_sims(sims)
