@@ -60,7 +60,7 @@ results_B = run_scenario(P,prob,1000,treatment_rates)
 """
 SCENARIO A2:
 * Age-specific susceptibilties calculated from Chinese case data
-* Asymptomatics are 
+* Asymptomatics are
 * 20% of infections are symptomatics
 """
 

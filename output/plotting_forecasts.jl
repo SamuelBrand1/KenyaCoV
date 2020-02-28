@@ -12,3 +12,4 @@ savefig(plt_incidence_spatial_two_week,"plotting/daily_incidence_spatial_A_two_w
 plt_incidence_by_age = plot_total_incidence_by_age(results_A,treatment_rates)
 savefig(plt_incidence_by_age,"plotting/total_cases_by_age_and_treatment.png")
 plt = plot_total_incidence_by_treatment(results_A,treatment_rates)
+savefig(plt,"plotting/total_cases_by_treatment.png")

@@ -92,14 +92,14 @@ end
 function plot_total_incidence_by_age(results,treatment_rates)
     cases_age = results[1][4][21,:,:]
     plt = scatter(collect(1:16)*2,cases_age[:,1],
-            # yerror = (cases_age[:,2],cases_age[:,3]),
+            yerror = (cases_age[:,2],cases_age[:,3]),
             lab = "No treatment/isolation",
             xticks = (collect(1:16)*2,age_cats))
     for i=2:4
         τ = treatment_rates[i]
         cases_age = results[i][4][21,:,:]
         scatter!(plt,collect(1:16)*2,cases_age[:,1],
-                # yerror = (cases_age[:,2],cases_age[:,3]),
+                yerror = (cases_age[:,2],cases_age[:,3]),
                 lab = "Av. $(round(1/(7*τ),digits = 0)) weeks to treatment")
     end
     title!(plt,"Scenario A: Total cases by age and treatment")
@@ -114,11 +114,11 @@ function plot_total_incidence_by_treatment(results,treatment_rates)
     case_U = [sqrt(sum(results[i][4][21,:,3].^2)) for i = 1:4]
 
     plt = scatter(collect(1:4)*2,cases,
-            yerror = (case_L,case_U),
+            # yerror = (case_L,case_U),
             lab = "",
             xticks = (collect(1:4)*2,["n/t","3 wks","2 wks","1 wk"]),
             ms = 10)
-    title!(plt,"Scenario A: Total cases by treatment")
+    title!(plt,"Scenario A: Summed median total cases by treatment")
     ylabel!(plt,"Total cases")
     xlabel!(plt,"Av. time to treatment")
     ylims!(plt,(0.,2.5e7))
