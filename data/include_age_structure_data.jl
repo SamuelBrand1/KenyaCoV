@@ -1,10 +1,37 @@
 #Script for building the population pyramid into data
-using DataFrames,Plots,JLD2,MAT,LinearAlgebra
+using DataFrames,Plots,JLD2,MAT,LinearAlgebra,Distances,StatsPlots
+using LinearAlgebra:normalize,normalize!
 
 """
 Load population pyramid and convert into percentages for each of 16 age groups used in
 the age structured models
 """
+age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75+"]
+poppyramids_tbl = readtable("data/agePyramid.csv")
+poppyramids_tbl = poppyramids_tbl[1:47,6:22]
+poppyramids = zeros(47,16);
+for i = 1:47,a = 1:16
+    println(i," ",a)
+    if a < 16
+        poppyramids[i,a] = poppyramids_tbl[i,a]
+    else
+        poppyramids[i,16] = poppyramids_tbl[i,16] + poppyramids_tbl[i,17]
+    end
+    # poppyramids[i,:] = normalize(poppyramids[i,:],1)
+end
+for i = 1:47
+    poppyramids[i,:] .= normalize(poppyramids[i,:],1)
+end
+poppyramids = poppyramids'
+KL_dists = zeros(47,47)
+pairwise!(KL_dists,KLDivergence(),poppyramids,dims = 2)
+heatmap(KL_dists)
+plt_agepyr = groupedbar(1:16,poppyramids[:,[41,44]],lab = ["Nairobi" "Kilifi"],
+            xticks = (1:16,age_cats))
+savefig(plt_agepyr,"plotting/exampleagepyramids.png")
+
+
+
 poppyramid = readtable("data/Kenya_population_pyramid.csv")
 
 N = 0.
