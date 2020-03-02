@@ -2,39 +2,37 @@
 using DataFrames,Plots,JLD2,MAT,LinearAlgebra,Distances,StatsPlots
 using LinearAlgebra:normalize,normalize!
 
-"""
-Load population pyramid and convert into percentages for each of 16 age groups used in
-the age structured models
-"""
-age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75+"]
+
+
+
 """
 World Pop data: First 47 rows are counties, then next 20 rows are risk regions
 """
-poppyramids_tbl = readtable("data/agePyramid_with_riskregions.csv")
-# poppyramids_tbl = poppyramids_tbl[1:47,6:22]
-poppyramids_counties = zeros(47,16);
-for i = 1:47,a = 1:16
-    if a < 16
-        poppyramids_counties[i,a] = poppyramids_tbl[i,a+1]
-    else
-        poppyramids_counties[i,16] = poppyramids_tbl[i,16+1] + poppyramids_tbl[i,17+1]
-    end
-end
-for i = 1:47
-    poppyramids_counties[i,:] .= normalize(poppyramids_counties[i,:],1)
-end
-poppyramids_riskregions = zeros(20,16);
-for i = 1:20,a = 1:16
-    if a < 16
-        poppyramids_riskregions[i,a] = poppyramids_tbl[i+47,a+1]
-    else
-        poppyramids_riskregions[i,16] = poppyramids_tbl[i+47,16+1] + poppyramids_tbl[i+47,17+1]
-    end
-end
-for i = 1:20
-    poppyramids_riskregions[i,:] .= normalize(poppyramids_riskregions[i,:],1)
-end
-@save "data/populationpyramids_by_riskregion.jld2" poppyramids_riskregions
+# poppyramids_tbl = readtable("data/agePyramid_with_riskregions.csv")
+# # poppyramids_tbl = poppyramids_tbl[1:47,6:22]
+# poppyramids_counties = zeros(47,16);
+# for i = 1:47,a = 1:16
+#     if a < 16
+#         poppyramids_counties[i,a] = poppyramids_tbl[i,a+1]
+#     else
+#         poppyramids_counties[i,16] = poppyramids_tbl[i,16+1] + poppyramids_tbl[i,17+1]
+#     end
+# end
+# for i = 1:47
+#     poppyramids_counties[i,:] .= normalize(poppyramids_counties[i,:],1)
+# end
+# poppyramids_riskregions = zeros(20,16);
+# for i = 1:20,a = 1:16
+#     if a < 16
+#         poppyramids_riskregions[i,a] = poppyramids_tbl[i+47,a+1]
+#     else
+#         poppyramids_riskregions[i,16] = poppyramids_tbl[i+47,16+1] + poppyramids_tbl[i+47,17+1]
+#     end
+# end
+# for i = 1:20
+#     poppyramids_riskregions[i,:] .= normalize(poppyramids_riskregions[i,:],1)
+# end
+# @save "data/populationpyramids_by_riskregion.jld2" poppyramids_riskregions
 """
 Worldpop pyramid for the whole of Kenya --- this is now
 """
@@ -61,16 +59,22 @@ for i = 1:16,j=1:16
     agemixingmatrix[i,j] = agemixingmatrix_table[i,j]
 end
 
+
 heatmap(agemixingmatrix,clims = (0.,5.))
 @save "data/agemixingmatrix.jld2" agemixingmatrix
 """
 Load population sizes for each risk region
 """
-popsize_risk_region = readtable("data/population_risk_regions_2019.csv")
-N_region = [round(Int64,popsize_risk_region[i,2]) for i = 1:20 ]
+
+popsize_risk_region = readtable("data/2019_census_age_pyramids_riskregions.csv")
+
 N_region_age = zeros(Int64,20,16)
 for i = 1:20,j = 1:16
-    N_region_age[i,j] = round(Int64,popsize_risk_region[i,2]*poppyramids_riskregions[i,j])
+    if j < 16
+        N_region_age[i,j] = round(Int64,popsize_risk_region[i,j+2])
+    else
+        N_region_age[i,16] = round(Int64,popsize_risk_region[i,18] + popsize_risk_region[i,19])
+    end
 end
 heatmap(N_region_age)
 """
