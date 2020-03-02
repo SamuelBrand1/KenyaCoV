@@ -11,7 +11,7 @@ Disease state enumeration:
 * 2 -> E
 * 3 -> I_subclinical
 * 4 -> I_diseased
-* 5 -> H(ospitalised)
+* 5 -> Q(uarantined)
 * 6 -> Recovered
 * 7 -> Cumulative I_sub
 * 8 -> Cumulative I_dis
@@ -20,5 +20,5 @@ Disease state enumeration:
 *src/run_KenyaCoV_basicmodel.jl* demonstrates basic methods for running a KenyaCoV simulation version 1 (spatial + urban/rural). *src/run_KenyaCoV_basicmodel.jl* demonstrates basic methods for running KenyaCoV simulation version 2 (spatial + age structured).
 
 In both simulation versions the state of the epidemic is represented as a multi-dimensional array:
-* Simulation 1: $X(n,s,u)$ is the number of individuals (discrete) in the $n$th county, in disease state $s$, in urban/rural environment $u$.
+* Simulation 1: **X(n,s,u)** is the number of individuals (discrete) in the *n*th county, in disease state *s*, in urban/rural environment *u*.
 * Simulation 2:

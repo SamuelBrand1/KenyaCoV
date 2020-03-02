@@ -7,43 +7,50 @@ Load population pyramid and convert into percentages for each of 16 age groups u
 the age structured models
 """
 age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75+"]
-poppyramids_tbl = readtable("data/agePyramid.csv")
-poppyramids_tbl = poppyramids_tbl[1:47,6:22]
-poppyramids = zeros(47,16);
+"""
+World Pop data: First 47 rows are counties, then next 20 rows are risk regions
+"""
+poppyramids_tbl = readtable("data/agePyramid_with_riskregions.csv")
+# poppyramids_tbl = poppyramids_tbl[1:47,6:22]
+poppyramids_counties = zeros(47,16);
 for i = 1:47,a = 1:16
-    println(i," ",a)
     if a < 16
-        poppyramids[i,a] = poppyramids_tbl[i,a]
+        poppyramids_counties[i,a] = poppyramids_tbl[i,a+1]
     else
-        poppyramids[i,16] = poppyramids_tbl[i,16] + poppyramids_tbl[i,17]
+        poppyramids_counties[i,16] = poppyramids_tbl[i,16+1] + poppyramids_tbl[i,17+1]
     end
-    # poppyramids[i,:] = normalize(poppyramids[i,:],1)
 end
 for i = 1:47
-    poppyramids[i,:] .= normalize(poppyramids[i,:],1)
+    poppyramids_counties[i,:] .= normalize(poppyramids_counties[i,:],1)
 end
-poppyramids = poppyramids'
-KL_dists = zeros(47,47)
-pairwise!(KL_dists,KLDivergence(),poppyramids,dims = 2)
-heatmap(KL_dists)
-plt_agepyr = groupedbar(1:16,poppyramids[:,[41,44]],lab = ["Nairobi" "Kilifi"],
-            xticks = (1:16,age_cats))
-savefig(plt_agepyr,"plotting/exampleagepyramids.png")
-
-
-
-poppyramid = readtable("data/Kenya_population_pyramid.csv")
-
-N = 0.
-d1, = size(poppyramid)
-for i = 1:d1
-    global N
-    N += poppyramid[i,2] + poppyramid[i,3]
+poppyramids_riskregions = zeros(20,16);
+for i = 1:20,a = 1:16
+    if a < 16
+        poppyramids_riskregions[i,a] = poppyramids_tbl[i+47,a+1]
+    else
+        poppyramids_riskregions[i,16] = poppyramids_tbl[i+47,16+1] + poppyramids_tbl[i+47,17+1]
+    end
 end
-prop_by_agegroup = [(poppyramid[i,2] + poppyramid[i,3])/N for i = 1:15]
-push!(prop_by_agegroup,1 - sum(prop_by_agegroup)) #Older people groupped in to last category
-bar(prop_by_agegroup)
-@save "data/populationpyramid.jld2" prop_by_agegroup
+for i = 1:20
+    poppyramids_riskregions[i,:] .= normalize(poppyramids_riskregions[i,:],1)
+end
+@save "data/populationpyramids_by_riskregion.jld2" poppyramids_riskregions
+"""
+Worldpop pyramid for the whole of Kenya --- this is now
+"""
+
+# poppyramid = readtable("data/Kenya_population_pyramid.csv")
+#
+# N = 0.
+# d1, = size(poppyramid)
+# for i = 1:d1
+#     global N
+#     N += poppyramid[i,2] + poppyramid[i,3]
+# end
+# prop_by_agegroup = [(poppyramid[i,2] + poppyramid[i,3])/N for i = 1:15]
+# push!(prop_by_agegroup,1 - sum(prop_by_agegroup)) #Older people groupped in to last category
+# bar(prop_by_agegroup)
+# @save "data/populationpyramid.jld2" prop_by_agegroup
 
 """
 Load age mixing matrix and convert into JLD2 array
@@ -63,8 +70,9 @@ popsize_risk_region = readtable("data/population_risk_regions_2019.csv")
 N_region = [round(Int64,popsize_risk_region[i,2]) for i = 1:20 ]
 N_region_age = zeros(Int64,20,16)
 for i = 1:20,j = 1:16
-    N_region_age[i,j] = round(Int64,popsize_risk_region[i,2]*prop_by_agegroup[j])
+    N_region_age[i,j] = round(Int64,popsize_risk_region[i,2]*poppyramids_riskregions[i,j])
 end
+heatmap(N_region_age)
 """
 Load movement matrix - then derive the P,ρ and T values
 """
