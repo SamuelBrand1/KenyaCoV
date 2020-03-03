@@ -1,8 +1,20 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,JLD2,DataFrames,StatsPlots,FileIO,MAT
 using Statistics: median, quantile
-include("plotting_functions.jl");
+
+
+treatment_rates = [0.,1/7,1/3.5,1]
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_A.jld2") results_A
+
+include("plotting_functions.jl");
+plt1 = plot_incidence_spatial(results_A,treatment_rates,1)
+savefig(plt1,"plotting/daily_obs_incidence_no_treatment_A.png")
+plt2 = plot_incidence_spatial(results_A,treatment_rates,2)
+plt3 = plot_incidence_spatial(results_A,treatment_rates,3)
+layout = @layout [a; b; c]
+plt = plot(plt1,plt2,plt3,layout = layout)
+savefig(plt,"plotting/daily_obs_incidence.png")
+
 
 plt_incidence = plot_incidence_timeseries(results_A,treatment_rates)
 savefig(plt_incidence,"plotting/daily_incidence_A.png")
