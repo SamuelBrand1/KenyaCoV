@@ -2,26 +2,28 @@ push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,JLD2,DataFrames,StatsPlots,FileIO,MAT
 using Statistics: median, quantile
 
-
 treatment_rates = [0.,1/7,1/3.5,1]
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_A.jld2") results_A
-
 include("plotting_functions.jl");
-plt1 = plot_incidence_spatial(results_A,treatment_rates,1)
-savefig(plt1,"plotting/daily_obs_incidence_no_treatment_A.png")
-plt2 = plot_incidence_spatial(results_A,treatment_rates,2)
-plt3 = plot_incidence_spatial(results_A,treatment_rates,3)
-layout = @layout [a; b; c]
-plt = plot(plt1,plt2,plt3,layout = layout)
-savefig(plt,"plotting/daily_obs_incidence.png")
+
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_A.jld2") results_A
+plt = plot_total_incidence(results_A,treatment_rates)
+savefig(plt,"plotting/early_growth_A.png")
 
 
-plt_incidence = plot_incidence_timeseries(results_A,treatment_rates)
-savefig(plt_incidence,"plotting/daily_incidence_A.png")
-plt_incidence_spatial_two_week = plot_incidence_spatial(results_A,treatment_rates,3)
-savefig(plt_incidence_spatial_two_week,"plotting/daily_incidence_spatial_A_two_week.png")
+"""
+Spatial plot
+"""
+inc_D_at_60 = results_A[1][1][1:20,60,1]
+ordering = sortperm(inc_D_at_60,rev = true)
 
-plt_incidence_by_age = plot_total_incidence_by_age(results_A,treatment_rates)
+plt_no_intervention = plot_incidence_spatial(results_A,treatment_rates,1,ordering)
+savefig(plt_no_intervention,"plotting/rate_of_early_growth_A.png")
+
+plt_incidence_by_age_noi = plot_total_incidence_by_age(results_A,treatment_rates,1)
+plt_incidence_by_age_1wk = plot_total_incidence_by_age(results_A,treatment_rates,2)
+plt_incidence_by_age_halfwk = plot_total_incidence_by_age(results_A,treatment_rates,3)
+plt_incidence_by_age_oneday = plot_total_incidence_by_age(results_A,treatment_rates,4)
+
 savefig(plt_incidence_by_age,"plotting/total_cases_by_age_and_treatment.png")
 plt = plot_total_incidence_by_treatment(results_A,treatment_rates)
 savefig(plt,"plotting/total_cases_by_treatment.png")

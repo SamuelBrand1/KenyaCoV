@@ -58,56 +58,88 @@ age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44",
 #
 #     return plt
 # end
+function plot_total_incidence(results,treatment_rates)
+    inc_D = results[1][1]
+    plt = plot(1:365,inc_D[21,:,1].+1,
+                fontfamily="Helvetica",
+                lw = 3,
+                lab="No isolation",
+                legend = :topleft,
+                ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
+                fillalpha = 0.15,
+                xlims = (30.,100),
+                yscale = :log10,
+                xlabel = "Days",
+                ylabel = "Daily incidence")
+    for i = 2:3
+        τ = treatment_rates[i]
+        inc_D = results[i][1]
+        plot!(plt,1:365,inc_D[21,:,1].+1,
+                    lw = 3,
+                    lab="Isolation in mean $(round(1/τ,digits = 1)) days",
+                    ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
+                    fillalpha = 0.15,
+                    xlims = (30.,100),
+                    # yscale = :log10,
+                    xlabel = "Days",
+                    ylabel = "Daily incidence")
+    end
+    return plt
+end
 
-function plot_incidence_spatial(results,treatment_rates,i)
+
+function plot_incidence_spatial(results,treatment_rates,i,ordering)
     τ = treatment_rates[i]
     inc_D = results[i][1]
-    plt = plot(1:365,inc_D[4,:,1].+1,
-                ribbon = (inc_D[4,:,2],inc_D[4,:,3]),
+    plt = plot(1:365,inc_D[ordering[1],:,1].+1,
+                # ribbon = (inc_D[4,:,2],inc_D[4,:,3]),
                 fillalpha = 0.1,
                 lab = riskregionnames[4],
                 # lab = "",
-                lw=4,
-                xlims = (50.,100.),
-                # yscale = :log10,
-                legend = :topleft,
-                legendfontsize = 9.1);
-    for i in [15,12]
+                lw=2,
+                xlims = (0.,100.),
+                yscale = :log10,
+                legend = :outertopright,
+                legendfontsize = 8.9);
+    for i in ordering[2:end]
         if i != 4
             plot!(plt,1:365,inc_D[i,:,1].+1,
                     # lab = "",
-                    ribbon = (inc_D[i,:,2],inc_D[i,:,3]),
+                    # ribbon = (inc_D[i,:,2],inc_D[i,:,3]),
                     lab = riskregionnames[i],
-                    lw=4);
+                    lw=2);
         end
     end
     xlabel!(plt,"Days")
     ylabel!(plt,"Daily incidence")
     # ylims!(plt,(1,1e5))
-    if τ == 0
-        title!(plt,"No isolation")
-    else
-        title!(plt," Mean time to isolation $(round(1/τ,digits = 1)) days")
-    end
+    # if τ == 0
+    #     title!(plt,"No isolation")
+    # else
+    #     title!(plt," Mean time to isolation $(round(1/τ,digits = 1)) days")
+    # end
 
     return plt
 end
 
-function plot_total_incidence_by_age(results,treatment_rates)
-    cases_age = results[1][4][21,:,:]
-    plt = scatter(collect(1:16)*2,cases_age[:,1],
-            yerror = (cases_age[:,2],cases_age[:,3]),
-            lab = "No treatment/isolation",
-            xticks = (collect(1:16)*2,age_cats))
-    for i=2:4
-        τ = treatment_rates[i]
-        cases_age = results[i][4][21,:,:]
-        scatter!(plt,collect(1:16)*2,cases_age[:,1],
-                yerror = (cases_age[:,2],cases_age[:,3]),
-                lab = "Av. $(round(1/(7*τ),digits = 0)) weeks to treatment")
+function plot_total_incidence_by_age(results,treatment_rates,i)
+    d1,d2,d3 = size(results[1][4][:,:,:])
+    cases_age = zeros(d3,d2)
+    for k = 1:d3,a = 1:d2
+        cases_age[k,a] = sum(results[i][4][:,a,k])
     end
-    title!(plt,"Scenario A: Total cases by age and treatment")
-    ylabel!(plt,"Total cases")
+    plt = boxplot(cases_age,lab = "",
+                xticks = (collect(1:2:16),age_cats[1:2:16]),color = :blue,
+                ylabel = "Detected cases",
+                xlabel = "Age")
+    τ = treatment_rates[i]
+    if τ > 0
+        title!(plt,"Mean time to isolation $(round(1/τ,digits = 1)) days")
+    else
+        title!(plt,"No isolation")
+    end
+
+
     return plt
 
 end
