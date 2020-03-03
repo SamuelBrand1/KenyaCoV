@@ -2,7 +2,7 @@ push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames
 using Revise
 import KenyaCoV
-using LinearAlgebra:eigen
+using LinearAlgebra:eigen,normalize
 
 
 """
@@ -12,6 +12,7 @@ Load age structured data
 u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
+
 """
 Can adjust β to match a desired R₀ value by evaluating the leading eigenvalue
 The idea is to match to the chinese epidemic R₀ -- it will be different in Kenya
@@ -35,7 +36,7 @@ Run model
 
 """
 
-u0[KenyaCoV.ind_nairobi_as,15,3] = 1#10 diseased
+u0[KenyaCoV.ind_nairobi_as,5,4] = 5#10 diseased
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 @time sol = solve(prob,FunctionMap(),dt = P.dt)
@@ -57,8 +58,26 @@ end
 display(plt)
 
 """
+Example of adding an event
+"""
+function isolation_limit(u,t,integrator) # Event when event_f(u,t) == 0
+  integrator.p.isolating_detecteds && sum(u[:,:,8]) < 10000
+end
+function affect_isolation_limit!(integrator)
+  integrator.p.τ = 0
+  integrator.p.isolating_detecteds = false
+end
+cb = DiscreteCallback(isolation_limit,affect_isolation_limit!)
+
+P.isolating_detecteds = true
+P.τ = 1/3
+@time sol_cb = solve(prob,FunctionMap(),dt = P.dt,callback = cb)
+sum(sol_cb[end][:,:,7:8])
+
+"""
 Example of adding a constant rate jump to the method
 """
+
 #1. Define the jump rate and affect on integrator
 jumprate(u,p,t) = 1.
 function jumpaffect!(integrator)

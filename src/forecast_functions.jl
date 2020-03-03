@@ -5,6 +5,20 @@ Output functions: Target the peak timing for each county, cases by each county,
 timing of total peak and total cases
 """
 
+"""
+Define uncertainty of parameter estimates
+"""
+d_incubation = LogNormal(log(4.8),0.25) #Liu et al
+mean(d_incubation)
+(quantile(d_incubation,0.025),median(d_incubation),quantile(d_incubation,0.975))
+d_R₀ = Gamma(100,2.92/100) ##Liu et al
+mean(d_R₀)
+(quantile(d_R₀,0.025),median(d_R₀),quantile(d_R₀,0.975))
+
+"""
+Simulation functions
+"""
+
 function output_daily_and_final_incidence(sol,i)
     times = sol.prob.tspan[1]:1:sol.prob.tspan[end]
     z = [sum(sol(t)[:,:,7:8],dims = 2)[:,1,:]  for t in times]
@@ -13,6 +27,8 @@ end
 
 function randomise_params(prob,i,repeat)
     _P = deepcopy(prob.p)
+    _P.isolating_detecteds = true
+    _P.τ = _P.τ_initial
     _P.σ = 1/rand(d_incubation)
     _P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
     return remake(prob,p=_P)
@@ -20,6 +36,8 @@ end
 
 function randomise_params_and_infectiousness(prob,i,repeat)
     _P = deepcopy(prob.p)
+    _P.isolating_detecteds = true
+    _P.τ = _P.τ_initial
     _P.σ = 1/rand(d_incubation)
     _P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
     _P.ϵ = rand(Uniform(0.,0.5))
@@ -27,18 +45,26 @@ function randomise_params_and_infectiousness(prob,i,repeat)
 end
 
 """
-Simulation functions
+Scenario functions
 """
 function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ)
-    P.τ = τ
+    P.τ_initial = τ
     ensemble_prob = EnsembleProblem(prob,
                                     prob_func = randomise_params,
                                     output_func = output_daily_and_final_incidence)
     return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
 end
 
+function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,cb::DiscreteCallback)
+    P.τ_initial = τ
+    ensemble_prob = EnsembleProblem(prob,
+                                    prob_func = randomise_params,
+                                    output_func = output_daily_and_final_incidence)
+    return solve(ensemble_prob,FunctionMap(),dt = P.dt,callback = cb,trajectories = n_traj)
+end
+
 function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,prob_func)
-    P.τ = τ
+    P.τ_initial = τ
     ensemble_prob = EnsembleProblem(prob,
                                     prob_func = prob_func,
                                     output_func = output_daily_and_final_incidence)
@@ -49,6 +75,16 @@ function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates)
     results = []
     for τ in treatment_rates
         sims = run_simulations(P,prob,n_traj,τ)
+        analysisdata = incidence_from_sims(sims)
+        push!(results,analysisdata)
+    end
+    return results
+end
+
+function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,cb::DiscreteCallback)
+    results = []
+    for τ in treatment_rates
+        sims = run_simulations(P,prob,n_traj,τ,cb)
         analysisdata = incidence_from_sims(sims)
         push!(results,analysisdata)
     end
@@ -67,14 +103,15 @@ end
 
 
 """
-Analysis functions:
+Analysis functions
 """
 function incidence_from_sims(sims)
     n = length(sims)
     m = length(sims[1][1])
     inc_A_data = zeros(21,m-1,n)
     inc_D_data = zeros(21,m-1,n)
-    final_case_data = zeros(21,16,n)
+    final_D = zeros(20,16,n)
+    final_A = zeros(20,16,n)
     for (k,sim) in enumerate(sims)
         for i = 1:20,t = 1:(m-1)
             inc_A_data[i,t,k] = sim[1][t+1][i,1] - sim[1][t][i,1]#Daily incidence rather than cumulative
@@ -84,17 +121,12 @@ function incidence_from_sims(sims)
             inc_A_data[21,t,k] = sum(sim[1][t+1][:,1] .- sim[1][t][:,1])
             inc_D_data[21,t,k] = sum(sim[1][t+1][:,2] .- sim[1][t][:,2])
         end
-        for i =1:20,a=1:16
-            final_case_data[i,a,k] = sum(sim[2][i,a,:])
-        end
-        for a = 1:16
-            final_case_data[21,a,k] = sum(sim[2][:,a,:])
-        end
+        final_A[:,:,k] .= sim[2][:,:,1]
+        final_D[:,:,k] .= sim[2][:,:,2]
     end
     peak_times = zeros(n,21)
     inc_A_conf_intvs = zeros(21,m-1,3)
     inc_D_conf_intvs = zeros(21,m-1,3)
-    final_case_intvs = zeros(21,16,3)
     for i = 1:21,t = 1:(m-1)
         inc_A_conf_intvs[i,t,1] = quantile(inc_A_data[i,t,:],0.5)
         inc_A_conf_intvs[i,t,2] = inc_A_conf_intvs[i,t,1] - quantile(inc_A_data[i,t,:],0.025) #Lower conf. int.
@@ -108,13 +140,5 @@ function incidence_from_sims(sims)
         peak_times[k,i] = argmax(inc_A_data[i,:,k])
     end
 
-    for i = 1:21,a=1:16
-        final_case_intvs[i,a,1] = quantile(final_case_data[i,a,:],0.5)
-        final_case_intvs[i,a,2] = quantile(final_case_data[i,a,:],0.5) - quantile(final_case_data[i,a,:],0.025)
-        final_case_intvs[i,a,3] = quantile(final_case_data[i,a,:],0.975) - quantile(final_case_data[i,a,:],0.5)
-    end
-
-
-
-    return inc_A_conf_intvs,inc_D_conf_intvs,peak_times,final_case_intvs
+    return inc_D_conf_intvs,inc_A_conf_intvs,peak_times,final_D,final_A
 end

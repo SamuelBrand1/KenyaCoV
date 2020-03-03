@@ -29,7 +29,8 @@ end
     γ::Float64 = 1/3.6
     σ::Float64 = 1/2.
     δ::Float64 = 0.05#Proportion of symptomatic/diseased vs non-symptomatic cases
-    τ::Float64 = 1/15. #treatment/isolation rate for symptomatics
+    τ::Float64 = 1/15. #current isolation rate for symptomatics
+    τ_initial::Float64 = 1/15. # isolation rate for symptomatics at beginning of epidemic
     μ₁::Float64 = 0.0#Excess mortality due to disease
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable infecteds
     χ::Vector{Float64} = ones(n_a)
@@ -40,6 +41,7 @@ end
     into_mom::Vector{Int}#Number of people flying into Mombassa each day
     into_nai::Vector{Int}#Number of people flying into Nairobi each day
     global_prev::Vector{Float64}
+    isolating_detecteds::Bool = true #This determines if people are still being isolated
     dt::Float64 = 1. #Useful for the non-negative method
     Î::Matrix{Float64} = zeros(n_wa,n_a) #For inplace calculations
     N̂::Matrix{Float64} = zeros(n_wa,n_a)#For inplace calculations

@@ -41,6 +41,7 @@ include("types.jl");
 include("regularjumps.jl");
 include("agestructurejumps.jl")
 include("transmissionmodel.jl");
+include("forecast_functions.jl");
 
 
 
