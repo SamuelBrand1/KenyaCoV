@@ -58,7 +58,7 @@ end
 
 function rates(out,u,p::CoVParameters_AS,t)
     @unpack λ,γ,σ,δ,τ,μ₁,χ ,τₚ = p                  #**** added τₚ
-    τₚ=τ/(τ+γ)                                      #****
+    #τₚ=τ/(τ+γ)                                      #****
     calculate_infection_rates!(u,p,t)
     for k = 1:length(out)
         i,a,eventtype = Tuple(index_as_events[k])
@@ -210,7 +210,7 @@ function max_change(out,u,p::CoVParameters_AS)
             out[ind_DR] = u[i,a,4] - out[ind_DQ]
         end=#
         if out[ind_IqQ] + out[ind_IqR] > u[i,a,10]      #**** More IQ->Q + IQ->R than actual IQ
-            out[ind_IqQ] = rand(Binomial(u[i,a,10],p.τ/(p.τ + p.γ)))
+            out[ind_IqQ] = rand(Binomial(u[i,a,10],p.τₚ))
             out[ind_IqR] =  u[i,a,10] - out[ind_IqQ]
         end
     end
@@ -225,17 +225,19 @@ end
 
 
 function nonneg_tauleap(du,u,p::CoVParameters_AS,t)
-    @unpack dc,dN,poi_rates,du_linear = p
+    @unpack dc,dN,poi_rates,du_linear,τₚ = p
     rates(poi_rates,u,p,t) #calculate rates of underlying Poisson processes
     PP_drivers(dN,poi_rates,p)#Generate Poisson rvs with rates scaled by time step dt
     max_change(dN,u,p)#Cap the size of the Poisson rvs to maintain non-negativity
 
     ##Contacts
+    if τₚ!=0    ## if the detection probability is not zero`
     #IQ_make_contacts(u,p,t)
-    IQ_make_contacts_Nairobi(u,p,t)
-    update_l_IQ(dN,u,p,t)  ##All IQ->R(10) are removed from l_IQ + All IQ with tau<=0 are added to dN and removed from l_IQ + decrease all tau + All E->IQ in dN are added to l_IQ:
-    max_change(dN,u,p)
-    update_contact_states(dN,u,p,t)   #updates the contact states, except for contacts made during this timestep
+        IQ_make_contacts_Nairobi(u,p,t)
+        update_l_IQ(dN,u,p,t)  ##All IQ->R(10) are removed from l_IQ + All IQ with tau<=0 are added to dN and removed from l_IQ + decrease all tau + All E->IQ in dN are added to l_IQ:
+        max_change(dN,u,p)
+        update_contact_states(dN,u,p,t)   #updates the contact states, except for contacts made during this timestep
+    end
 
     mul!(du_linear,dc,dN)#Calculates the effect on the state in the inplace du vector
     du .= reshape(du_linear,n_wa,n_a,n_s)
@@ -285,9 +287,11 @@ function IQ_make_contacts_Nairobi(u,p::CoVParameters_AS,t::Float64)             
 
     ## make contacts. We suppose all contacts are made in the same area. Contacts depend on the age mixing matrix M[a_i,a_j], we suppose a_i contacts a_j
     for i=1:size(l_IQ,1)
-        n_contacts=pois_rand(κ*dt)  #number of contacts scaled by dt
-        #i_IQ=l_IQ[i] ## is the current individual who's making the contacts
-        append!(l_IQ[i].contacts,[Contact(wa=l_IQ[i].wa,a=random_choice(Mₚ[l_IQ[i].a,:]),s=random_choice(uₚ[l_IQ[i].wa,l_IQ[i].a,:]),contact_t=t,contact_dur=0)     for c=1:n_contacts])
+        if (l_IQ[i].wa==4)
+            n_contacts=pois_rand(κ*dt)  #number of contacts scaled by dt
+            #i_IQ=l_IQ[i] ## is the current individual who's making the contacts
+            append!(l_IQ[i].contacts,[Contact(wa=l_IQ[i].wa,a=random_choice(Mₚ[l_IQ[i].a,:]),s=random_choice(uₚ[l_IQ[i].wa,l_IQ[i].a,:]),contact_t=t,contact_dur=0)     for c=1:n_contacts])
+        end
     end
 end
 
@@ -393,7 +397,7 @@ function intervention_trace_contacts(traced_index,u,p::CoVParameters_AS,t)      
         shuffle!(contacteds)
         contacteds=contacteds[1:min(κₜ,size(contacteds,1))]
         for c in contacteds
-            if c.s in [1,2,3,4,10]      u[c.wa,c.a,c.s]-=1;     u[c.wa,c.a,5]+=1;   end         #c.s=5  ##remove the S, E, Iᴬ, Iᴰ or IQ to Q
+            if c.s in [1,2,3,4,10] && u[c.wa,c.a,c.s]>0     u[c.wa,c.a,c.s]-=1;     u[c.wa,c.a,5]+=1;   end         #c.s=5  ##remove the S, E, Iᴬ, Iᴰ or IQ to Q
         end
     end
 end

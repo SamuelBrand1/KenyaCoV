@@ -41,7 +41,7 @@ end
 
     τₚ::Float64 = τ/(τ+γ)                   #**** probability of detection given that you're diseased (Iᴰ)
     κ::Float64 = 5                         #**** Mean number of contacts per day
-    κₘ::Float64 = 10                        #**** number of days IQ remembers his contacts
+    κₘ::Float64 = 10                        #**** nb days IQ remembers his contacts
     Mₚ::Matrix{Float64} = zeros(n_a,n_a)    #**** Age mixing probabilities matrix
     #contacts::Array{Tuple{Int64,Int64,Float64},1}=[] #Array of tuples (wa_infector,wa_infected,time)
     Δₜ::Float64=4/dt    #describes the tracing period (how far back is the detected I asked about his contacts), scaled by th model's timestep dt (we rescale when we modify the timestep)
