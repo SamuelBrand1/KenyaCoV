@@ -1,6 +1,6 @@
 # KenyaCoV
 
-Code for simulating Wuhan CoV in Kenya.
+Julia 1.3 code for simulating Wuhan CoV in Kenya.
 
 There are two main models:
 1. A county level model which distinguishes between a rural population (assumed to be immobile) and an urban population (assumed to be mobile around the country). Population flux is parameterised using a fit to the wider level data given in Wesolowski et al.
