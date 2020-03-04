@@ -40,14 +40,17 @@ end
     du_linear::Vector{Int64} = zeros(Int64,n_wa*n_a*n_s) #for inplace calculations
 
     τₚ::Float64 = τ/(τ+γ)                   #**** probability of detection given that you're diseased (Iᴰ)
-    κ::Float64 = 5                         #**** Mean number of contacts per day
-    κₘ::Float64 = 10                        #**** nb days IQ remembers his contacts
+    κ::Float64 = 5                          #**** Mean number of contacts per day
+    κₘ::Float64 = 7                        #**** nb days IQ remembers his contacts
     Mₚ::Matrix{Float64} = zeros(n_a,n_a)    #**** Age mixing probabilities matrix
     #contacts::Array{Tuple{Int64,Int64,Float64},1}=[] #Array of tuples (wa_infector,wa_infected,time)
-    Δₜ::Float64=4/dt    #describes the tracing period (how far back is the detected I asked about his contacts), scaled by th model's timestep dt (we rescale when we modify the timestep)
-    κₜ::Int=30                              #**** Number of contacts traced per event IQ->H
+    Δₜ::Float64=7                           #describes the tracing period per days (how far back is the detected I asked about his contacts)
+    κ_per_event4::Int=30                    #**** Number of contacts traced per event IQ->H
+    Κ_max_capacity::Int=1e4                 #**** Tracing capacity, maximum number of traceds
+    Κ_current::Int=0                        #**** Total current number of traced contacts (between timestep 0 and t)
+
     l_IQ::Vector{IQ_Person}=[]  #****  Each IQ is added with a generated period of 1/τ [[wa,a,exponential(1/τ),[contacts]],...], with their contact s@ each timestep
-    uₚ::Array{Float64,3}=zeros(n_wa,n_a,n_s) #**** For inplace calculations #### Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S,E,IQ,Iᴰ,Iᴬ,.. WE DO NOT MEET H!
+    uₚ::Array{Float64,3}=zeros(n_wa,n_a,n_s) #**** For inplace calculations. Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S,E,IQ,Iᴰ,Iᴬ,.. WE DO NOT MEET H!
 
 end
 

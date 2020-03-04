@@ -42,9 +42,14 @@ P.γ = 1/2.5
 P.σ = 1/rand(d_incubation)
 P.β = rand(d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
 
-P.τₚ=0.4#.8#P.τ/(P.τ+P.γ)
-#**** #Calculate P.Mₚ = Age mixing pobabilities matrix
-for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a
+P.τₚ=0.8
+P.κ=5
+P.κₘ=3
+P.Δₜ=3
+P.κ_per_event4=30
+P.Κ_max_capacity=1e3
+
+for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a   #**** #Calculate P.Mₚ = Age mixing pobabilities matrix
     P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:])
 end
 
@@ -56,4 +61,4 @@ for i = 1:20,(ind,t) in enumerate(sol.t)    I_area[i,ind] = sum(sol(t)[i,:,3:4] 
 plt = plot(sol.t,I_area[1,:], lab = 1);
 for i = 2:20    plot!(plt,sol.t,I_area[i,:],lab = i);   end
 display(plt)
-savefig(plt,"./contacts/detection_0.4.png")
+savefig(plt,"./contacts/detection_tests_0.8_v1.png")
