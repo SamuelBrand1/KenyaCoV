@@ -17,9 +17,11 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
 Can adjust β to match a desired R₀ value by evaluating the leading eigenvalue
 The idea is to match to the chinese epidemic R₀ -- it will be different in Kenya
 """
-
-P.ϵ = 1
-P.β = 2.2*P.γ
+d_R₀ = Gamma(100,2.92/100) ##Liu et al
+mean(d_R₀)
+(quantile(d_R₀,0.025),median(d_R₀),quantile(d_R₀,0.975))
+P.ϵ = 0
+P.β = 3.52*P.γ
 sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
 eigs, = eigen((P.β/P.γ)*sus_matrix.*P.M)
 R₀ = Real(eigs[end])

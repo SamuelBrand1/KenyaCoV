@@ -24,6 +24,7 @@ plt_incidence_by_age_1wk = plot_total_incidence_by_age(results_A,treatment_rates
 plt_incidence_by_age_halfwk = plot_total_incidence_by_age(results_A,treatment_rates,3)
 plt_incidence_by_age_oneday = plot_total_incidence_by_age(results_A,treatment_rates,4)
 
-savefig(plt_incidence_by_age,"plotting/total_cases_by_age_and_treatment.png")
-plt = plot_total_incidence_by_treatment(results_A,treatment_rates)
-savefig(plt,"plotting/total_cases_by_treatment.png")
+savefig(plt_incidence_by_age_noi,"plotting/total_cases_by_age_noi.png")
+savefig(plt_incidence_by_age_1wk,"plotting/total_cases_by_age_1wk.png")
+savefig(plt_incidence_by_age_halfwk,"plotting/total_cases_by_age_halfwk.png")
+savefig(plt_incidence_by_age_oneday,"plotting/total_cases_by_age_oneday.png")
