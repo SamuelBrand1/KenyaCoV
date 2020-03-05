@@ -34,7 +34,8 @@ end
     μ₁::Float64 = 0.0#Excess mortality due to disease
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable infecteds
     ϵ_D::Float64 = 1.#Relative infectiousness of detectable infecteds after intervention
-    χ::Vector{Float64} = ones(n_a)
+    rel_detection_rate::Vector{Float64} = ones(n_a) #relative detection rate
+    χ::Vector{Float64} = ones(n_a) #relative susceptibility
     ρ::Vector{Float64} = [0.01 for i in 1:n] #Time spent outside of area
     T::Matrix{Float64} = zeros(n,n)#Probability distributions of location for mobile individuals
     M::Matrix{Float64} = zeros(n_a,n_a) #Age mixing matrix

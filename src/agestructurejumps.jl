@@ -62,7 +62,7 @@ end
 
 
 function rates(out,u,p::CoVParameters_AS,t)
-    @unpack λ,γ,σ,δ,τ,μ₁,χ = p
+    @unpack λ,γ,σ,δ,τ,μ₁,χ,rel_detection_rate = p
     calculate_infection_rates!(u,p,t)
     for k = 1:length(out)
         i,a,eventtype = Tuple(index_as_events[k])
@@ -70,10 +70,10 @@ function rates(out,u,p::CoVParameters_AS,t)
             out[k] = χ[a]*λ[i,a]*u[i,a,1] #Transmission
         end
         if eventtype ==2
-            out[k] = (1-δ)*σ*u[i,a,2] # E->A
+            out[k] = (1-(δ*rel_detection_rate[a]))*σ*u[i,a,2] # E->A
         end
         if eventtype ==3
-            out[k] = δ*σ*u[i,a,2] # E->D
+            out[k] = δ*rel_detection_rate[a]*σ*u[i,a,2] # E->D
         end
         if eventtype ==4
             out[k] = τ*u[i,a,4] # D->H

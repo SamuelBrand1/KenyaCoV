@@ -65,16 +65,20 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
                                             "data/projected_global_prevelance.csv")
 #Redistribute susceptibility JUST to rescale infectiousness so we get the correct R₀/r
 P.χ = ones(KenyaCoV.n_a)
-sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
-eigs, = eigen(sus_matrix.*M_China)
-R₀_scale = Real(eigs[end])
-P.χ = ones(KenyaCoV.n_a)/R₀_scale
-
+P.rel_detection_rate = reporting_rate
 P.dt = 0.25;
 P.ext_inf_rate = 0.;
 P.ϵ = 0.5
 P.δ = 0.2
 P.γ = 1/2.5
+
+rep_matrix = repeat(P.δ*reporting_rate' + P.ϵ*(1 .- (P.δ*reporting_rate')),KenyaCoV.n_a,1)
+eigs, = eigen(rep_matrix.*M_China)
+R₀_scale = Real(eigs[end])
+P.χ = (P.δ + P.ϵ*(1-P.δ))*ones(KenyaCoV.n_a)/R₀_scale
+
+
+
 P.σ = 1/rand(KenyaCoV.d_incubation)
 P.β = rand(KenyaCoV.d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
 results_B1 = KenyaCoV.run_scenario(P,prob,1000,treatment_rates,cb_iso_limit)
@@ -117,16 +121,19 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
                                             "data/projected_global_prevelance.csv")
 #Redistribute susceptibility JUST to rescale infectiousness so we get the correct R₀/r
 P.χ = ones(KenyaCoV.n_a)
-sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
-eigs, = eigen((P.β/P.γ)*sus_matrix.*P.M)
-R₀_scale = Real(eigs[end])
-P.χ = ones(KenyaCoV.n_a)/R₀_scale
-
+P.rel_detection_rate = reporting_rate
 P.dt = 0.25;
 P.ext_inf_rate = 0.;
 P.ϵ = 0.5
 P.δ = 0.8
 P.γ = 1/2.5
+
+rep_matrix = repeat(P.δ*reporting_rate' + P.ϵ*(1 .- (P.δ*reporting_rate')),KenyaCoV.n_a,1)
+eigs, = eigen(rep_matrix.*M_China)
+R₀_scale = Real(eigs[end])
+P.χ = (P.δ + P.ϵ*(1-P.δ))*ones(KenyaCoV.n_a)/R₀_scale 
+
+
 P.σ = 1/rand(KenyaCoV.d_incubation)
 P.β = rand(KenyaCoV.d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
 results_B2 = KenyaCoV.run_scenario(P,prob,1000,treatment_rates,cb_iso_limit)
