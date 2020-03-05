@@ -33,6 +33,7 @@ end
     τ_initial::Float64 = 1/15. # isolation rate for symptomatics at beginning of epidemic
     μ₁::Float64 = 0.0#Excess mortality due to disease
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable infecteds
+    ϵ_D::Float64 = 1.#Relative infectiousness of detectable infecteds after intervention
     χ::Vector{Float64} = ones(n_a)
     ρ::Vector{Float64} = [0.01 for i in 1:n] #Time spent outside of area
     T::Matrix{Float64} = zeros(n,n)#Probability distributions of location for mobile individuals

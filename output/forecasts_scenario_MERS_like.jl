@@ -33,26 +33,26 @@ function affect_isolation_limit!(integrator)
 end
 cb_iso_limit = DiscreteCallback(isolation_limit,affect_isolation_limit!)
 
+println("Scenario B: MERS-like data loaded")
 
 
-
-"""
-SCENARIO A1:
-* Age-specific susceptibilties calculated from Chinese case data
-* Asymptomatics are not infectious
-* 20% of infections are symptomatics
-"""
-P.dt = 0.25;
-P.ext_inf_rate = 0.;
-P.ϵ = 0.
-P.δ = 0.2
-P.γ = 1/2.5
-P.σ = 1/rand(KenyaCoV.d_incubation)
-P.β = rand(KenyaCoV.d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
-
-results_A1 = KenyaCoV.run_scenario(P,prob,10,treatment_rates,cb_iso_limit)
-
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_A1.jld2") results_A1
+# """
+# SCENARIO A1:
+# * Age-specific susceptibilties calculated from Chinese case data
+# * Asymptomatics are not infectious
+# * 20% of infections are symptomatics
+# """
+# P.dt = 0.25;
+# P.ext_inf_rate = 0.;
+# P.ϵ = 0.
+# P.δ = 0.2
+# P.γ = 1/2.5
+# P.σ = 1/rand(KenyaCoV.d_incubation)
+# P.β = rand(KenyaCoV.d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
+#
+# results_A1 = KenyaCoV.run_scenario(P,prob,10,treatment_rates,cb_iso_limit)
+#
+# @save joinpath(homedir(),"Github/KenyaCoVOutputs/results_A1.jld2") results_A1
 
 """
 SCENARIO B1:
@@ -81,28 +81,29 @@ results_B1 = KenyaCoV.run_scenario(P,prob,1000,treatment_rates,cb_iso_limit)
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/results_B1.jld2") results_B1
 results_B1 = 0
 
+println("Scenario B: MERS-like finished B1")
 
 
-"""
-SCENARIO A2:
-* No age-dependent susceptibility
-* Asymptomatics are not infectious
-* 80% of infections are symptomatics
-"""
-u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
-                                            "data/flight_numbers.csv",
-                                            "data/projected_global_prevelance.csv")
-
-P.dt = 0.25;
-P.ext_inf_rate = 0.;
-P.ϵ = 0.
-P.δ = 0.8
-P.γ = 1/2.5
-P.σ = 1/rand(KenyaCoV.d_incubation)
-P.β = rand(KenyaCoV.d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
-
-results_A2 = KenyaCoV.run_scenario(P,prob,1000,treatment_rates,cb_iso_limit)
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_A2.jld2") results_A2
+# """
+# SCENARIO A2:
+# * No age-dependent susceptibility
+# * Asymptomatics are not infectious
+# * 80% of infections are symptomatics
+# """
+# u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
+#                                             "data/flight_numbers.csv",
+#                                             "data/projected_global_prevelance.csv")
+#
+# P.dt = 0.25;
+# P.ext_inf_rate = 0.;
+# P.ϵ = 0.
+# P.δ = 0.8
+# P.γ = 1/2.5
+# P.σ = 1/rand(KenyaCoV.d_incubation)
+# P.β = rand(KenyaCoV.d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
+#
+# results_A2 = KenyaCoV.run_scenario(P,prob,1000,treatment_rates,cb_iso_limit)
+# @save joinpath(homedir(),"Github/KenyaCoVOutputs/results_A2.jld2") results_A2
 
 
 """

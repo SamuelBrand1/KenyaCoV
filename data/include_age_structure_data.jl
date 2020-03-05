@@ -2,7 +2,36 @@
 using DataFrames,Plots,JLD2,MAT,LinearAlgebra,Distances,StatsPlots
 using LinearAlgebra:normalize,normalize!
 
+"""
+Age dependent reporting for MERS-like scenario
 
+Age    Susceptibility   Reporting
+0-4      0.00282027   0.0142415
+5-9      0.00364015   0.0196252
+10-14  0.00288739   0.0114435
+15-19  0.0120954   0.0273375
+20-24  0.0377834   0.122321
+25-29  0.0579848   0.303001
+30-34  0.0685311   0.42322
+35-39  0.067254   0.390164
+40-44  0.0615844   0.317926
+45-49  0.0965786   0.465243
+50-54  0.118037   0.480286
+55-59  0.15693   0.459481
+60-64  0.284027   0.727757
+65-69  0.393072   0.874986
+70-74  0.411986   0.555446
+75-79  0.703186   0.320811
+80-84  1.32085   0.185529
+85-89  1.08871   0.0708618
+90-94  0.577218   0.0115956
+95-99  0.830651   0.00386519
+"""
+reporting_rate = [0.0142415, 0.0196252,0.0114435,0.0273375,0.122321,
+                    0.303001,0.42322,0.390164,0.317926,0.465243,
+                    0.480286,0.459481,0.727757,0.874986,0.555446,0.320811]
+
+@save "data/reporting_rate_for_MERS_like_scenario.jld2" reporting_rate
 
 
 """
@@ -51,8 +80,17 @@ Worldpop pyramid for the whole of Kenya --- this is now
 # @save "data/populationpyramid.jld2" prop_by_agegroup
 
 """
-Load age mixing matrix and convert into JLD2 array
+Load age mixing matrix for Kenya and convert into JLD2 array, do the same for China for baseline comparisons
 """
+agemixingmatrix_table_china = readtable("data/china_baseline_age_mixing.csv")
+agemixingmatrix_china = zeros(16,16)
+for i = 1:16,j=1:16
+    agemixingmatrix_china[i,j] = agemixingmatrix_table_china[i,j]
+end
+heatmap(agemixingmatrix_china,clims = (0.,5.))
+M_China = agemixingmatrix_china
+@save "data/agemixingmatrix_china.jld2" M_China
+
 agemixingmatrix_table = readtable("data/Kenya_age_matrix.csv")
 agemixingmatrix = zeros(16,16)
 for i = 1:16,j=1:16
@@ -60,7 +98,6 @@ for i = 1:16,j=1:16
 end
 
 
-heatmap(agemixingmatrix,clims = (0.,5.))
 @save "data/agemixingmatrix.jld2" agemixingmatrix
 """
 Load population sizes for each risk region
