@@ -6,12 +6,12 @@ using LinearAlgebra:eigen
 using Statistics: median, quantile
 
 
-session_number="00"
+session_number="30"
 results_folder="./contacts/result_sessions_v2/session"*session_number*"/"
 mkdir(results_folder)
 plt_Nairobi=plot();
 solutions=[]
-for j=1:3
+for j=1:100
     global P
     u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
     u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
@@ -35,7 +35,7 @@ for j=1:3
     P.σ = 1/rand(d_incubation)
     P.β = rand(d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
     P.τ=1/3.
-    P.τₚ=0.01
+    P.τₚ=0.8
     P.κ=5
     P.κₘ=7
     P.Δₜ=7

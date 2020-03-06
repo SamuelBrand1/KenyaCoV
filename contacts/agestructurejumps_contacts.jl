@@ -227,7 +227,7 @@ end
 
 
 function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
-    @unpack dc, dN, poi_rates, du_linear, τₚ, Κ_current, Κ_max_capacity = p
+    @unpack dc, dN, poi_rates, du_linear, τₚ, Κ_current, Κ_max_capacity, t_max_capacity = p
     rates(poi_rates, u, p, t)       #calculate rates of underlying Poisson processes
     PP_drivers(dN, poi_rates, p)    #Generate Poisson rvs with rates scaled by time step dt
     max_change(dN, u, p)            #Cap the size of the Poisson rvs to maintain non-negativity
@@ -239,13 +239,16 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
         update_l_IQ(dN, u, p, t)                ##All IQ->R(10) are removed from l_IQ + All IQ with tau<=0 are added to dN and removed from l_IQ + decrease all tau + All E->IQ in dN are added to l_IQ:
         max_change(dN, u, p)
         update_contact_states(dN, u, p, t)      #updates the contact states, except for contacts made during this timestep
-    elseif Κ_current >= Κ_max_capacity
+    elseif Κ_current >= Κ_max_capacity  && t_max_capacity == -1
         println("Tracing stopped at ", t)
+        t_max_capacity=t
     end
+    #if t%25==0 println("Κ_currentLEAP=",Κ_current)  end
 
     mul!(du_linear, dc, dN)#Calculates the effect on the state in the inplace du vector
     du .= reshape(du_linear, n_wa, n_a, n_s)
     du .+= u #Calculates how the state should change
+    @pack! p=t_max_capacity
 end
 
 function ode_model(du, u, p::CoVParameters_AS, t)
@@ -441,9 +444,11 @@ function intervention_trace_contacts(traced_index::Int, u, p::CoVParameters_AS, 
                 u[c.wa, c.a, c.s] -= 1
                 u[c.wa, c.a, 5] += 1
                 Κ_current += 1                                                  ## Increment the total number of traceds
+                #if t%25==0 println("Κ_current=",Κ_current)  end
             end
         end
     end
+    @pack! p = Κ_current
 end
 
 function check_negativity(u, dN::Vector{Int64}, t)

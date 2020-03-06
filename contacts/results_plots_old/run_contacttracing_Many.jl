@@ -5,20 +5,18 @@ import KenyaCoV_contacts
 using LinearAlgebra:eigen
 using Statistics: median, quantile
 
+#include("../output/forecast_functions.jl")
+gr()#Plotting frontend
 
-session_number="00"
-results_folder="./contacts/result_sessions_v2/session"*session_number*"/"
-mkdir(results_folder)
+
+u0_0,P_0,P_dest_0 = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
+u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
+
+
 plt_Nairobi=plot();
-solutions=[]
-for j=1:3
-    global P
-    u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
+for j=1:10
+    u0,P,P_dest = u0_0,P_0,P_dest_0
     u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
-
-    for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a   #**** #Calculate P.Mₚ = Age mixing pobabilities matrix
-        P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:])
-    end
 
     d_incubation = LogNormal(log(4.8),0.25) #Liu et al
     mean(d_incubation);
@@ -35,25 +33,30 @@ for j=1:3
     P.σ = 1/rand(d_incubation)
     P.β = rand(d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
     P.τ=1/3.
-    P.τₚ=0.01
+    P.τₚ=0.05
     P.κ=5
     P.κₘ=7
     P.Δₜ=7
     P.κ_per_event4=30
     P.Κ_max_capacity=1e4
 
+    for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a   #**** #Calculate P.Mₚ = Age mixing pobabilities matrix
+        P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:])
+    end
+
     prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
-    print("simulation "*string(j)*" with proba tau=",P.τₚ,"        ")
+    print("simulation with proba tau=",P.τₚ,"           ")
     @time sol=solve(prob,FunctionMap(),dt = P.dt)
-    push!(solutions,sol)
+    @save "./contacts/results_plots_local/sol_"*string(P.τₚ)*"_v"*string(j)*".jld2" sol
 
     times = 0:1:365;    I_area = zeros(Int64,20,length(sol.t))
     for i = 1:20,(ind,t) in enumerate(sol.t)    I_area[i,ind] = sum(sol(t)[i,:,3:4] .+ sol(t)[i,:,10])   end
     plt = plot(sol.t,I_area[1,:], lab = 1);
-    for i = 2:20    plot!(plt,sol.t,I_area[i,:],lab = i);     #display(plt);
-    savefig(plt,results_folder*"session"*session_number*"_taup"*string(P.τₚ)*"_sim"*string(j)*".png")
-    plot!(plt_Nairobi,sol.t,I_area[4,:],lab = "Nairobi"*string(j)); end
-end
+    for i = 2:20    plot!(plt,sol.t,I_area[i,:],lab = i);   end
+    display(plt);
+    savefig(plt,"./contacts/results_plots_local/detection_tests_"*string(P.τₚ)*"_v"*string(j)*".png")
 
-savefig(plt_Nairobi,results_folder*"detection_tests_"*string(P.τₚ)*"_NAIROBI.png");  #display(plt_Nairobi);
-@save results_folder*"solutions.jld2" solutions
+    plot!(plt_Nairobi,sol.t,I_area[4,:],lab = "Nairobi"*string(j));
+end
+display(plt_Nairobi);
+savefig(plt_Nairobi,"./contacts/results_plots_local/detection_tests_"*string(P.τₚ)*"_NAIROBI.png")
