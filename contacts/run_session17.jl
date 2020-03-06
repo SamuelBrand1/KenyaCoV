@@ -55,9 +55,9 @@ for j=1:5
     plt = plot(sol.t,I_area[1,:], lab = 1);
     for i = 2:20    plot!(plt,sol.t,I_area[i,:],lab = i);   end
     #display(plt);
-    savefig(plt,"./contacts/results_plots_sessions/session16/detection_tests_"*string(P.τₚ)*"_v"*string(j)*".png")
+    savefig(plt,"./contacts/results_plots_sessions/session17/detection_tests_"*string(P.τₚ)*"_v"*string(j)*".png")
 
     plot!(plt_Nairobi,sol.t,I_area[4,:],lab = "Nairobi"*string(j));
 end
 #display(plt_Nairobi);
-savefig(plt_Nairobi,"./contacts/results_plots_sessions/session16/detection_tests_"*string(P.τₚ)*"_NAIROBI.png")
+savefig(plt_Nairobi,"./contacts/results_plots_sessions/session17/detection_tests_"*string(P.τₚ)*"_NAIROBI.png")

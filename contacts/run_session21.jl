@@ -14,7 +14,7 @@ u0_0,P_0,P_dest_0 = KenyaCoV_contacts.model_ingredients_from_data("data/data_for
 P=P_0
 
 plt_Nairobi=plot();
-for j=1:5
+for j=1:10
     #global u0_0,P_0,P_dest_0
     u0,P,P_dest = u0_0,P_0,P_dest_0
     u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
@@ -33,13 +33,13 @@ for j=1:5
     P.γ = 1/2.5
     P.σ = 1/rand(d_incubation)
     P.β = rand(d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
-
-    P.τₚ=0.8
+    P.τ=1/3.
+    P.τₚ=0.1
     P.κ=5
     P.κₘ=7
     P.Δₜ=7
     P.κ_per_event4=30
-    P.Κ_max_capacity=1e5
+    P.Κ_max_capacity=1e4
 
     for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a   #**** #Calculate P.Mₚ = Age mixing pobabilities matrix
         P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:])
@@ -55,9 +55,9 @@ for j=1:5
     plt = plot(sol.t,I_area[1,:], lab = 1);
     for i = 2:20    plot!(plt,sol.t,I_area[i,:],lab = i);   end
     #display(plt);
-    savefig(plt,"./contacts/results_plots_sessions/session18/detection_tests_"*string(P.τₚ)*"_v"*string(j)*".png")
+    savefig(plt,"./contacts/results_plots_sessions/session20/detection_tests_"*string(P.τₚ)*"_v"*string(j)*".png")
 
     plot!(plt_Nairobi,sol.t,I_area[4,:],lab = "Nairobi"*string(j));
 end
 #display(plt_Nairobi);
-savefig(plt_Nairobi,"./contacts/results_plots_sessions/session18/detection_tests_"*string(P.τₚ)*"_NAIROBI.png")
+savefig(plt_Nairobi,"./contacts/results_plots_sessions/session20/detection_tests_"*string(P.τₚ)*"_NAIROBI.png")
