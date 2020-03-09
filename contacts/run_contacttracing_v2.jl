@@ -5,8 +5,6 @@ import KenyaCoV_contacts
 using LinearAlgebra:eigen
 using Statistics: median, quantile
 
-#include("../output/forecast_functions.jl")
-gr()#Plotting frontend
 """
 Define uncertainty of parameter estimates
 """
@@ -22,12 +20,6 @@ Load age structured data
 """
 u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2", "data/flight_numbers.csv", "data/projected_global_prevelance.csv")
 u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
-#prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
-
-"""
-Declare the treatment/isolation rates considered
-"""
-treatment_rates = [0.,1/21.,1/14,1/7]
 
 """
 SCENARIO I:  PLOTTING ONE PROBLEM
@@ -47,7 +39,7 @@ P.κ=5
 P.κₘ=3
 P.Δₜ=3
 P.κ_per_event4=30
-P.Κ_max_capacity=1e3
+P.Κ_max_capacity=1e4
 
 for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a   #**** #Calculate P.Mₚ = Age mixing pobabilities matrix
     P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:])
@@ -59,10 +51,23 @@ prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 function run_scenario2(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list)
     results = []
     for τₚ in τₚ_list
+        println("Running ",n_traj," sims for τₚ=",τₚ)
         sims = run_simulations2(P,prob,n_traj,τₚ)
-        #analysisdata = incidence_from_sims(sims)
-        #push!(results,analysisdata)
         push!(results,sims)
+    end
+    return results
+end
+function run_scenario2_andMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list)
+    #results = []
+    for τₚ in τₚ_list
+        println("Running ",n_traj," sims for τₚ=",τₚ)
+        @time sims = run_simulations2(P,prob,n_traj,τₚ)
+
+        finalCumINairobiSum=[sum(sims[sim_i].u[end][4,:,8])   for sim_i=1:n_traj]
+        file = matopen("./contacts/finalCumIData_sims"*string(n_traj)*"_taup"*string(τₚ)*"_1e4.mat", "w")
+        write(file, "finalCumINairobiSum", finalCumINairobiSum)
+        close(file)
+        #push!(results,sims)
     end
     return results
 end
@@ -79,26 +84,32 @@ function randomise_params(prob,i,repeat)
     return remake(prob,p=_P)
 end
 
-τₚ_list=[0.,0.25,0.5,0.75,0.9]
-results_sessions = run_scenario2(P,prob,10,τₚ_list)
+τₚ_list=[0.0,0.25,0.5,0.75,0.9]
+results_sessions = run_scenario2_andMAT(P,prob,1000,τₚ_list)
+
+#=results_sessions = run_scenario2(P,prob,100,τₚ_list)
 
 #@save "./contacts/results_sessions_1" results_sessions
 
 finalCumINairobiSum=[]
-for τₚi=1:size(τₚ_list,1),sim_i=1:10
-    push!(finalCumINairobiSum,sum(results_sessions[τₚi][sim_i].u[end][4,:,8]))
+for τₚi=1:size(τₚ_list,1)
+    push!(finalCumINairobiSum,[sum(results_sessions[τₚi][sim_i].u[end][4,:,8])   for sim_i=1:10])
 end
 plot(finalCumINairobiSum)
 
 finalCumINairobi=[]
-for τₚi=1:size(τₚ_list,1),sim_i=1:10
+for τₚi=1:size(τₚ_list,1),sim_i=1:100
     push!(finalCumINairobi,results_sessions[τₚi][sim_i].u[end][4,:,8])
 end
 plot(finalCumINairobi)
 
 using MAT
 ##https://github.com/JuliaIO/MAT.jl
-file = matopen("./contacts/finalCumIData.mat", "w")
+file = matopen("./contacts/finalCumIData1000.mat", "w")
 write(file, "finalCumINairobiSum", finalCumINairobiSum)
 write(file, "finalCumINairobi", finalCumINairobi)
 close(file)
+
+
+
+boxplot(finalCumINairobiSum, leg = false)=#

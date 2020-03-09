@@ -240,7 +240,7 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
         max_change(dN, u, p)
         update_contact_states(dN, u, p, t)      #updates the contact states, except for contacts made during this timestep
     elseif Κ_current >= Κ_max_capacity  && t_max_capacity == -1
-        println("Tracing stopped at ", t)
+        #println("Tracing stopped at ", t)
         t_max_capacity=t
     end
     #if t%25==0 println("Κ_currentLEAP=",Κ_current)  end
