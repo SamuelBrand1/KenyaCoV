@@ -102,24 +102,30 @@ function run_scenario_andMATsims(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_tr
         #@save "./contacts/session2_sims"*string(n_traj)*"_taup"*string(τₚ)*"_1e4.jld2" sims
     end
 end
-function save_sims_MAT(outputfile,sims)
-    sims_vector=sims.u[1].t
-    for i=1:size(sims.u,1)
-        sims_vector=[sims_vector sims.u[i].u]
+function run_saveMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list,session)
+    folder="./contacts/results_session"*string(session)*"/"
+    mkdir(folder)
+    for τₚ in τₚ_list
+        P.τₚ =τₚ
+        @time sims = solve(EnsembleProblem(prob,prob_func=randomise_params),FunctionMap(),dt=P.dt,trajectories=n_traj)
+        sims_vector=sims.u[1].t
+        for i=1:size(sims.u,1)
+            sims_vector=[sims_vector sims.u[i].u]
+        end
+        file = matopen(folder*"sims"*string(n_traj)*"_taup"*string(τₚ)*"_"*string(P.Κ_max_capacity)*".mat", "w")
+        write(file, "sims", sims_vector);
+        close(file);
     end
-    file = matopen("./contacts/session""_sims"*string(n_traj)*"_taup"*string(τₚ)*"_1e4.mat", "w")
-    write(file, "sims", sims);
-    close(file);
 end
 
 τₚ_list=[0.0,0.25]#,0.5,0.75,0.9]
-results_sessions = run_scenario_andMATsims(P,prob,10,τₚ_list)
+results_sessions = run_saveMAT(P,prob,2,τₚ_list,8)
 
 
-P.τₚ = 0
+#=P.τₚ = 0
 @time sims = solve(EnsembleProblem(prob,prob_func = randomise_params),FunctionMap(),dt = P.dt,trajectories = 5)
 save_sims_MAT()
-
+=#
 #=results_sessions = run_scenario2(P,prob,100,τₚ_list)
 
 #@save "./contacts/results_sessions_1" results_sessions
