@@ -107,6 +107,7 @@ function run_saveMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_lis
     mkdir(folder)
     for τₚ in τₚ_list
         P.τₚ =τₚ
+        println("Running ",n_traj," sims for τₚ=",τₚ, " and Κ_max_capacity=",P.Κ_max_capacity)
         @time sims = solve(EnsembleProblem(prob,prob_func=randomise_params),FunctionMap(),dt=P.dt,trajectories=n_traj)
         sims_vector=sims.u[1].t
         for i=1:size(sims.u,1)
@@ -118,8 +119,8 @@ function run_saveMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_lis
     end
 end
 
-τₚ_list=[0.0,0.25]#,0.5,0.75,0.9]
-results_sessions = run_saveMAT(P,prob,2,τₚ_list,8)
+τₚ_list=[0.0,0.25,0.5,0.75,0.9]
+results_sessions = run_saveMAT(P,prob,1000,τₚ_list,5)
 
 
 #=P.τₚ = 0
