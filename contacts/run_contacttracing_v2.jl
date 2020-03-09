@@ -48,6 +48,17 @@ end
 prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 
 
+function run_simulations2(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ)
+    P.τₚ = τₚ
+    ensemble_prob = EnsembleProblem(prob,prob_func = randomise_params)
+    return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
+end
+function randomise_params(prob,i,repeat)
+    _P = deepcopy(prob.p)
+    _P.σ = 1/rand(d_incubation)
+    _P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
+    return remake(prob,p=_P)
+end
 function run_scenario2(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list)
     results = []
     for τₚ in τₚ_list
@@ -57,7 +68,7 @@ function run_scenario2(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_l
     end
     return results
 end
-function run_scenario2_andMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list)
+function run_scenario_andMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list)
     #results = []
     for τₚ in τₚ_list
         println("Running ",n_traj," sims for τₚ=",τₚ)
@@ -71,21 +82,21 @@ function run_scenario2_andMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,
     end
     return results
 end
-function run_simulations2(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ)
-    P.τₚ = τₚ
-    ensemble_prob = EnsembleProblem(prob,prob_func = randomise_params)
-    return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
+function run_scenario_andMATsims(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list)
+    for τₚ in τₚ_list
+        println("Running ",n_traj," sims for τₚ=",τₚ)
+        P.τₚ = τₚ
+        @time sims = solve(EnsembleProblem(prob,prob_func = randomise_params),FunctionMap(),dt = P.dt,trajectories = n_traj)
+        file = matopen("./contacts/sims"*string(n_traj)*"_taup"*string(τₚ)*"_1e4.mat", "w")
+        write(file, "sims", sims)
+        close(file)
+    end
+    return results
 end
 
-function randomise_params(prob,i,repeat)
-    _P = deepcopy(prob.p)
-    _P.σ = 1/rand(d_incubation)
-    _P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
-    return remake(prob,p=_P)
-end
 
 τₚ_list=[0.0,0.25,0.5,0.75,0.9]
-results_sessions = run_scenario2_andMAT(P,prob,1000,τₚ_list)
+results_sessions = run_scenario_andMATsims(P,prob,1000,τₚ_list)
 
 #=results_sessions = run_scenario2(P,prob,100,τₚ_list)
 
