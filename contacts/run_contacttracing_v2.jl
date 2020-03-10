@@ -120,7 +120,7 @@ function run_saveMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_lis
 end
 
 τₚ_list=[0.0,0.25,0.5,0.75,0.9]
-results_sessions = run_saveMAT(P,prob,1000,τₚ_list,5)
+results_sessions = run_saveMAT(P,prob,1000,τₚ_list,7)
 
 
 #=P.τₚ = 0

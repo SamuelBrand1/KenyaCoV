@@ -16,7 +16,8 @@ n_traj=100;
 % cumulative_symptomatics_sumallages(0.0,data_per_taup,results_folder);
 
 %ALL_TAUP_cumulative_symptomatics_perage(taup_list,data_per_taup,results_folder,data_files);
-ALL_TAUP_cumulative_symptomatics_sumages(taup_list,data_per_taup,results_folder,data_files);
+%ALL_TAUP_cumulative_symptomatics_sumages(taup_list,results_folder,data_files);
+data=ALL_TAUP_cumulative_symptomatics_sumages_BOXPLOT(taup_list,results_folder,data_files);
 
 %% plotting functions IN NAIROBI
 function cumulative_symptomatics_perage(taup,data_per_taup,results_folder)
@@ -45,14 +46,14 @@ function cumulative_symptomatics_sumallages(taup,data_per_taup,results_folder)
     plot(Id_per_taup_nairobi);
     saveas(p,results_folder+"cumulative_symptomatics_allages_"+num2str(taup)+".png");
 end
-function ALL_TAUP_cumulative_symptomatics_perage(taup_list,data_per_taup,results_folder,data_files)
+function ALL_TAUP_cumulative_symptomatics_perage(taup_list,results_folder,data_files)
     for i=1:size(taup_list,2)
         data_per_taup=load(data_files(i));
         data_per_taup=data_per_taup.sims(:,2:end);
         cumulative_symptomatics_perage(taup_list(i),data_per_taup,results_folder);
     end
 end
-function ALL_TAUP_cumulative_symptomatics_sumages(taup_list,data_per_taup,results_folder,data_files)
+function ALL_TAUP_cumulative_symptomatics_sumages(taup_list,results_folder,data_files)
     p=figure(); title("Final cumulative Infecteds(ID+IQ) 100 sims (sum all ages)");   hold on
     Legend=cell(size(taup_list,2),1);
     for i=1:size(taup_list,2)
@@ -70,21 +71,23 @@ function ALL_TAUP_cumulative_symptomatics_sumages(taup_list,data_per_taup,result
     legend(Legend);
     saveas(p,results_folder+"cumulative_symptomatics_allages.png");%_"+num2str(taup)+".png");
 end
-function ALL_TAUP_cumulative_symptomatics_sumages_BOXPLOT(taup_list,data_per_taup,results_folder,data_files)
+function data=ALL_TAUP_cumulative_symptomatics_sumages_BOXPLOT(taup_list,results_folder,data_files)
     p=figure(); title("Final cumulative Infecteds(ID+IQ) 100 sims (sum all ages)");   hold on
     Legend=cell(size(taup_list,2),1);
+    data=[];
     for i=1:size(taup_list,2)
         data_per_taup=load(data_files(i));
         data_per_taup=data_per_taup.sims(:,2:end);
         
         Id_per_taup_nairobi=[];   % Infecteds=I_D+I_Q
         for j=1:size(data_per_taup,2)
-            Id_per_taup_nairobi=[Id_per_taup_nairobi; sum(data_per_taup{end,j}(4,:,8))];
+            Id_per_taup_nairobi=[Id_per_taup_nairobi;  sum(data_per_taup{end,j}(4,:,8))];
         end
         Legend{i}=strcat("taup=",num2str(taup_list(i)));
-        boxplot(Id_per_taup_nairobi);
+        data=[data Id_per_taup_nairobi];
     end
+    boxplot(data);
     hold off
-    legend(Legend);
+    legend(findobj(gca,'Tag','Box'),Legend);
     saveas(p,results_folder+"cumulative_symptomatics_allages_BOXPLOT.png");%_"+num2str(taup)+".png");
 end
