@@ -46,12 +46,12 @@ end
     #contacts::Array{Tuple{Int64,Int64,Float64},1}=[] #Array of tuples (wa_infector,wa_infected,time)
     Δₜ::Float64=7                           #describes the tracing period per days (how far back is the detected I asked about his contacts)
     κ_per_event4::Int=30                    #**** Number of contacts traced per event IQ->H
-    Κ_max_capacity::Int=1e4                 #**** Tracing capacity, maximum number of traceds
-    Κ_current::Int=0                        #**** Total current number of traced contacts (between timestep 0 and t)
+    Κ_max_capacity::Array{Float64,1}=zeros(n_wa)     #**** Tracing capacity, maximum number of traceds                          #!!!! vector for all wa
+    Κ_current::Array{Float64,1}=zeros(n_wa)          #**** Total current number of traced contacts (between timestep 0 and t)   #!!!! vector for all wa
 
     l_IQ::Vector{IQ_Person}=[]  #****  Each IQ is added with a generated period of 1/τ [[wa,a,exponential(1/τ),[contacts]],...], with their contact s@ each timestep
     uₚ::Array{Float64,3}=zeros(n_wa,n_a,n_s) #**** For inplace calculations. Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S,E,IQ,Iᴰ,Iᴬ,.. WE DO NOT MEET H!
-    t_max_capacity::Float64=-1
+    t_max_capacity::Float64=-1              #**** When the tracing stopped
 end
 
 

@@ -233,17 +233,16 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
     max_change(dN, u, p)            #Cap the size of the Poisson rvs to maintain non-negativity
 
     ##Contacts
-    if τₚ != 0 && Κ_current < Κ_max_capacity    ## if the detection probability is not zero`
-        #IQ_make_contacts(u,p,t)
-        IQ_make_contacts_Nairobi(u, p, t)
+    if τₚ != 0 && sum(Κ_current) < sum(Κ_max_capacity)    ## if the detection probability is not zero` #!!!! in all wa
+        IQ_make_contacts(u,p,t)                         #!!!!
+        #IQ_make_contacts_Nairobi(u, p, t)
         update_l_IQ(dN, u, p, t)                ##All IQ->R(10) are removed from l_IQ + All IQ with tau<=0 are added to dN and removed from l_IQ + decrease all tau + All E->IQ in dN are added to l_IQ:
         max_change(dN, u, p)
         update_contact_states(dN, u, p, t)      #updates the contact states, except for contacts made during this timestep
-    elseif Κ_current >= Κ_max_capacity  && t_max_capacity == -1
+    elseif sum(Κ_current) >= sum(Κ_max_capacity)  && t_max_capacity == -1                            #!!!! in all wa
         #println("Tracing stopped at ", t)
         t_max_capacity=t
     end
-    #if t%25==0 println("Κ_currentLEAP=",Κ_current)  end
 
     mul!(du_linear, dc, dN)#Calculates the effect on the state in the inplace du vector
     du .= reshape(du_linear, n_wa, n_a, n_s)
@@ -268,7 +267,7 @@ function ode_model(du, u, p::CoVParameters_AS, t)
 end
 
 using PoissonRandom, SimpleRandom
-function IQ_make_contacts(u, p::CoVParameters_AS, t::Float64)                     #****
+function IQ_make_contactsOLD(u, p::CoVParameters_AS, t::Float64)                     #****
     @unpack l_IQ, κ, Mₚ, dt, uₚ = p
     #### Recalculate uₚ=zeros(n_wa,n_a,n_s)   : Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S, E, IQ, Iᴰ,... WE DO NOT MEET Q!
     for wa = 1:n_wa, a = 1:n_a, s = 1:n_s   ## Recalculate uₚ
@@ -323,6 +322,39 @@ function IQ_make_contacts_Nairobi(u, p::CoVParameters_AS, t::Float64)           
                 ) for c = 1:n_contacts],
             )
         end
+    end
+end
+
+function IQ_make_contacts(u, p::CoVParameters_AS, t::Float64)                     #!!!!
+    @unpack l_IQ, κ, Mₚ, dt, uₚ,Κ_max_capacity,Κ_current = p
+    #### Recalculate uₚ=zeros(n_wa,n_a,n_s)   : Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S, E, IQ, Iᴰ,... WE DO NOT MEET Q!
+    for wa = 1:n_wa, a = 1:n_a, s = 1:n_s   ## Recalculate uₚ
+        #if Κ_current[wa]<Κ_max_capacity[wa] #!!!! we only Recalculate when there could be more contacts made
+            if s ∉ [5, 7, 8, 9] ## we only include the states 1(S) 2(E) 3(Iᴬ) 4(Iᴰ) 6(R) and 10(IQ). We do not include 5(Q) nor the cumulatives.  We have no chance of meeting an Q, and we remove the cumulative states
+                uₚ[wa, a, s] = u[wa, a, s] / (sum(u[wa, a, 1:4]) + u[wa, a, 6] + u[wa, a, 10])
+            else
+                uₚ[wa, a, s] = 0
+            end
+        #end
+    end
+
+    ## make contacts. We suppose all contacts are made in the same area. Contacts depend on the age mixing matrix M[a_i,a_j], we suppose a_i contacts a_j
+    for i = 1:size(l_IQ, 1)
+        #if (l_IQ[i].wa == 4) #!!!! this is commented so we can make contacts in all wa
+#        if Κ_current[wa]<Κ_max_capacity[wa] #!!!!
+            n_contacts = pois_rand(κ * dt)  #number of contacts scaled by dt
+            #i_IQ=l_IQ[i] ## is the current individual who's making the contacts
+            append!(
+                l_IQ[i].contacts,
+                [Contact(
+                    wa = l_IQ[i].wa,
+                    a = random_choice(Mₚ[l_IQ[i].a, :]),
+                    s = random_choice(uₚ[l_IQ[i].wa, l_IQ[i].a, :]),
+                    contact_t = t,
+                    contact_dur = 0,
+                ) for c = 1:n_contacts],
+            )
+#        end
     end
 end
 
@@ -440,11 +472,10 @@ function intervention_trace_contacts(traced_index::Int, u, p::CoVParameters_AS, 
         shuffle!(contacteds)
         contacteds = @view contacteds[1:min(κ_per_event4, size(contacteds, 1))]      #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         for c in contacteds                                                     ## for each contact, remove the S, E, Iᴬ, Iᴰ or IQ to Q
-            if c.s in [1, 2, 3, 4, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current < Κ_max_capacity
+            if c.s in [1, 2, 3, 4, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]   #!!!! per wa
                 u[c.wa, c.a, c.s] -= 1
                 u[c.wa, c.a, 5] += 1
-                Κ_current += 1                                                  ## Increment the total number of traceds
-                #if t%25==0 println("Κ_current=",Κ_current)  end
+                Κ_current[c.wa] += 1                                                  ## Increment the total number of traceds
             end
         end
     end
