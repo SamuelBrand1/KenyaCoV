@@ -1,6 +1,6 @@
-using Plots,MAT, StatsPlots, Images, Statistics, ImageView
+using Plots,MAT, StatsPlots, Images, Statistics, ImageView,ImageDraw
 
-results_folder=".\\contacts\\results_session20s\\results_session21\\"
+results_folder=".\\contacts\\results_session20s\\results_session22\\"
 τₚ_list=[0.0,0.25,0.5,0.75,0.9]
 data_files=readdir(results_folder)#["sims100_taup0.0_capacity10000.mat","sims100_taup0.25_capacity10000.mat","sims100_taup0.5_capacity10000.mat","sims100_taup0.75_capacity10000.mat","sims100_taup0.9_capacity10000.mat"];
 data_files=[s for s in data_files if endswith(s,".mat")]
