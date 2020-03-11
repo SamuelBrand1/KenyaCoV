@@ -1,63 +1,51 @@
 riskregionnames = ["Machakos/Muranga" "Mandera" "Baringo/Nakuru" "Nairobi" "Uasin Gishu" "Marsabit" "Garissa" "Nakuru/Narok" "Turkana" "Taita Taveta" "Kitui/Meru" "Kilifi/Mombasa" "Kericho/Kisumu" "Kilifi/Lamu" "Kakamega/Kisumu" "Wajir" "Kajiado/Kisumu" "Homa bay/Migori" "Samburu/Laikipia" "Kilifi/Kwale" "Total"]
 age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75+"]
 
-# function plot_observed_incidence_timeseries(results,treatment_rates)
-#     inc_D = results[1][1]
-#     inc_A = results[1][2]
-#     plt = plot(1:365,inc_A[21,:,1],
-#                 ribbon = (inc_A[21,:,2],inc_A[21,:,3]),
-#                 lab = "",
-#                 fillalpha = 0.25,ls=:dash,lw=2,
-#                 color = :black);
-#     plot!(plt,1:365,inc_D[21,:,1],
-#             # ribbon = (inc_D[21,:,2],inc_D[21,:,3]),
-#             lab = "No treatment/isolation",
-#             color = :black,
-#             fillalpha = 0.25,lw=3);
-#     inc_A = results[2][1]
-#     inc_D = results[2][2]
-#     plot!(plt,1:365,inc_A[21,:,1],
-#                 ribbon = (inc_A[21,:,2],inc_A[21,:,3]),
-#                 lab = "",
-#                 fillalpha = 0.25,
-#                 color = :red,ls=:dash,lw=2 );
-#     plot!(plt,1:365,inc_D[21,:,1],
-#             # ribbon = (inc_D[21,:,2],inc_D[21,:,3]),
-#             lab = "Av. $(round(1/(7*treatment_rates[2]),digits = 0)) weeks to treatment",
-#             fillalpha = 0.25,
-#             color = :red,lw=3);
-#
-#     inc_A = results[3][1]
-#     inc_D = results[3][2]
-#     plot!(plt,1:365,inc_A[21,:,1],
-#                 ribbon = (inc_A[21,:,2],inc_A[21,:,3]),
-#                 lab = "",
-#                 fillalpha = 0.25,
-#                 color = :green,ls=:dash,lw=2 );
-#     plot!(plt,1:365,inc_D[21,:,1],
-#             # ribbon = (inc_D[21,:,2],inc_D[21,:,3]),
-#             lab = "Av. $(round(1/(7*treatment_rates[3]),digits = 0)) weeks to treatment",
-#             fillalpha = 0.25,
-#             color = :green,lw=3);
-#     inc_A = results[4][1]
-#     inc_D = results[4][2]
-#     plot!(plt,1:365,inc_A[21,:,1],
-#                 ribbon = (inc_A[21,:,2],inc_A[21,:,3]),
-#                 lab = "",
-#                 fillalpha = 0.25,
-#                 color = :blue,ls=:dash,lw=2 );
-#     plot!(plt,1:365,inc_D[21,:,1],
-#             # ribbon = (inc_D[21,:,2],inc_D[21,:,3]),
-#             lab = "Av. $(round(1/(7*treatment_rates[4]),digits = 0)) weeks to treatment",
-#             fillalpha = 0.25,
-#             color = :blue,lw=3);
-#
-#     xlabel!(plt,"days")
-#     ylabel!(plt,"Incidence")
-#     title!(plt,"Scenario A: Total daily incidence")
-#
-#     return plt
-# end
+function plot_total_incidence(results_group,treatments::Tuple{Float64,Real},i)
+    τ,ϵ_D = treatments
+    inc_D1 = results_group[1][i][1]
+    inc_D2 = results_group[2][i][1]
+    inc_A2 = results_group[2][i][2]
+    plt = plot(1:365,inc_D1[21,:,1].+1,
+                fontfamily="Helvetica",
+                lw = 3,
+                lab="SARS-like scenario",
+                legend = :topright,
+                ribbon =(inc_D1[21,:,2],inc_D1[21,:,3]),
+                # fillalpha = 0.15,
+                # xlims = (0.,100),
+                yscale = :log10,
+                xlabel = "Days",
+                ylabel = "Daily incidence + 1")
+        plot!(plt,1:365,inc_D2[21,:,1].+1,
+                    lw = 3,
+                    lab="MERS-like scenario",
+                    ribbon =(inc_D2[21,:,2],inc_D2[21,:,3]),
+                    fillalpha = 0.15)
+                    # yscale = :log10,
+                    # xlabel = "Days",
+                    # ylabel = "Daily incidence")
+        plot!(plt,1:365,inc_A2[21,:,1].+1,
+                    lw = 3,
+                    lab="MERS-like scenario: undetected",
+                    ls = :dot,
+                    # ribbon =(inc_D2[21,:,2],inc_D2[21,:,3]),
+                    fillalpha = 0.15)
+                    # yscale = :log10,
+                    # xlabel = "Days",
+                    # ylabel = "Daily incidence")
+
+        # plot!(plt,1:365,inc_D3[21,:,1].+inc_A3[21,:,1].+1,
+        #             lw = 3,
+        #             lab="MERS-like scenario, delta = 0.8",
+        #             # ribbon =(inc_D3[21,:,2],inc_D3[21,:,3]),
+        #             fillalpha = 0.15,
+        #             yscale = :log10,
+        #             xlabel = "Days",
+        #             ylabel = "Daily incidence")
+    return plt
+end
+
 function plot_total_incidence(results,treatment_rates)
     inc_D = results[1][1]
     plt = plot(1:365,inc_D[21,:,1].+1,

@@ -77,8 +77,6 @@ eigs, = eigen(rep_matrix.*M_China)
 R₀_scale = Real(eigs[end])
 P.χ = (P.δ + P.ϵ*(1-P.δ))*ones(KenyaCoV.n_a)/R₀_scale
 
-
-
 P.σ = 1/rand(KenyaCoV.d_incubation)
 P.β = rand(KenyaCoV.d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
 results_B1 = KenyaCoV.run_scenario(P,prob,1000,treatment_rates,cb_iso_limit)
@@ -131,7 +129,7 @@ P.γ = 1/2.5
 rep_matrix = repeat(P.δ*reporting_rate' + P.ϵ*(1 .- (P.δ*reporting_rate')),KenyaCoV.n_a,1)
 eigs, = eigen(rep_matrix.*M_China)
 R₀_scale = Real(eigs[end])
-P.χ = (P.δ + P.ϵ*(1-P.δ))*ones(KenyaCoV.n_a)/R₀_scale 
+P.χ = (P.δ + P.ϵ*(1-P.δ))*ones(KenyaCoV.n_a)/R₀_scale
 
 
 P.σ = 1/rand(KenyaCoV.d_incubation)
