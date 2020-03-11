@@ -52,10 +52,9 @@ P.κ=10
 P.κₘ=7;     P.Δₜ=7
 P.κ_per_event4=50
 τₚ_list=[0.0,0.25,0.5,0.75,0.9]
-P.Κ_max_capacity=[100 for i=1:KenyaCoV_contacts.n_wa]
 P.Κ_max_capacity[KenyaCoV_contacts.ind_nairobi_as]=1e3
 P.Κ_max_capacity[KenyaCoV_contacts.ind_mombasa_as]=1e3
-session_nb=22
+session_nb=21
 n_traj=200
 
 for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
