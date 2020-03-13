@@ -18,7 +18,7 @@ export n,n_t,n_s,n_a,
 n = 47 #global defining number of counties
 n_s = 9 #global defining number of state
 n_t = 16 #global defining number of events per location
-n_a = 16 #global defining number of age categories
+n_a = 17 #global defining number of age categories
 n_wa = 20 #global defining number of wider area groupings
 n_ta = 8 #global defining number of events per location and age group
 mobile_age_indices = 5:11; #This assumes that 16-49 year ols move around and others don't

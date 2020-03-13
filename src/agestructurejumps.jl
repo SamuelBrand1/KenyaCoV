@@ -52,7 +52,7 @@ function calculate_infection_rates!(u,p::CoVParameters_AS,t)
     I_D = @view u[:,:,4]
     mul!(p.Î,p.T,p.ϵ*I_A .+ p.ϵ_D*I_D)#Local infecteds **if** everyone moved around
     p.Î[:,immobile_age_indices] .= p.ϵ*I_A[:,immobile_age_indices] .+ p.ϵ_D*I_D[:,immobile_age_indices]#This corrects for immobility
-    mul!(p.λ_loc,p.β .*(p.Î ./p.N̂),p.M')#Local force of infection due to age-mixing
+    mul!(p.λ_loc,p.β .*(p.Î ./p.N̂),p.M)#Local force of infection due to age-mixing --- M is in to (row), from (col) format
     mul!(p.λ,p.T',p.λ_loc)#this accounts for mobile susceptibles contracting away from home
     p.λ[:,immobile_age_indices] .= p.λ_loc[:,immobile_age_indices]#This corrects for immobility
     p.λ[ind_mombasa_as,:] .+= p.ext_inf_rate*import_rate_mom(t,p.into_mom,p.global_prev)
@@ -62,7 +62,7 @@ end
 
 
 function rates(out,u,p::CoVParameters_AS,t)
-    @unpack λ,γ,σ,δ,τ,μ₁,χ,rel_detection_rate = p
+    @unpack λ,γ,σ,δ,τ,μ₁,χ,rel_detection_rate,clear_quarantine = p
     calculate_infection_rates!(u,p,t)
     for k = 1:length(out)
         i,a,eventtype = Tuple(index_as_events[k])
@@ -79,7 +79,7 @@ function rates(out,u,p::CoVParameters_AS,t)
             out[k] = τ*u[i,a,4] # D->H
         end
         if eventtype ==5
-            out[k] = γ*u[i,a,5] # H->R
+            out[k] = clear_quarantine*u[i,a,5] # H->R
         end
         if eventtype ==6
             out[k] = γ*u[i,a,4] # D->R

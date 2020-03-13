@@ -31,6 +31,7 @@ end
     δ::Float64 = 0.05#Proportion of symptomatic/diseased vs non-symptomatic cases
     τ::Float64 = 1/15. #current isolation rate for symptomatics
     τ_initial::Float64 = 1/15. # isolation rate for symptomatics at beginning of epidemic
+    clear_quarantine = 1/14. # Two weeks on average to end isolation
     μ₁::Float64 = 0.0#Excess mortality due to disease
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable infecteds
     ϵ_D::Float64 = 1.#Relative infectiousness of detectable infecteds after intervention
