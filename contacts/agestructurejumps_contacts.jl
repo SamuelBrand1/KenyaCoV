@@ -22,7 +22,7 @@ States:
 6 -> Recovered
 7 -> Cumulative I_sub
 8 -> Cumulative I_dis
-9 -> Cumulative Dead
+9 -> Cumulative I_Q                                    #****2  Cumulative dead BECOMES Cumulative I_Q
 10 -> I_d(iseased_to_be_)h(ospitalised)                 #****  IQ
 
 Events for each wider area and age group:
@@ -148,17 +148,17 @@ function change_matrix(dc)
         end
         if eventtype == 8 # Q->death
             ind_Q = linear_as[i, a, 5]
-            ind_cumdead = linear_as[i, a, 9]
+            #ind_cumdead = linear_as[i, a, 9]
             dc[ind_Q, k] = -1
-            dc[ind_cumdead, k] = 1
+            #dc[ind_cumdead, k] = 1
         end
         if eventtype == 9            #**** adding the event for E -> IQ
             ind_E = linear_as[i, a, 2]
-            ind_DQ = linear_as[i, a, 10]
-            ind_cumD = linear_as[i, a, 8]
+            ind_IQ = linear_as[i, a, 10]
+            ind_cumQ = linear_as[i, a, 9]   #****2
             dc[ind_E, k] = -1
-            dc[ind_DQ, k] = 1
-            dc[ind_cumD] = 1
+            dc[ind_IQ, k] = 1
+            dc[ind_cumQ] = 1
         end
         if eventtype == 10           #**** IQ->R
             ind_DQ = linear_as[i, a, 10]
@@ -200,12 +200,12 @@ function max_change(out, u, p::CoVParameters_AS)
         out[ind_IqQ] = min(out[ind_IqQ], u[i, a, 10])       #**** No more IQ->Q than actual IQ
 
         #spliting events using binomial sampling
-        if out[ind_EA] + out[ind_ED] > u[i, a, 2] && u[i, a, 2] >= 0  #More incubations than actual rural E population
+        if out[ind_EA] + out[ind_ED] + out[ind_EIq] > u[i, a, 2] && u[i, a, 2] >= 0  #More incubations than actual rural E population
             #out[ind_ED] = rand(Binomial(u[i,a,2],p.δ)) #Binomially distributed the rural incubations between Asympotomatic and symptomatic
             #out[ind_EA] =  u[i,a,2] - out[ind_ED]
             D = rand(Binomial(u[i, a, 2], p.δ)) #Binomially distributed the incubations between Asympotomatic and symptomatic   #****
             out[ind_EA] = u[i, a, 2] - D
-            out[ind_EIq] = rand(Binomial(D, p.τₚ)) # Binomially distribute symptomatics between DQ and D
+            out[ind_EIq] = rand(Binomial(D, p.τₚ)) # Binomially distribute symptomatics between IQ and ID
             out[ind_ED] = D - out[ind_EIq]
         end
         #=if out[ind_DR] + out[ind_DQ] > u[i,a,4] # More end of infection events than diseased/symptomatic infecteds
@@ -218,9 +218,9 @@ function max_change(out, u, p::CoVParameters_AS)
         end
     end
 
-    for wa = 1:n_wa, a = 1:n_a, s = 1:n_s
-        if out[linear_as_events[wa, a, s]] < 0
-            out[linear_as_events[wa, a, s]] = 0
+    for wa = 1:n_wa, a = 1:n_a, e = 1:n_ta
+        if out[linear_as_events[wa, a, e]] < 0
+            out[linear_as_events[wa, a, e]] = 0
         end
     end
 end
@@ -235,12 +235,11 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
     ##Contacts
     if τₚ != 0 && sum(Κ_current) < sum(Κ_max_capacity)    ## if the detection probability is not zero` #!!!! in all wa
         IQ_make_contacts(u,p,t)                         #!!!!
-        #IQ_make_contacts_Nairobi(u, p, t)
         update_l_IQ(dN, u, p, t)                ##All IQ->R(10) are removed from l_IQ + All IQ with tau<=0 are added to dN and removed from l_IQ + decrease all tau + All E->IQ in dN are added to l_IQ:
         max_change(dN, u, p)
         update_contact_states(dN, u, p, t)      #updates the contact states, except for contacts made during this timestep
     elseif sum(Κ_current) >= sum(Κ_max_capacity)  && t_max_capacity == -1                            #!!!! in all wa
-        #println("Tracing stopped at ", t)
+        println("Tracing stopped at ", t)
         t_max_capacity=t
     end
 
@@ -262,80 +261,25 @@ function ode_model(du, u, p::CoVParameters_AS, t)
         du[i, a, 6] = γ * (u[i, a, 5] + u[i, a, 4] + u[i, a, 3])
         du[i, a, 7] = (1 - δ) * σ * u[i, a, 2]
         du[i, a, 8] = δ * σ * u[i, a, 2]
-        du[i, a, 9] = μ₁ * u[i, a, 5]
+        du[i, a, 9] = μ₁ * u[i, a, 5] #****2    9 no longer means dead
     end
 end
 
 using PoissonRandom, SimpleRandom
-function IQ_make_contactsOLD(u, p::CoVParameters_AS, t::Float64)                     #****
-    @unpack l_IQ, κ, Mₚ, dt, uₚ = p
-    #### Recalculate uₚ=zeros(n_wa,n_a,n_s)   : Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S, E, IQ, Iᴰ,... WE DO NOT MEET Q!
-    for wa = 1:n_wa, a = 1:n_a, s = 1:n_s   ## Recalculate uₚ
-        if s ∉ [5, 7, 8, 9] ## we only include the states 1(S) 2(E) 3(Iᴬ) 4(Iᴰ) 6(R) and 10(IQ). We do not include 5(Q) nor the cumulatives.
-            uₚ[wa, a, s] = u[wa, a, s] / (sum(u[wa, a, 1:4]) + u[wa, a, 6] + u[wa, a, 10]) ## we only include the states 1(S) 2(E) 3(Iᴬ) 4(Iᴰ) 6(R) and 10(IQ). We do not include 5(Q) nor the cumulatives.
-        else  # we have no chance of meeting an Q, and we remove the cumulative states
-            uₚ[wa, a, s] = 0  # we have no chance of meeting an Q, and we remove the cumulative states
-        end  # we have no chance of meeting an Q, and we remove the cumulative states
-    end
-
-    ## make contacts. We suppose all contacts are made in the same area. Contacts depend on the age mixing matrix M[a_i,a_j], we suppose a_i contacts a_j
-    for i = 1:size(l_IQ, 1)
-        n_contacts = pois_rand(κ * dt)  #number of contacts scaled by dt
-        #i_IQ=l_IQ[i] ## is the current individual who's making the contacts
-        append!(
-            l_IQ[i].contacts,
-            [Contact(
-                wa = l_IQ[i].wa,
-                a = random_choice(Mₚ[l_IQ[i].a, :]),
-                s = random_choice(uₚ[l_IQ[i].wa, l_IQ[i].a, :]),
-                contact_t = t,
-                contact_dur = 0,
-            ) for c = 1:n_contacts],
-        )
-    end
-end
-
-function IQ_make_contacts_Nairobi(u, p::CoVParameters_AS, t::Float64)                     #****
-    @unpack l_IQ, κ, Mₚ, dt, uₚ = p
-    #### Recalculate uₚ=zeros(n_wa,n_a,n_s)   : Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S, E, IQ, Iᴰ,... WE DO NOT MEET Q!
-    for wa in 4, a = 1:n_a, s = 1:n_s   ## Recalculate uₚ
-        if s ∉ [5, 7, 8, 9] ## we only include the states 1(S) 2(E) 3(Iᴬ) 4(Iᴰ) 6(R) and 10(IQ). We do not include 5(Q) nor the cumulatives.  We have no chance of meeting an Q, and we remove the cumulative states
-            uₚ[wa, a, s] = u[wa, a, s] / (sum(u[wa, a, 1:4]) + u[wa, a, 6] + u[wa, a, 10])
-        else
-            uₚ[wa, a, s] = 0
-        end
-    end
-
-    ## make contacts. We suppose all contacts are made in the same area. Contacts depend on the age mixing matrix M[a_i,a_j], we suppose a_i contacts a_j
-    for i = 1:size(l_IQ, 1)
-        if (l_IQ[i].wa == 4)
-            n_contacts = pois_rand(κ * dt)  #number of contacts scaled by dt
-            #i_IQ=l_IQ[i] ## is the current individual who's making the contacts
-            append!(
-                l_IQ[i].contacts,
-                [Contact(
-                    wa = l_IQ[i].wa,
-                    a = random_choice(Mₚ[l_IQ[i].a, :]),
-                    s = random_choice(uₚ[l_IQ[i].wa, l_IQ[i].a, :]),
-                    contact_t = t,
-                    contact_dur = 0,
-                ) for c = 1:n_contacts],
-            )
-        end
-    end
-end
-
 function IQ_make_contacts(u, p::CoVParameters_AS, t::Float64)                     #!!!!
     @unpack l_IQ, κ, Mₚ, dt, uₚ,Κ_max_capacity,Κ_current = p
     #### Recalculate uₚ=zeros(n_wa,n_a,n_s)   : Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S, E, IQ, Iᴰ,... WE DO NOT MEET Q!
-    for wa = 1:n_wa, a = 1:n_a, s = 1:n_s   ## Recalculate uₚ
+    for wa = 1:n_wa, a = 1:n_a   ## Recalculate uₚ
+        summ=sum(u[wa, a, 1:4]) + u[wa, a, 6] + u[wa, a, 10]
+        for s=1:n_s
         #if Κ_current[wa]<Κ_max_capacity[wa] #!!!! we only Recalculate when there could be more contacts made
             if s ∉ [5, 7, 8, 9] ## we only include the states 1(S) 2(E) 3(Iᴬ) 4(Iᴰ) 6(R) and 10(IQ). We do not include 5(Q) nor the cumulatives.  We have no chance of meeting an Q, and we remove the cumulative states
-                uₚ[wa, a, s] = u[wa, a, s] / (sum(u[wa, a, 1:4]) + u[wa, a, 6] + u[wa, a, 10])
+                uₚ[wa, a, s] = u[wa, a, s] / summ
             else
                 uₚ[wa, a, s] = 0
             end
         #end
+        end
     end
 
     ## make contacts. We suppose all contacts are made in the same area. Contacts depend on the age mixing matrix M[a_i,a_j], we suppose a_i contacts a_j
@@ -398,7 +342,7 @@ function update_l_IQ(dN::Vector{Int64}, u, p::CoVParameters_AS, t)              
     ## Add all new IQ to the list l_IQ l_IQ
     for wa = 1:n_wa, a = 1:n_a
         if dN[linear_as_events[wa, a, 9]] != 0
-            for exp = 1:dN[linear_as_events[wa, a, 9]]     ##need to rescale by dt??
+            for exp = 1:dN[linear_as_events[wa, a, 9]]
                 push!(l_IQ, IQ_Person(wa = wa, a = a, detection_dur = randexp() / τ))     ##need to rescale by dt??
             end
         end
@@ -414,7 +358,7 @@ function update_contact_states(dN::Vector{Int64}, u, p::CoVParameters_AS, t)    
             e = l_IQ[i].contacts[j]                 # e is the contact
 
             if t - e.contact_t >= κₘ / dt           ## Forget the old contacts
-                deleteat!(l_IQ[i].contacts, j)      ##forgetting the contact
+                deleteat!(l_IQ[i].contacts, j)
             elseif e.contact_t != t                 ## if the contact hasnt been made during the current timestep
                 if u[e.wa,e.a,1]!=0 && e.s == 1 && rand(Binomial(1,dN[linear_as_events[e.wa,e.a,1]]/u[e.wa,e.a,1]))==1 ## If contact is S(1) and event S->E(1) occured
                     e.s = 2
