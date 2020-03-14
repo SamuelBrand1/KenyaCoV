@@ -25,12 +25,12 @@
 end
 
 @with_kw mutable struct CoVParameters_AS
-    β::Float64 = 2.5/3.6
-    γ::Float64 = 1/3.6
-    σ::Float64 = 1/2.
-    δ::Float64 = 0.05#Proportion of symptomatic/diseased vs non-symptomatic cases
-    τ::Float64 = 1/15. #current isolation rate for symptomatics
-    τ_initial::Float64 = 1/15. # isolation rate for symptomatics at beginning of epidemic
+    β::Float64 = 1.
+    γ::Float64 = 1/2.5
+    σ::Float64 = 1/5.
+    δ::Float64 = 0.9#Proportion of over 80s who get identified
+    τ::Float64 = 0. #current isolation rate for symptomatics
+    τ_initial::Float64 = 0. # isolation rate for symptomatics at beginning of epidemic
     clear_quarantine = 1/14. # Two weeks on average to end isolation
     μ₁::Float64 = 0.0#Excess mortality due to disease
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable infecteds
@@ -40,6 +40,7 @@ end
     ρ::Vector{Float64} = [0.01 for i in 1:n] #Time spent outside of area
     T::Matrix{Float64} = zeros(n,n)#Probability distributions of location for mobile individuals
     M::Matrix{Float64} = zeros(n_a,n_a) #Age mixing matrix
+    M_ho::Matrix{Float64} = zeros(n_a,n_a) #Age mixing matrix --- if only home contacts are made
     ext_inf_rate::Float64 = 0. #Scales the contact rate with the infecteds arriving via air
     into_mom::Vector{Int}#Number of people flying into Mombassa each day
     into_nai::Vector{Int}#Number of people flying into Nairobi each day

@@ -22,7 +22,7 @@ n_a = 17 #global defining number of age categories
 n_wa = 20 #global defining number of wider area groupings
 n_ta = 8 #global defining number of events per location and age group
 mobile_age_indices = 5:11; #This assumes that 16-49 year ols move around and others don't
-immobile_age_indices = [1,2,3,4,12,13,14,15,16]
+immobile_age_indices = [1,2,3,4,12,13,14,15,16,17]
 
 ind_mombasa = 28
 ind_nairobi = 30
@@ -34,6 +34,7 @@ index_as_events = CartesianIndices((1:n_wa, 1:n_a,1:n_ta))
 linear_as = LinearIndices((1:n_wa, 1:n_a,1:n_s))
 linear_as_events = LinearIndices((1:n_wa, 1:n_a,1:n_ta))
 
+@load "data/agemixingmatrix_china.jld2" M_China
 
 include("kenya_data.jl");
 include("gravity_model.jl");

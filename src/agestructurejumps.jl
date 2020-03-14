@@ -191,15 +191,15 @@ function nonneg_tauleap(du,u,p::CoVParameters_AS,t)
 end
 
 function ode_model(du,u,p::CoVParameters_AS,t)
-    @unpack λ,γ,σ,δ,τ,μ₁,χ = p
+    @unpack λ,γ,σ,δ,τ,μ₁,χ,rel_detection_rate,clear_quarantine = p
     calculate_infection_rates!(u,p,t)
     for i = 1:n_wa,a = 1:n_a
         du[i,a,1] = (-1)*χ[a]*λ[i,a]*u[i,a,1]
         du[i,a,2] = χ[a]*λ[i,a]*u[i,a,1] - σ*u[i,a,2]
-        du[i,a,3] = (1-δ)*σ*u[i,a,2] - γ*u[i,a,3]
-        du[i,a,4] = δ*σ*u[i,a,2] - γ*u[i,a,4] - τ*u[i,a,4]
-        du[i,a,5] = τ*u[i,a,4] - γ*u[i,a,5] - μ₁*u[i,a,5]
-        du[i,a,6] = γ*(u[i,a,5] + u[i,a,4] + u[i,a,3])
+        du[i,a,3] = (1-(δ*rel_detection_rate[a]))*σ*u[i,a,2] - γ*u[i,a,3]
+        du[i,a,4] = δ*rel_detection_rate[a]*σ*u[i,a,2] - γ*u[i,a,4] - τ*u[i,a,4]
+        du[i,a,5] = τ*u[i,a,4] - clear_quarantine*u[i,a,5] - μ₁*u[i,a,5]
+        du[i,a,6] = clear_quarantine*u[i,a,5] + γ*(u[i,a,4] + u[i,a,3])
         du[i,a,7] = (1-δ)*σ*u[i,a,2]
         du[i,a,8] = δ*σ*u[i,a,2]
         du[i,a,9] = μ₁*u[i,a,5]

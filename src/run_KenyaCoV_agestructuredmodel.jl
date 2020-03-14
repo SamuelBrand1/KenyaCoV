@@ -14,26 +14,32 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
                                             "data/projected_global_prevelance.csv")
 
 @load "data/agemixingmatrix_china.jld2" M_China
+@load "data/agemixingmatrix_Kenya_norestrictions.jld2" M_Kenya
+@load "data/agemixingmatrix_Kenya_homeonly.jld2" M_Kenya_ho
+
 
 """
 Can adjust β to match a desired R₀ value by evaluating the leading eigenvalue
 The idea is to match to the chinese epidemic R₀ -- it will be different in Kenya
 """
-d_R₀ = Gamma(100,2.5/100) ##Liu et al
-mean(d_R₀)
-(quantile(d_R₀,0.025),median(d_R₀),quantile(d_R₀,0.975))
-P.ϵ = 1
-P.β = 3.52*P.γ
-sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
-eigs, = eigen(sus_matrix.*M_China)
-R₀ = Real(eigs[end])
+
+P.ϵ = 0.1
+P.χ = ones(KenyaCoV.n_a)
+R₀_scale = KenyaCoV.calculate_R₀_scale(P)
+P.χ = ones(KenyaCoV.n_a)/R₀_scale
+P.β = 2*P.γ
+
+KenyaCoV.calculate_R₀(P)
+KenyaCoV.calculate_R₀_homeonly(P)
+
+P.dt = 0.25
 
 """
 Can vary the spatial contact assumptions as well
 """
-P.ρ = zeros(20)
-KenyaCoV.transportstructure_params!(P,P.ρ,P_dest)
-P.dt = 0.25
+# P.ρ = zeros(20)
+# KenyaCoV.transportstructure_params!(P,P.ρ,P_dest)
+
 
 """
 Run model
@@ -41,10 +47,11 @@ Run model
 """
 
 u0[KenyaCoV.ind_nairobi_as,5,4] = 5#10 diseased
-
+P.ϵ_D = 1
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 @time sol = solve(prob,FunctionMap(),dt = P.dt)
-sum(sol[end][:,:,7:8])
+sum(sol[end][:,:,8])/sum(u0)
+sum(sol[end][:,:,8])
 
 prob_ode = KenyaCoV.create_KenyaCoV_ode_prob(u0,(0.,365.),P)
 @time sol_ode = solve(prob_ode,Tsit5())

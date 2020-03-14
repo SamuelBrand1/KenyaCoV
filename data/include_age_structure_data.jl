@@ -102,4 +102,4 @@ heatmap(T,clims = (0.,0.1))
 """
 Save all the data
 """
-@save "data/data_for_age_structuredmodel.jld2" N_region_age M_Kenya movements_per_person P_dest ρ T σ detection_rates M_Kenya_ho
+@save "data/data_for_age_structuredmodel.jld2" N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho

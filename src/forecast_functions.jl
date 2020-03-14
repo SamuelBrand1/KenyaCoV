@@ -25,12 +25,12 @@ function output_daily_and_final_incidence(sol,i)
     return (z,sol[end][:,:,7:8]),false
 end
 
-function randomise_params(prob,i,repeat)
+function randomise_params(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
     _P = deepcopy(prob.p)
     _P.isolating_detecteds = true
     _P.τ = _P.τ_initial
     _P.σ = 1/rand(d_incubation)
-    _P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
+    _P.β = rand(d_R₀)*_P.γ
     return remake(prob,p=_P)
 end
 
@@ -39,7 +39,7 @@ function randomise_params_and_infectiousness(prob,i,repeat)
     _P.isolating_detecteds = true
     _P.τ = _P.τ_initial
     _P.σ = 1/rand(d_incubation)
-    _P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
+    _P.β = rand(d_R₀)*_P.γ
     _P.ϵ = rand(Uniform(0.,0.5))
     return remake(prob,p=_P)
 end
@@ -111,18 +111,18 @@ Analysis functions
 function incidence_from_sims(sims)
     n = length(sims)
     m = length(sims[1][1])
-    inc_A_data = zeros(21,m-1,n)
-    inc_D_data = zeros(21,m-1,n)
-    final_D = zeros(20,16,n)
-    final_A = zeros(20,16,n)
+    inc_A_data = zeros(n_wa+1,m-1,n)
+    inc_D_data = zeros(n_wa+1,m-1,n)
+    final_D = zeros(n_wa,n_a,n)
+    final_A = zeros(n_wa,n_a,n)
     for (k,sim) in enumerate(sims)
-        for i = 1:20,t = 1:(m-1)
+        for i = 1:n_wa,t = 1:(m-1)
             inc_A_data[i,t,k] = sim[1][t+1][i,1] - sim[1][t][i,1]#Daily incidence rather than cumulative
             inc_D_data[i,t,k] = sim[1][t+1][i,2] - sim[1][t][i,2]
         end
         for t = 1:(m-1)
-            inc_A_data[21,t,k] = sum(sim[1][t+1][:,1] .- sim[1][t][:,1])
-            inc_D_data[21,t,k] = sum(sim[1][t+1][:,2] .- sim[1][t][:,2])
+            inc_A_data[n_wa+1,t,k] = sum(sim[1][t+1][:,1] .- sim[1][t][:,1])
+            inc_D_data[n_wa+1,t,k] = sum(sim[1][t+1][:,2] .- sim[1][t][:,2])
         end
         final_A[:,:,k] .= sim[2][:,:,1]
         final_D[:,:,k] .= sim[2][:,:,2]
@@ -130,7 +130,7 @@ function incidence_from_sims(sims)
     peak_times = zeros(n,21)
     inc_A_conf_intvs = zeros(21,m-1,3)
     inc_D_conf_intvs = zeros(21,m-1,3)
-    for i = 1:21,t = 1:(m-1)
+    for i = 1:(n_wa+1),t = 1:(m-1)
         inc_A_conf_intvs[i,t,1] = quantile(inc_A_data[i,t,:],0.5)
         inc_A_conf_intvs[i,t,2] = inc_A_conf_intvs[i,t,1] - quantile(inc_A_data[i,t,:],0.025) #Lower conf. int.
         inc_A_conf_intvs[i,t,3] =  quantile(inc_A_data[i,t,:],0.975) - inc_A_conf_intvs[i,t,1] #Upper conf. int.
@@ -139,7 +139,7 @@ function incidence_from_sims(sims)
         inc_D_conf_intvs[i,t,3] =  quantile(inc_D_data[i,t,:],0.975) - inc_D_conf_intvs[i,t,1] #Upper conf. int.
     end
 
-    for i = 1:21, k =1:n
+    for i = 1:(n_wa+1), k =1:n
         peak_times[k,i] = argmax(inc_A_data[i,:,k])
     end
 

@@ -73,7 +73,7 @@ function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrix
 end
 
 function model_ingredients_from_data(agestructuredata_filename,flight_filename,prev_filename)
-    @load agestructuredata_filename N_region_age agemixingmatrix movements_per_person P_dest ρ T age_specific_sus
+    @load "data/data_for_age_structuredmodel.jld2" N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho
 
     #Population state array
     suspop_kenya = zeros(Int64,n_wa,n_a,n_s) #Array by area, age group and disease state
@@ -96,10 +96,11 @@ function model_ingredients_from_data(agestructuredata_filename,flight_filename,p
     change_matrix(dc)
 
     #Parameter definition
-    P = CoVParameters_AS(T = T,ρ = ρ,χ = age_specific_sus,
+    P = CoVParameters_AS(T = T,ρ = ρ,χ = σ,rel_detection_rate = rel_detection_rates[:,2], #This assumes that the detection rates match ϵ = 0.1
                         into_mom = into_mom, into_nai = into_nai,
                         global_prev = global_prev,
-                        M = agemixingmatrix,
+                        M = M_Kenya,
+                        M_ho = M_Kenya_ho,
                         dc=dc,
                         N̂=N̂)
     #Matrix for in-place tau-leap calculations
@@ -138,4 +139,24 @@ end
 function create_KenyaCoV_ode_prob(u0,tspan,P::CoVParameters_AS)
     _u0 = convert.(Float64,u0)
     return prob = ODEProblem(ode_model,_u0,tspan,P)
+end
+
+function calculate_R₀_scale(P::CoVParameters_AS)
+    sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
+    trans_matrix = repeat(P.δ*P.rel_detection_rate' + P.ϵ*(1 .- P.δ*P.rel_detection_rate'),KenyaCoV.n_a,1)
+    eigs, = eigen(sus_matrix.*M_China.*trans_matrix)
+    return Real(eigs[end])
+end
+function calculate_R₀(P::CoVParameters_AS)
+    sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
+    trans_matrix = repeat(P.δ*P.rel_detection_rate' + P.ϵ*(1 .- P.δ*P.rel_detection_rate'),KenyaCoV.n_a,1)
+    eigs, = eigen(sus_matrix.*P.M.*trans_matrix)
+    return Real(eigs[end])*P.β/P.γ
+end
+
+function calculate_R₀_homeonly(P::CoVParameters_AS)
+    sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
+    trans_matrix = repeat(P.δ*P.rel_detection_rate' + P.ϵ*(1 .- P.δ*P.rel_detection_rate'),KenyaCoV.n_a,1)
+    eigs, = eigen(sus_matrix.*P.M_ho.*trans_matrix)
+    return Real(eigs[end])*P.β/P.γ
 end
