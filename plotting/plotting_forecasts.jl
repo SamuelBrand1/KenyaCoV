@@ -2,7 +2,7 @@ push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,JLD2,DataFrames,StatsPlots,FileIO,MAT
 using Statistics: median, quantile
 
-treatment_rates = [(0.,1),(0.,0.75),(0.,0.5),(1/7.,1.),(1/7,0.75),(1/7,0.5),(1/3.5,1.),(1/3.5,0.75),(1/3.5,0.5)]
+treatment_rates = [(0.,1),(0.,0.5),(1/7.,1.),(1/7,0.5),(1/3.5,1.),(1/3.5,0.5)]
 
 """
 Plots ---
@@ -10,19 +10,20 @@ Plots ---
 2) Peaks
 3) Size and age distribution
 """
+results_1
 
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_A1.jld2") results_A1
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_A2.jld2") results_A2
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_B1.jld2") results_B1
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_B2.jld2") results_B2
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_1.jld2") results_1
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2.jld2") results_2
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3.jld2") results_3
 
 include("plotting_functions.jl");
-res_group = [results_A1,results_B1]
+res_group = [results_1]
 
 plt = plot_total_incidence(res_group,treatment_rates[2],5)
 title!(plt,"Av. 1 week to isolation, 25% reduction in infectiousness")
 savefig(plt,"plotting/incidence_with_intervention.png")
 
+plot_total_incidence(results_1,treatment_rates)
 
 """
 Spatial plot

@@ -1,5 +1,5 @@
 riskregionnames = ["Machakos/Muranga" "Mandera" "Baringo/Nakuru" "Nairobi" "Uasin Gishu" "Marsabit" "Garissa" "Nakuru/Narok" "Turkana" "Taita Taveta" "Kitui/Meru" "Kilifi/Mombasa" "Kericho/Kisumu" "Kilifi/Lamu" "Kakamega/Kisumu" "Wajir" "Kajiado/Kisumu" "Homa bay/Migori" "Samburu/Laikipia" "Kilifi/Kwale" "Total"]
-age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75+"]
+age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"]
 
 function plot_total_incidence(results_group,treatments::Tuple{Float64,Real},i)
     τ,ϵ_D = treatments
@@ -59,19 +59,19 @@ function plot_total_incidence(results,treatment_rates)
                 yscale = :log10,
                 xlabel = "Days",
                 ylabel = "Daily incidence")
-    for i = 2:3
-        τ = treatment_rates[i]
-        inc_D = results[i][1]
-        plot!(plt,1:365,inc_D[21,:,1].+1,
-                    lw = 3,
-                    lab="Isolation in mean $(round(1/τ,digits = 1)) days",
-                    ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
-                    fillalpha = 0.15,
-                    xlims = (30.,100),
-                    # yscale = :log10,
-                    xlabel = "Days",
-                    ylabel = "Daily incidence")
-    end
+    # for i = 2:3
+    #     τ = treatment_rates[i]
+    #     inc_D = results[i][1]
+    #     plot!(plt,1:365,inc_D[21,:,1].+1,
+    #                 lw = 3,
+    #                 lab="Isolation in mean $(round(1/τ,digits = 1)) days",
+    #                 ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
+    #                 fillalpha = 0.15,
+    #                 xlims = (30.,100),
+    #                 # yscale = :log10,
+    #                 xlabel = "Days",
+    #                 ylabel = "Daily incidence")
+    # end
     return plt
 end
 
