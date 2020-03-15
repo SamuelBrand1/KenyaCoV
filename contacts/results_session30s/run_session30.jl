@@ -51,11 +51,12 @@ P.τ=1/3.
 P.κ=10
 P.κₘ=7;     P.Δₜ=7
 P.κ_per_event4=50
-τₚ_list=[0.0,0.5]
+τₚ_list=[0.0,0.25,0.5,0.75,0.9]
+P.Κ_max_capacity=[1000 for e in P.Κ_max_capacity]
 P.Κ_max_capacity[KenyaCoV_contacts.ind_nairobi_as]=1e3
 #P.Κ_max_capacity[KenyaCoV_contacts.ind_mombasa_as]=1e2
-session_nb=31
-n_traj=10
+session_nb=38
+n_traj=100
 
 for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
 prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)

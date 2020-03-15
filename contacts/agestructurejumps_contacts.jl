@@ -24,6 +24,8 @@ States:
 8 -> Cumulative I_dis
 9 -> Cumulative I_Q                                    #****2  Cumulative dead BECOMES Cumulative I_Q
 10 -> I_d(iseased_to_be_)h(ospitalised)                 #****  IQ
+11 -> C(daily contacteds)                               #****2
+12 -> Cumulative contacteds
 
 Events for each wider area and age group:
 
@@ -37,6 +39,11 @@ Events for each wider area and age group:
 8-> Quarantined->death
 9-> Incubation into diseased to be detected  E->IQ    #****
 10->Diseased to be Quarantined who recover DQ->R       #**** IQ->R
+11-> S to Q
+12-> E to Q
+13-> I_A to Q
+14-> I_D to Q
+15-> I_Q to Q
 
 """
 
@@ -158,13 +165,63 @@ function change_matrix(dc)
             ind_cumQ = linear_as[i, a, 9]   #****2
             dc[ind_E, k] = -1
             dc[ind_IQ, k] = 1
-            dc[ind_cumQ] = 1
+            dc[ind_cumQ, k] = 1
         end
         if eventtype == 10           #**** IQ->R
             ind_DQ = linear_as[i, a, 10]
             ind_R = linear_as[i, a, 6]
             dc[ind_DQ, k] = -1
             dc[ind_R, k] = 1
+        end
+        if eventtype == 11          #****2      S->Q (contact)
+            ind_Q = linear_as[i, a, 5]
+            ind_S = linear_as[i, a, 1]
+            ind_C = linear_as[i, a, 11]
+            ind_CumC = linear_as[i, a, 12]
+            dc[ind_S, k] = -1
+            dc[ind_Q, k] = 1
+            dc[ind_C, k] = 1
+            dc[ind_CumC, k] = 1
+        end
+        if eventtype == 12          #****2      E->Q (contact)
+            ind_Q = linear_as[i, a, 5]
+            ind_E = linear_as[i, a, 2]
+            ind_C = linear_as[i, a, 11]
+            ind_CumC = linear_as[i, a, 12]
+            dc[ind_E, k] = -1
+            dc[ind_Q, k] = 1
+            dc[ind_C, k] = 1
+            dc[ind_CumC, k] = 1
+        end
+        if eventtype == 13          #****2      I_A->Q (contact)
+            ind_Q = linear_as[i, a, 5]
+            ind_IA = linear_as[i, a, 3]
+            ind_C = linear_as[i, a, 11]
+            ind_CumC = linear_as[i, a, 12]
+            dc[ind_IA, k] = -1
+            dc[ind_Q, k] = 1
+            dc[ind_C, k] = 1
+            dc[ind_CumC, k] = 1
+        end
+        if eventtype == 14          #****2      I_D->Q (contact)
+            ind_Q = linear_as[i, a, 5]
+            ind_ID = linear_as[i, a, 4]
+            ind_C = linear_as[i, a, 11]
+            ind_CumC = linear_as[i, a, 12]
+            dc[ind_ID, k] = -1
+            dc[ind_Q, k] = 1
+            dc[ind_C, k] = 1
+            dc[ind_CumC, k] = 1
+        end
+        if eventtype == 15          #****2      I_Q->Q (contact)
+            ind_Q = linear_as[i, a, 5]
+            ind_IQ = linear_as[i, a, 10]
+            ind_C = linear_as[i, a, 11]
+            ind_CumC = linear_as[i, a, 12]
+            dc[ind_IQ, k] = -1
+            dc[ind_Q, k] = 1
+            dc[ind_C, k] = 1
+            dc[ind_CumC, k] = 1
         end
     end
 end
@@ -190,6 +247,11 @@ function max_change(out, u, p::CoVParameters_AS)
         ind_Qdeath = linear_as_events[i, a, 8]
         ind_EIq = linear_as_events[i, a, 9]                #****
         ind_IqR = linear_as_events[i, a, 10]               #****
+        ind_SQ = linear_as_events[i, a, 11]               #****2
+        ind_EQ = linear_as_events[i, a, 12]               #****2
+        ind_AQ = linear_as_events[i, a, 13]               #****2
+        ind_DQ = linear_as_events[i, a, 14]               #****2
+        ind_IqQ = linear_as_events[i, a, 15]              #****2
 
         out[ind_trans] = min(out[ind_trans], u[i, a, 1])
         out[ind_QR] = min(out[ind_QR], u[i, a, 5])
@@ -198,6 +260,13 @@ function max_change(out, u, p::CoVParameters_AS)
         out[ind_DR] = min(out[ind_DR], u[i, a, 4])         #**** No more Iᴰ->R than actual Iᴰ
         out[ind_IqR] = min(out[ind_IqR], u[i, a, 10])       #**** No more IQ->R than actual IQ
         out[ind_IqQ] = min(out[ind_IqQ], u[i, a, 10])       #**** No more IQ->Q than actual IQ
+
+        out[ind_SQ] = min(out[ind_SQ], u[i, a, 1])       #****2 No more S->Q than actual S
+        out[ind_EQ] = min(out[ind_EQ], u[i, a, 2])       #****2 No more E->Q than actual E
+        out[ind_AQ] = min(out[ind_AQ], u[i, a, 3])       #****2 No more I_A->Q than actual I_A
+        out[ind_DQ] = min(out[ind_DQ], u[i, a, 4])       #****2 No more I_D->Q than actual I_D
+        out[ind_IqQ] = min(out[ind_IqQ], u[i, a, 10])    #****2 No more I_Q->Q than actual I_Q
+
 
         #spliting events using binomial sampling
         if out[ind_EA] + out[ind_ED] + out[ind_EIq] > u[i, a, 2] && u[i, a, 2] >= 0  #More incubations than actual rural E population
@@ -249,7 +318,7 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
     @pack! p=t_max_capacity
 end
 
-function ode_model(du, u, p::CoVParameters_AS, t)
+#=function ode_model(du, u, p::CoVParameters_AS, t)
     @unpack λ, γ, σ, δ, τ, μ₁, χ = p
     calculate_infection_rates!(u, p, t)
     for i = 1:n_wa, a = 1:n_a
@@ -263,7 +332,7 @@ function ode_model(du, u, p::CoVParameters_AS, t)
         du[i, a, 8] = δ * σ * u[i, a, 2]
         du[i, a, 9] = μ₁ * u[i, a, 5] #****2    9 no longer means dead
     end
-end
+end=#
 
 using PoissonRandom, SimpleRandom
 function IQ_make_contacts(u, p::CoVParameters_AS, t::Float64)                     #!!!!
@@ -285,7 +354,7 @@ function IQ_make_contacts(u, p::CoVParameters_AS, t::Float64)                   
     ## make contacts. We suppose all contacts are made in the same area. Contacts depend on the age mixing matrix M[a_i,a_j], we suppose a_i contacts a_j
     for i = 1:size(l_IQ, 1)
         #if (l_IQ[i].wa == 4) #!!!! this is commented so we can make contacts in all wa
-#        if Κ_current[wa]<Κ_max_capacity[wa] #!!!!
+        #if Κ_current[wa]<Κ_max_capacity[wa] #!!!!
             n_contacts = pois_rand(κ * dt)  #number of contacts scaled by dt
             #i_IQ=l_IQ[i] ## is the current individual who's making the contacts
             append!(
@@ -298,7 +367,7 @@ function IQ_make_contacts(u, p::CoVParameters_AS, t::Float64)                   
                     contact_dur = 0,
                 ) for c = 1:n_contacts],
             )
-#        end
+        #end
     end
 end
 
@@ -324,7 +393,7 @@ function update_l_IQ(dN::Vector{Int64}, u, p::CoVParameters_AS, t)              
     while i <= size(l_IQ, 1)
         if l_IQ[i].detection_dur <= 0
             dN[linear_as_events[Int(l_IQ[i].wa), Int(l_IQ[i].a), 4]] += 1          ## move IQ to Q, which is the event number 4
-            intervention_trace_contacts(i, u, p, t)                                ## CONTACT TRACING INTERVENTION
+            intervention_trace_contacts(i, dN, u, p, t)                                ## CONTACT TRACING INTERVENTION
             deleteat!(l_IQ, i)                                                   ## delete from the l_IQ list
         end
         i += 1
@@ -409,7 +478,7 @@ function update_contact_states(dN::Vector{Int64}, u, p::CoVParameters_AS, t)    
 end
 
 
-function intervention_trace_contacts(traced_index::Int, u, p::CoVParameters_AS, t)   #****
+function intervention_trace_contacts(traced_index::Int, dN::Vector{Int64}, u, p::CoVParameters_AS, t)   #****
     @unpack l_IQ, Δₜ, κ_per_event4, Κ_current, Κ_max_capacity, dt = p
     contacteds = [c for c in l_IQ[traced_index].contacts if t - c.contact_t <= Δₜ/dt]
     if contacteds != []
@@ -417,15 +486,26 @@ function intervention_trace_contacts(traced_index::Int, u, p::CoVParameters_AS, 
         contacteds = @view contacteds[1:min(κ_per_event4, size(contacteds, 1))]      #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         for c in contacteds                                                     ## for each contact, remove the S, E, Iᴬ, Iᴰ or IQ to Q
             if c.s in [1, 2, 3, 4, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]   #!!!! per wa
-                u[c.wa, c.a, c.s] -= 1
-                u[c.wa, c.a, 5] += 1
                 Κ_current[c.wa] += 1                                                  ## Increment the total number of traceds
+                if c.s==1
+                    dN[linear_as_events[c.wa, c.a, 11]] +=1
+                elseif c.s==2
+                    dN[linear_as_events[c.wa, c.a, 12]] +=1
+                elseif c.s==3
+                    dN[linear_as_events[c.wa, c.a, 13]] +=1
+                elseif c.s==4
+                    dN[linear_as_events[c.wa, c.a, 14]] +=1
+                elseif c.s==10
+                    dN[linear_as_events[c.wa, c.a, 15]] +=1
+                end
+                #u[c.wa, c.a, c.s] -= 1
+                #u[c.wa, c.a, 5] += 1
             end
         end
     end
     @pack! p = Κ_current
 end
-
+#=
 function check_negativity(u, dN::Vector{Int64}, t)
     for wa = 1:n_wa, a = 1:n_a, s = 1:n_s
         if u[wa, a, s] < 0
@@ -436,3 +516,4 @@ function check_negativity(u, dN::Vector{Int64}, t)
         end
     end
 end
+=#

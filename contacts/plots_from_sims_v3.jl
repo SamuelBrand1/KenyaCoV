@@ -1,12 +1,12 @@
-using Plots,MAT, StatsPlots, Images, Statistics, ImageView,ImageDraw
+using Plots,MAT, StatsPlots, Statistics#, Images, ImageView,ImageDraw
 
-results_folder=".\\contacts\\results_session30s\\results_session31\\"
-τₚ_list=[0.0,0.5]
-colors=[:blue,:orange]
-markershapes=[:circle,:ltriangle]
+results_folder=".\\contacts\\results_session30s\\results_session38\\"
+τₚ_list=[0.0,0.25,0.5,0.75,0.9]#[0.0,0.5]
+colors=[:blue,:orange, :purple3, :maroon, :gold]
+markershapes=[:circle,:ltriangle, :hexagon, :star, :plus]
 data_files=readdir(results_folder)#["sims100_taup0.0_capacity10000.mat","sims100_taup0.25_capacity10000.mat","sims100_taup0.5_capacity10000.mat","sims100_taup0.75_capacity10000.mat","sims100_taup0.9_capacity10000.mat"];
 data_files=[s for s in data_files if endswith(s,".mat")]
-n_traj=10
+n_traj=100
 riskregionnames = ["Machakos/Muranga" "Mandera" "Baringo/Nakuru" "Nairobi" "Uasin Gishu" "Marsabit" "Garissa" "Nakuru/Narok" "Turkana" "Taita Taveta" "Kitui/Meru" "Kilifi/Mombasa" "Kericho/Kisumu" "Kilifi/Lamu" "Kakamega/Kisumu" "Wajir" "Kajiado/Kisumu" "Homa bay/Migori" "Samburu/Laikipia" "Kilifi/Kwale" "Total"]
 wa_coords=[[300,450], [515,85], [165,360], [235,465], [115,300], [300,140], [510,380], [180, 430], [120, 130], [355, 615], [340, 375], [465, 630], [100, 380], [495, 530], [40, 355], [490, 255], [155, 495], [30, 440], [250, 290], [400, 670]]
 ## Plotting functions IN NAIROBI
@@ -54,7 +54,7 @@ function ALL_TAUP_cumulative_infecteds_sumages(τₚ_list,results_folder,data_fi
     end
     savefig(p,results_folder*"jl_cumulative_Ia, Id, Iq_allages_nairobi.png")
 end
-function ALL_TAUP_cumulative_infecteds_sumages_ONESIM(τₚ_list,results_folder,data_files,n_traj)
+function ALL_TAUP_cumulative_infecteds_sumages_ONESIM_GROUPEDBAR(τₚ_list,results_folder,data_files,n_traj)
 
     histo=Int[]
     L=repeat(["IA","ID","IQ"], inner = size(τₚ_list,1))
@@ -67,19 +67,25 @@ function ALL_TAUP_cumulative_infecteds_sumages_ONESIM(τₚ_list,results_folder,
         data_per_taup=data_per_taup[:,2:end]
 
         push!(histo,sum(data_per_taup[end,1][4,:,7]))
-        push!(histo,sum(data_per_taup[end,1][4,:,8]))
-        push!(histo,sum(data_per_taup[end,1][4,:,9]))
-
     end
+    for i=1:size(τₚ_list,1)
+        file = matopen(results_folder*data_files[i])
+        data_per_taup=read(file, "sims")
+        close(file)
+        data_per_taup=data_per_taup[:,2:end]
+
+        push!(histo,sum(data_per_taup[end,1][4,:,8]))
+    end
+    for i=1:size(τₚ_list,1)
+        file = matopen(results_folder*data_files[i])
+        data_per_taup=read(file, "sims")
+        close(file)
+        data_per_taup=data_per_taup[:,2:end]
+
+        push!(histo,sum(data_per_taup[end,1][4,:,9]))
+    end
+
     p=groupedbar(L,histo,group=gro,title="Final cumulative Ia,Id,Iq ONE SIM (sum all ages) Nairobi")
-#=
-    mn = histo#[20, 35, 30, 35, 27,25, 32, 34, 20, 25]
-    sx = repeat(["Men", "Women"], inner = 5)
-    nam = repeat("G" .* string.(1:5), outer = 2)
-    using StatsPlots
-    groupedbar(nam, mn,  group = sx, ylabel = "Scores",
-            title = "Scores by group and gender")
-=#
     savefig(p,results_folder*"jl_cumulative_Ia-Id-Iq_ONE_SIM_allages_nairobi.png")
 end
 function ALL_TAUP_cumulative_IQ_sumages_BOXPLOT(τₚ_list,results_folder,data_files,n_traj)
@@ -143,8 +149,7 @@ function ALL_TAUP_cumulative_symptomatics_peragegroup_BOXPLOT(τₚ_list,results
 end=#
 function ALL_TAUP_sumages_CURVES(τₚ_list,results_folder,data_files,n_traj)
     pI=plot(title="E,IA,ID,IQ "*string(n_traj)*" sims (sum all ages) Nairobi")
-    pIdIq=plot(title="ID+IQ "*string(n_traj)*" sims (sum all ages) Nairobi")
-    pIdIq_peak=plot(title="PEAK E,IA,ID,IQ "*string(n_traj)*" sims (sum all ages) Nairobi")
+    pIdIq=plot(title="ID,IQ,ID+IQ "*string(n_traj)*" sims (sum all ages) Nairobi")
     pSR=plot(title="S and R "*string(n_traj)*" sims (sum all ages) Nairobi")
     pQ=plot(title="Q "*string(n_traj)*" sims (sum all ages) Nairobi")
     pIa=plot(title="IA "*string(n_traj)*" sims (sum all ages) Nairobi")
@@ -168,12 +173,12 @@ function ALL_TAUP_sumages_CURVES(τₚ_list,results_folder,data_files,n_traj)
             Ej=[sum([data_per_taup[t,j][4,a,2]  for a=1:16])        for t=1:size(data_per_taup,1)]
             plot!(pI,IAj .+ IDj .+ IQj .+ Ej,color=colors[i],legend=false)
             plot!(pIa,IAj,color=colors[i],legend=false)
-            #plot!(pIdIq_peak,IDj .+ IQj, color=colors[i],legend=false,ylim=(3.2e4,3.6e4))
             plot!(pIdIq,IDj .+ IQj, color=colors[i],legend=false)
+            plot!(pIdIq,IDj, color=colors[i],legend=false,markershape=markershapes[i])
+            plot!(pIdIq,IQj, color=colors[i],legend=false)#,markershape=markershapes[i])
             Qj=[sum([data_per_taup[t,j][4,a,5]  for a=1:16])        for t=1:size(data_per_taup,1)]
             plot!(pQ,Qj)#, color=colors[i])#,legend=false)
         end
-        #plot!(Id_per_taup_nairobi,label="taup"*string(τₚ_list[i]))
     end
     #display(p)
     savefig(pSR,results_folder*"jl_SR_nairobi.png")
@@ -183,16 +188,115 @@ function ALL_TAUP_sumages_CURVES(τₚ_list,results_folder,data_files,n_traj)
     #savefig(pIdIq_peak,results_folder*"jl_IdIq_PEAK_nairobi.png")
     savefig(pQ,results_folder*"jl_Q_nairobi.png")
 end
+
+function ALL_TAUP_sumages_CONTACT_CURVES(τₚ_list,results_folder,data_files,n_traj)
+    pCumC=plot(title="CumC "*string(n_traj)*" sims (sum all ages) Nairobi")
+    pC=plot(title="Contacts "*string(n_traj)*" sims (sum all ages) Nairobi")
+    data=[]
+    for i=1:size(τₚ_list,1)
+        file = matopen(results_folder*data_files[i])
+        data_per_taup=read(file, "sims")
+        close(file)
+        data_per_taup=data_per_taup[:,2:end]
+
+        for j=1:size(data_per_taup,2) # for each sim
+            CumCj=[sum([data_per_taup[t,j][4,a,12]  for a=1:16])        for t=1:size(data_per_taup,1)]
+            plot!(pCumC,CumCj, color=colors[i])#,markershape=markershapes[i])
+            Cj=[sum([data_per_taup[t,j][4,a,11]  for a=1:16])        for t=1:size(data_per_taup,1)]
+            plot!(pC,Cj, color=colors[i])#,markershape=markershapes[i])
+        end
+    end
+    savefig(pCumC,results_folder*"jl_CumC_nairobi.png")
+    #savefig(pC,results_folder*"jl_Contacts_nairobi.png")
+end
+function ALL_TAUP_ONESIM(τₚ_list,results_folder,data_files,n_traj)
+    p1=plot()#title="Q - ONE SIM (sum all ages) Nairobi")
+    p2=plot()#title="I_Q - ONE SIM (sum all ages) Nairobi")
+    for i=1:size(τₚ_list,1)
+        file = matopen(results_folder*data_files[i])
+        data_per_taup=read(file, "sims")
+        close(file)
+        data_per_taup=data_per_taup[:,2:end]
+        Q=[sum([data_per_taup[t,1][4,a,5]  for a=1:16])        for t=1:size(data_per_taup,1)]
+        plot!(p1,Q,label="taup"*string(τₚ_list[i])*"-Q")# color=colors[i],markershape=markershapes[i])
+        CumC=[sum([data_per_taup[t,1][4,a,12]  for a=1:16])        for t=1:size(data_per_taup,1)]
+        plot!(p1,CumC,label="taup"*string(τₚ_list[i])*"-CumC")
+        Iq=[sum([data_per_taup[t,1][4,a,10]  for a=1:16])        for t=1:size(data_per_taup,1)]
+        plot!(p2,Iq,label="taup"*string(τₚ_list[i])*"-I_Q")
+        CumIq=[sum([data_per_taup[t,1][4,a,9]  for a=1:16])        for t=1:size(data_per_taup,1)]
+        plot!(p2,CumIq,label="taup"*string(τₚ_list[i])*"-CumI_Q")
+    end
+    p=plot(p1,p2,layout=(1,2),title="ONE SIM (sum all ages) Nairobi")
+    savefig(p,results_folder*"jl_ONE_SIM_Q_nairobi.png")
+end
+function peak_times_Nairobi(τₚ_list,results_folder,data_files,n_traj)
+    peaks=[]
+    median_time_diff=[]
+    #p=plot(title="I_A+I_D+I_Q Naitobi")
+    for i=1:size(τₚ_list,1)
+        peaks_per_tau=[]
+        file = matopen(results_folder*data_files[i])
+        data_per_taup=read(file, "sims")
+        close(file)
+        data_per_taup=data_per_taup[:,2:end]
+        for j=1:size(data_per_taup,2) # for each sim
+            I_A=[sum([data_per_taup[t,j][4,a,3]  for a=1:16])        for t=1:size(data_per_taup,1)]
+            I_D=[sum([data_per_taup[t,j][4,a,4]  for a=1:16])        for t=1:size(data_per_taup,1)]
+            I_Q=[sum([data_per_taup[t,j][4,a,10]  for a=1:16])        for t=1:size(data_per_taup,1)]
+            I=I_A .+ I_D .+ I_Q
+            #plot!(p,I,color=colors[i])
+            push!(peaks_per_tau,findall(x->x==maximum(I),I)[1] *.5)  # rescale by dt= .5
+        end
+        push!(peaks,peaks_per_tau)
+        push!(median_time_diff,median(peaks_per_tau)-median(peaks[1]))
+    end
+    #global peaks=[e .* .5 for e in peaks] # rescale by dt= .5
+    #median_time_diff=[e*.5 for e in median_time_diff] # rescale by dt= .5
+    savefig(boxplot(peaks,title="peak times per tau",legend=false),results_folder*"jl_peaks_nairobi.png")
+    display(boxplot(peaks,title="peak times per tau",legend=false))
+    savefig(bar(median_time_diff),results_folder*"jl_time_diff_days_nairobi.png")
+end
+function peak_times_allWA(τₚ_list,results_folder,data_files,n_traj)
+    peaks=[]
+    #p=plot(title="I_A+I_D+I_Q Naitobi")
+    for i=1:size(τₚ_list,1)
+        peaks_per_tau_wa=[]
+        file = matopen(results_folder*data_files[i])
+        data_per_taup=read(file, "sims")
+        close(file)
+        data_per_taup=data_per_taup[:,2:end]
+        for wa=1:20
+            for j=1:size(data_per_taup,2) # for each sim
+                I_A=[sum([data_per_taup[t,j][wa,a,3]  for a=1:16])        for t=1:size(data_per_taup,1)]
+                I_D=[sum([data_per_taup[t,j][wa,a,4]  for a=1:16])        for t=1:size(data_per_taup,1)]
+                I_Q=[sum([data_per_taup[t,j][wa,a,10]  for a=1:16])        for t=1:size(data_per_taup,1)]
+                I=I_A .+ I_D .+ I_Q
+                #plot!(p,I,color=colors[i])
+                push!(peaks_per_tau_wa,findall(x->x==maximum(I),I)[1])
+            end
+            push!(peaks,peaks_per_tau_wa)
+        end
+    end
+    #display(p)
+    b=boxplot(peaks,legend=false)
+    savefig(b,results_folder*"jl_peaks_allWA.png")
+
+end
+
 ## Calling the functions , IN NAIROBI
 
 #ALL_TAUP_cumulative_symptomatics_sumages_BOXPLOT(τₚ_list,results_folder,data_files,n_traj)
 #ALL_TAUP_cumulative_symptomatics_perage_BOXPLOT(τₚ_list,results_folder,data_files,n_traj)
 #ALL_TAUP_cumulative_symptomatics_peragegroup_BOXPLOT(τₚ_list,results_folder,data_files,n_traj)
 
-ALL_TAUP_cumulative_infecteds_sumages(τₚ_list,results_folder,data_files,n_traj)
-ALL_TAUP_cumulative_IQ_sumages_BOXPLOT(τₚ_list,results_folder,data_files,n_traj)
-ALL_TAUP_cumulative_symptomatics_sumages(τₚ_list,results_folder,data_files,n_traj)
+ALL_TAUP_cumulative_infecteds_sumages_ONESIM_GROUPEDBAR(τₚ_list,results_folder,data_files,n_traj)
+#ALL_TAUP_cumulative_IQ_sumages_BOXPLOT(τₚ_list,results_folder,data_files,n_traj)
+#ALL_TAUP_cumulative_symptomatics_sumages(τₚ_list,results_folder,data_files,n_traj)
 ALL_TAUP_sumages_CURVES(τₚ_list,results_folder,data_files,n_traj)
+ALL_TAUP_sumages_CONTACT_CURVES(τₚ_list,results_folder,data_files,n_traj)
+ALL_TAUP_ONESIM(τₚ_list,results_folder,data_files,n_traj)
+peak_times_Nairobi(τₚ_list,results_folder,data_files,n_traj)
+peak_times_allWA(τₚ_list,results_folder,data_files,n_traj)
 
 ## Plotting functions in all areas
 function ALL_TAUP_cumulative_symptomatics_maps(τₚ_list,results_folder,data_files,n_traj,wa_coords)
@@ -241,4 +345,4 @@ function ALL_TAUP_cumulative_symptomatics_maps(τₚ_list,results_folder,data_fi
 end
 
 ## Calling the functions in all areas
-maxl,S=ALL_TAUP_cumulative_symptomatics_maps(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+#maxl,S=ALL_TAUP_cumulative_symptomatics_maps(τₚ_list,results_folder,data_files,n_traj,wa_coords)
