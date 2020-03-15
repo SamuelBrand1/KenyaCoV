@@ -150,13 +150,19 @@ end
 function calculate_R₀(P::CoVParameters_AS)
     sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
     trans_matrix = repeat(P.δ*P.rel_detection_rate' + P.ϵ*(1 .- P.δ*P.rel_detection_rate'),KenyaCoV.n_a,1)
-    eigs, = eigen(sus_matrix.*P.M.*trans_matrix)
-    return Real(eigs[end])*P.β/P.γ
+    K = sus_matrix.*P.M.*trans_matrix*P.β/P.γ
+    v₀ = zeros(n_a)
+    v₀[6] = 1
+    eigs,evects = eigen(K)
+    return Real(eigs[end]), LinearAlgebra.normalize!(abs.(evects[:,end]),1),(K^5)*v₀
 end
 
 function calculate_R₀_homeonly(P::CoVParameters_AS)
     sus_matrix = repeat(P.χ,1,KenyaCoV.n_a)
     trans_matrix = repeat(P.δ*P.rel_detection_rate' + P.ϵ*(1 .- P.δ*P.rel_detection_rate'),KenyaCoV.n_a,1)
-    eigs, = eigen(sus_matrix.*P.M_ho.*trans_matrix)
-    return Real(eigs[end])*P.β/P.γ
+    K = sus_matrix.*P.M.*trans_matrix*P.β/P.γ
+    v₀ = zeros(n_a)
+    v₀[6] = 1
+    eigs,evects = eigen(K)
+    return Real(eigs[end]), LinearAlgebra.normalize!(abs.(evects[:,end]),1),(K^2)*v₀
 end
