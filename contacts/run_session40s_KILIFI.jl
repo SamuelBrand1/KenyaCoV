@@ -13,7 +13,8 @@ function randomise_params(prob,i,repeat)
 end
 function run_saveMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list,session)
     #folder="./contacts/results_session40s/results_session"*string(session)*"/"
-    folder="W:/BACKUP MakingContacts/2020-03-16_v5/results_session"*string(session)*"/"
+    #folder="W:/BACKUP MakingContacts/2020-03-16_v5/results_session"*string(session)*"/"
+    folder="./contacts/results_session40s/results_session"*string(session)*"/"
     mkdir(folder)
     for τₚ in τₚ_list
         P.τₚ =τₚ
@@ -57,7 +58,7 @@ P.κ_per_event4=50
 #P.Κ_max_capacity[KenyaCoV_contacts.ind_mombasa_as]=1e2
 P.Κ_max_capacity[12]=1e3
 session_nb=46
-n_traj=500
+n_traj=50
 
 for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
 prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
@@ -81,14 +82,14 @@ P.κ_per_event4=50
 #P.Κ_max_capacity[KenyaCoV_contacts.ind_mombasa_as]=1e2
 P.Κ_max_capacity[12]=5e3
 session_nb=47
-n_traj=500
+#n_traj=5
 
 for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
 prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 results_sessions = run_saveMAT(P,prob,n_traj,τₚ_list,session_nb)
 
 """
-SCENARIO I
+SCENARIO III
 """
 u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
 u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
@@ -105,7 +106,7 @@ P.κ_per_event4=50
 #P.Κ_max_capacity[KenyaCoV_contacts.ind_mombasa_as]=1e2
 P.Κ_max_capacity[12]=1e4
 session_nb=48
-n_traj=500
+#n_traj=5
 
 for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
 prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)

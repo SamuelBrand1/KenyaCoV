@@ -1,6 +1,6 @@
 using Plots,MAT, StatsPlots, Statistics#, Images, ImageView,ImageDraw
 
-results_folder=".\\contacts\\results_session40s\\results_session42\\"
+results_folder=".\\contacts\\results_session40s\\results_session46\\"
 τₚ_list=[.0,.25,.5,.75,.9]#[.0,.5]
 n_traj=20
 dt=.5
@@ -441,17 +441,17 @@ function time_from_intro_to_peak_Kilifi(τₚ_list,results_folder,data_files,n_t
 end
 
 
-results_folder=".\\contacts\\results_session40s\\results_session43\\"
-τₚ_list=[.0,.25,.5,.75,.9]#[.0,.5]
-n_traj=500
+results_folder=".\\contacts\\results_session40s\\results_session46\\"
+τₚ_list=[.25,.5,.75,.9]#[.0,.5]
+n_traj=50
 one_sim_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
 time_from_intro_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
 time_from_intro_to_peak_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
 
 
 results_folder=".\\contacts\\results_session40s\\results_session43\\"
-τₚ_list=[.0,.25,.5,.75]#[.0,.5]
-n_traj=200
+τₚ_list=[.25,.5,.75,.9]#[.0,.5]
+n_traj=50
 one_sim_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
 time_from_intro_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
 time_from_intro_to_peak_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
