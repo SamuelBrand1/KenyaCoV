@@ -85,13 +85,13 @@ KenyaCoV.calculate_R₀(P)
 
 u0[KenyaCoV.ind_nairobi_as,detected_age_group,4] = num_initial_detected
 u0[KenyaCoV.ind_nairobi_as,:,3] = undetected_age_profile
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,2*365.),P)
 
 results_2SI = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,cb_iso_limit)
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI.jld2") results_2SI
 
 
-println("Finished 2 social distancing")
+println("Finished 2 imperfect social distancing")
 """
 SCENARIO 3 --- Social distancing:
 * No age-specific susceptibilties --- its disease difference
@@ -131,10 +131,10 @@ KenyaCoV.calculate_R₀(P)
 
 u0[KenyaCoV.ind_nairobi_as,detected_age_group,4] = num_initial_detected
 u0[KenyaCoV.ind_nairobi_as,:,3] = undetected_age_profile
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,2*365.),P)
 
 results_3SI = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,cb_iso_limit)
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI.jld2") results_3SI
 
 
-println("Finished 3 Social distancing")
+println("Finished 3 imperfect social distancing")
