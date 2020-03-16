@@ -1,8 +1,8 @@
 using Plots,MAT, StatsPlots, Statistics#, Images, ImageView,ImageDraw
 
-results_folder=".\\contacts\\results_session40s\\results_session42\\"
+results_folder=".\\contacts\\results_session40s\\results_session43\\"
 τₚ_list=[.0,.25,.5,.75,.9]#[.0,.5]
-n_traj=20
+n_traj=500
 dt=.5
 
 colors=[:blue,:orange, :purple3, :maroon, :gold]
