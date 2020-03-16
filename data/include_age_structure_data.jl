@@ -64,6 +64,8 @@ M_Kenya = extend_and_convert_Prem_matrix(agemixingmatrix,prop_75_79_amongst_75_p
 heatmap(M_Kenya,clims = (0.,2.))
 
 @save "data/agemixingmatrix_Kenya_norestrictions.jld2" M_Kenya
+
+
 agemixingmatrix_table = readtable("data/Kenya_age_matrix_home_only.csv")
 agemixingmatrix = zeros(16,16)
 for i = 1:16,j=1:16
@@ -73,6 +75,30 @@ M_Kenya_ho = extend_and_convert_Prem_matrix(agemixingmatrix,prop_75_79_amongst_7
 heatmap(M_Kenya_ho,clims = (0.,2.))
 @save "data/agemixingmatrix_Kenya_homeonly.jld2" M_Kenya_ho
 
+agemixingmatrix_table = readtable("data/Kenya_age_matrix_other.csv")
+agemixingmatrix = zeros(16,16)
+for i = 1:16,j=1:16
+    agemixingmatrix[i,j] = agemixingmatrix_table[i,j]
+end
+M_Kenya_other = extend_and_convert_Prem_matrix(agemixingmatrix,prop_75_79_amongst_75_plus_Kenya)
+
+agemixingmatrix_table = readtable("data/Kenya_age_matrix_school_only.csv")
+agemixingmatrix = zeros(16,16)
+for i = 1:16,j=1:16
+    agemixingmatrix[i,j] = agemixingmatrix_table[i,j]
+end
+M_Kenya_school = extend_and_convert_Prem_matrix(agemixingmatrix,prop_75_79_amongst_75_plus_Kenya)
+
+agemixingmatrix_table = readtable("data/Kenya_age_matrix_work_only.csv")
+agemixingmatrix = zeros(16,16)
+for i = 1:16,j=1:16
+    agemixingmatrix[i,j] = agemixingmatrix_table[i,j]
+end
+M_Kenya_work = extend_and_convert_Prem_matrix(agemixingmatrix,prop_75_79_amongst_75_plus_Kenya)
+
+@save "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
+
+reduced_treatment_rates = [(0.,1),(1/3.5,0.5)]
 
 """
 Load movement matrix - then derive the P,ρ and T values

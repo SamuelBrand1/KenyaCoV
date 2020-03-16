@@ -9,7 +9,6 @@ function plot_total_incidence(results_group,treatments::Tuple{Float64,Real},i)
     plt = plot(1:365,inc_D1[21,:,1].+1,
                 fontfamily="Helvetica",
                 lw = 3,
-                lab="SARS-like scenario",
                 legend = :topright,
                 ribbon =(inc_D1[21,:,2],inc_D1[21,:,3]),
                 # fillalpha = 0.15,
@@ -17,23 +16,85 @@ function plot_total_incidence(results_group,treatments::Tuple{Float64,Real},i)
                 yscale = :log10,
                 xlabel = "Days",
                 ylabel = "Daily incidence + 1")
-        plot!(plt,1:365,inc_D2[21,:,1].+1,
-                    lw = 3,
-                    lab="MERS-like scenario",
-                    ribbon =(inc_D2[21,:,2],inc_D2[21,:,3]),
-                    fillalpha = 0.15)
-                    # yscale = :log10,
-                    # xlabel = "Days",
-                    # ylabel = "Daily incidence")
-        plot!(plt,1:365,inc_A2[21,:,1].+1,
-                    lw = 3,
-                    lab="MERS-like scenario: undetected",
-                    ls = :dot,
-                    # ribbon =(inc_D2[21,:,2],inc_D2[21,:,3]),
-                    fillalpha = 0.15)
-                    # yscale = :log10,
-                    # xlabel = "Days",
-                    # ylabel = "Daily incidence")
+        # plot!(plt,1:365,inc_D2[21,:,1].+1,
+        #             lw = 3,
+        #             lab="MERS-like scenario",
+        #             ribbon =(inc_D2[21,:,2],inc_D2[21,:,3]),
+        #             fillalpha = 0.15)
+        #             # yscale = :log10,
+        #             # xlabel = "Days",
+        #             # ylabel = "Daily incidence")
+        # plot!(plt,1:365,inc_A2[21,:,1].+1,
+        #             lw = 3,
+        #             lab="MERS-like scenario: undetected",
+        #             ls = :dot,
+        #             # ribbon =(inc_D2[21,:,2],inc_D2[21,:,3]),
+        #             fillalpha = 0.15)
+        #             # yscale = :log10,
+        #             # xlabel = "Days",
+        #             # ylabel = "Daily incidence")
+
+        # plot!(plt,1:365,inc_D3[21,:,1].+inc_A3[21,:,1].+1,
+        #             lw = 3,
+        #             lab="MERS-like scenario, delta = 0.8",
+        #             # ribbon =(inc_D3[21,:,2],inc_D3[21,:,3]),
+        #             fillalpha = 0.15,
+        #             yscale = :log10,
+        #             xlabel = "Days",
+        #             ylabel = "Daily incidence")
+    return plt
+end
+
+function plot_total_incidence_group(scenario_group,treatment_group,treatment_num,rel_transmission_perc)
+        plt = plot()
+        tracing_rate,e_D = treatment_group[treatment_num]
+        for (i,scenarioresults) in enumerate(scenario_group)
+                inc_D = scenarioresults[treatment_num][1]
+                plot!(plt,1:365,inc_D[21,:,1].+1,
+                fontfamily="Helvetica",
+                lw = 3,
+                lab= "rel. infect. of undetecteds: $(rel_transmission_perc[i])%",
+                legend = :topright,
+                ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
+                fillalpha = 0.15,
+                # xlims = (0.,100),
+                yscale = :log10,
+                xlabel = "Days",
+                ylabel = "Daily incidence + 1")
+        end
+        return plt
+end
+
+function plot_total_incidence(results)
+    inc_D1 = results[1][1]
+
+    plt = plot(1:365,inc_D1[21,:,1].+1,
+                fontfamily="Helvetica",
+                lw = 3,
+                legend = :topright,
+                ribbon =(inc_D1[21,:,2],inc_D1[21,:,3]),
+                # fillalpha = 0.15,
+                # xlims = (0.,100),
+                yscale = :log10,
+                xlabel = "Days",
+                ylabel = "Daily incidence + 1")
+        # plot!(plt,1:365,inc_D2[21,:,1].+1,
+        #             lw = 3,
+        #             lab="MERS-like scenario",
+        #             ribbon =(inc_D2[21,:,2],inc_D2[21,:,3]),
+        #             fillalpha = 0.15)
+        #             # yscale = :log10,
+        #             # xlabel = "Days",
+        #             # ylabel = "Daily incidence")
+        # plot!(plt,1:365,inc_A2[21,:,1].+1,
+        #             lw = 3,
+        #             lab="MERS-like scenario: undetected",
+        #             ls = :dot,
+        #             # ribbon =(inc_D2[21,:,2],inc_D2[21,:,3]),
+        #             fillalpha = 0.15)
+        #             # yscale = :log10,
+        #             # xlabel = "Days",
+        #             # ylabel = "Daily incidence")
 
         # plot!(plt,1:365,inc_D3[21,:,1].+inc_A3[21,:,1].+1,
         #             lw = 3,

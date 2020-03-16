@@ -227,3 +227,104 @@ results_5 = KenyaCoV.run_scenario(P,prob,1000,treatment_rates,cb_iso_limit)
 
 
 println("Finished 5")
+
+
+"""
+SOCIAL DISTANCING SCENARIOS
+Load all mixing matrices
+"""
+
+@load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
+reduced_treatment_rates = [(0.,1),(1/3.5,0.5)]
+
+"""
+SCENARIO 2 --- SOCIAL DISTANCING:
+* No age-specific susceptibilties --- its disease difference
+* Asymptomatics are 10% as infectious as symptomatics
+"""
+u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
+                                            "data/flight_numbers.csv",
+                                            "data/projected_global_prevelance.csv")
+#Redistribute susceptibility JUST to rescale infectiousness so we get the correct R₀/r
+P.χ = ones(KenyaCoV.n_a)
+P.rel_detection_rate = d_01
+P.dt = 0.25;
+P.ext_inf_rate = 0.;
+P.ϵ = 0.1
+P.γ = 1/2.5
+R₀_scale = KenyaCoV.calculate_R₀_scale(P)
+P.χ = ones(KenyaCoV.n_a)/R₀_scale
+
+
+P.σ = 1/rand(KenyaCoV.d_incubation)
+P.β = 2.5*P.γ
+
+
+#Choosing initial conditions - scenario 2
+rand_chosen_R,eq_case_distribution,fifth_gen_case_distribution = KenyaCoV.calculate_R₀(P)
+num_initial_detected = ceil(Int64,sum(fifth_gen_case_distribution.*d_01))
+detected_age_group = argmax(fifth_gen_case_distribution.*d_01)
+undetected_age_profile = round.(Int64,fifth_gen_case_distribution.*(1 .- d_01))
+
+
+#Implement social distancing
+KenyaCoV.calculate_R₀(P)
+P.M = M_Kenya_ho .+ M_Kenya_work
+KenyaCoV.calculate_R₀(P)
+
+
+u0[KenyaCoV.ind_nairobi_as,detected_age_group,4] = num_initial_detected
+u0[KenyaCoV.ind_nairobi_as,:,3] = undetected_age_profile
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
+
+results_2S = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,cb_iso_limit)
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_2S.jld2") results_2S
+
+
+println("Finished 2 social distancing")
+"""
+SCENARIO 3 --- Social distancing:
+* No age-specific susceptibilties --- its disease difference
+* Asymptomatics are 25% as infectious as symptomatics
+"""
+u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
+                                            "data/flight_numbers.csv",
+                                            "data/projected_global_prevelance.csv")
+#Redistribute susceptibility JUST to rescale infectiousness so we get the correct R₀/r
+P.χ = ones(KenyaCoV.n_a)
+P.rel_detection_rate = d_025
+P.dt = 0.25;
+P.ext_inf_rate = 0.;
+P.ϵ = 0.25
+P.γ = 1/2.5
+R₀_scale = KenyaCoV.calculate_R₀_scale(P)
+P.χ = ones(KenyaCoV.n_a)/R₀_scale
+
+
+P.σ = 1/rand(KenyaCoV.d_incubation)
+P.β = 2.5*P.γ
+
+
+
+
+#Choosing initial conditions - scenario 3
+rand_chosen_R,eq_case_distribution,fifth_gen_case_distribution = KenyaCoV.calculate_R₀(P)
+num_initial_detected = ceil(Int64,sum(fifth_gen_case_distribution.*d_025))
+detected_age_group = argmax(fifth_gen_case_distribution.*d_025)
+undetected_age_profile = round.(Int64,fifth_gen_case_distribution.*(1 .- d_025))
+
+#Implement social distancing
+KenyaCoV.calculate_R₀(P)
+P.M = M_Kenya_ho .+ M_Kenya_work
+KenyaCoV.calculate_R₀(P)
+
+
+u0[KenyaCoV.ind_nairobi_as,detected_age_group,4] = num_initial_detected
+u0[KenyaCoV.ind_nairobi_as,:,3] = undetected_age_profile
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
+
+results_3S = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,cb_iso_limit)
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_3S.jld2") results_3S
+
+
+println("Finished 3 Social distancing")
