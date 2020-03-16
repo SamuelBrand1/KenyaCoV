@@ -1,12 +1,13 @@
 using Plots,MAT, StatsPlots, Statistics#, Images, ImageView,ImageDraw
 
-results_folder=".\\contacts\\results_session30s\\results_session38\\"
+results_folder=".\\contacts\\results_session40s\\results_session40\\"
 τₚ_list=[0.0,0.25,0.5,0.75,0.9]#[0.0,0.5]
+n_traj=10
+
 colors=[:blue,:orange, :purple3, :maroon, :gold]
 markershapes=[:circle,:ltriangle, :hexagon, :star, :plus]
 data_files=readdir(results_folder)#["sims100_taup0.0_capacity10000.mat","sims100_taup0.25_capacity10000.mat","sims100_taup0.5_capacity10000.mat","sims100_taup0.75_capacity10000.mat","sims100_taup0.9_capacity10000.mat"];
 data_files=[s for s in data_files if endswith(s,".mat")]
-n_traj=100
 riskregionnames = ["Machakos/Muranga" "Mandera" "Baringo/Nakuru" "Nairobi" "Uasin Gishu" "Marsabit" "Garissa" "Nakuru/Narok" "Turkana" "Taita Taveta" "Kitui/Meru" "Kilifi/Mombasa" "Kericho/Kisumu" "Kilifi/Lamu" "Kakamega/Kisumu" "Wajir" "Kajiado/Kisumu" "Homa bay/Migori" "Samburu/Laikipia" "Kilifi/Kwale" "Total"]
 wa_coords=[[300,450], [515,85], [165,360], [235,465], [115,300], [300,140], [510,380], [180, 430], [120, 130], [355, 615], [340, 375], [465, 630], [100, 380], [495, 530], [40, 355], [490, 255], [155, 495], [30, 440], [250, 290], [400, 670]]
 ## Plotting functions IN NAIROBI

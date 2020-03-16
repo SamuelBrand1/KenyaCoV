@@ -80,7 +80,7 @@ function rates(out, u, p::CoVParameters_AS, t)
         end
         if eventtype == 4
             #out[k] = τ*u[i,a,4] # D->Q
-            out[k] = 0#τ*u[i,a,4]                   #**** was D->Q became IQ->Q, rate =0 because we do this manually in the function update_l_IQ()
+            out[k] = τ*u[i,a,10]                   #****v5 #**** was D->Q became IQ->Q, rate =0 because we do this manually in the function update_l_IQ()
         end
         if eventtype == 5
             out[k] = γ * u[i, a, 5] # Q->R
@@ -247,11 +247,12 @@ function max_change(out, u, p::CoVParameters_AS)
         ind_Qdeath = linear_as_events[i, a, 8]
         ind_EIq = linear_as_events[i, a, 9]                #****
         ind_IqR = linear_as_events[i, a, 10]               #****
-        ind_SQ = linear_as_events[i, a, 11]               #****2
-        ind_EQ = linear_as_events[i, a, 12]               #****2
-        ind_AQ = linear_as_events[i, a, 13]               #****2
-        ind_DQ = linear_as_events[i, a, 14]               #****2
-        ind_IqQ = linear_as_events[i, a, 15]              #****2
+
+        ind_CSQ = linear_as_events[i, a, 11]               #****2
+        ind_CEQ = linear_as_events[i, a, 12]               #****2
+        ind_CAQ = linear_as_events[i, a, 13]               #****2
+        ind_CDQ = linear_as_events[i, a, 14]               #****2
+        ind_CIqQ = linear_as_events[i, a, 15]              #****2
 
         out[ind_trans] = min(out[ind_trans], u[i, a, 1])
         out[ind_QR] = min(out[ind_QR], u[i, a, 5])
@@ -261,11 +262,11 @@ function max_change(out, u, p::CoVParameters_AS)
         out[ind_IqR] = min(out[ind_IqR], u[i, a, 10])       #**** No more IQ->R than actual IQ
         out[ind_IqQ] = min(out[ind_IqQ], u[i, a, 10])       #**** No more IQ->Q than actual IQ
 
-        out[ind_SQ] = min(out[ind_SQ], u[i, a, 1])       #****2 No more S->Q than actual S
-        out[ind_EQ] = min(out[ind_EQ], u[i, a, 2])       #****2 No more E->Q than actual E
-        out[ind_AQ] = min(out[ind_AQ], u[i, a, 3])       #****2 No more I_A->Q than actual I_A
-        out[ind_DQ] = min(out[ind_DQ], u[i, a, 4])       #****2 No more I_D->Q than actual I_D
-        out[ind_IqQ] = min(out[ind_IqQ], u[i, a, 10])    #****2 No more I_Q->Q than actual I_Q
+        out[ind_CSQ] = min(out[ind_CSQ], u[i, a, 1])       #****2 No more Contacted S->Q than actual S
+        out[ind_CEQ] = min(out[ind_CEQ], u[i, a, 2])       #****2 No more Contacted E->Q than actual E
+        out[ind_CAQ] = min(out[ind_CAQ], u[i, a, 3])       #****2 No more Contacted I_A->Q than actual I_A
+        out[ind_CDQ] = min(out[ind_CDQ], u[i, a, 4])       #****2 No more Contacted I_D->Q than actual I_D
+        out[ind_CIqQ] = min(out[ind_CIqQ], u[i, a, 10])    #****2 No more Contacted I_Q->Q than actual I_Q
 
 
         #spliting events using binomial sampling
@@ -282,8 +283,11 @@ function max_change(out, u, p::CoVParameters_AS)
             out[ind_DR] = u[i,a,4] - out[ind_DQ]
         end=#
         if out[ind_IqQ] + out[ind_IqR] > u[i, a, 10]      #**** More IQ->Q + IQ->R than actual IQ
-            out[ind_IqQ] = rand(Binomial(u[i, a, 10], p.τₚ))
+            out[ind_IqQ] = rand(Binomial(u[i, a, 10], p.τ))
             out[ind_IqR] = u[i, a, 10] - out[ind_IqQ]
+        end
+        if out[ind_IqQ] + out[ind_IqR] + out[ind_CIqQ] > u[i, a, 10]  #****2 More IQ->Q + IQ->R + Contacted IQ->Q than actual IQ
+            out[ind_CIqQ]=0 #in this case, the contacted is already heading to Q with the event IQ->Q, so we don't take him there again
         end
     end
 
@@ -374,6 +378,15 @@ end
 function update_l_IQ(dN::Vector{Int64}, u, p::CoVParameters_AS, t)                 #****
     @unpack l_IQ, τ = p
 
+    ## Add all new IQ to the list l_IQ l_IQ
+    for wa = 1:n_wa, a = 1:n_a
+        if dN[linear_as_events[wa, a, 9]] != 0  #event 9 is E->IQ
+            for exp = 1:dN[linear_as_events[wa, a, 9]]
+                push!(l_IQ, IQ_Person(wa = wa, a = a, detection_dur = randexp() / τ))     ##need to rescale by dt?? #****v5 detection_dur is not used anymore
+            end
+        end
+    end
+
     ##All events (10) IQ->R mean that an IQ recovered before being detected. Those need to be removed from l_IQ
     #IQ_to_R_events = dN[linear_as_events[:, :, 10]]
     for wa = 1:n_wa, a = 1:n_a
@@ -382,14 +395,15 @@ function update_l_IQ(dN::Vector{Int64}, u, p::CoVParameters_AS, t)              
             selected_IQ_list = filter(x -> (x.wa == wa && x.a == a), l_IQ)
             IQ_indices = findall(x -> x == selected_IQ_list[rand(1:end)], l_IQ)  #draw one random IQ from l_IQ with same wa and a, and get its indices in l_IQ. This should be one element in an array
             if size(IQ_indices, 1) > 0
-                deleteat!(l_IQ, IQ_indices[1])
-            end       #delete the chosen element from l_IQ
+                deleteat!(l_IQ, IQ_indices[1])  #delete the chosen element from l_IQ
+            end
             #if size(IQ_indices,1)>n_Iq_to_R      IQ_indices=IQ_indices[1:n_IIQ_to_R];    end    ## FORGOT why I wrote this line
         end
     end
 
     ## Update dN: All IQ with tau<=0 will be moved to Q with the event 4 (IQ->Q) and remove them from the list
-    i = 1
+    #****v5: rate instead of duration. So IQ->Q happens in the change matrix. Here, we only do the contact tracing
+    #=i = 1
     while i <= size(l_IQ, 1)
         if l_IQ[i].detection_dur <= 0
             dN[linear_as_events[Int(l_IQ[i].wa), Int(l_IQ[i].a), 4]] += 1          ## move IQ to Q, which is the event number 4
@@ -397,25 +411,30 @@ function update_l_IQ(dN::Vector{Int64}, u, p::CoVParameters_AS, t)              
             deleteat!(l_IQ, i)                                                   ## delete from the l_IQ list
         end
         i += 1
+    end=#
+    for wa = 1:n_wa, a = 1:n_a
+        n_Iq_to_Q = dN[linear_as_events[wa, a, 4]]    ##the number of events IQ->Q
+        for i=1:n_Iq_to_Q
+            selected_IQ_list = filter(x -> (x.wa == wa && x.a == a), l_IQ)
+            #println("dN[linear_as_events[wa, a, 4]]=",dN[linear_as_events[wa, a, 4]],"   size(selected_IQ_list,1)=",size(selected_IQ_list,1))
+            IQ_indices = findall(x -> x == selected_IQ_list[rand(1:end)], l_IQ) #draw one random IQ from l_IQ
+            if size(IQ_indices, 1) > 0
+                intervention_trace_contacts(IQ_indices[1], dN, u, p, t)   ## CONTACT TRACING INTERVENTION
+                deleteat!(l_IQ, IQ_indices[1])  #delete the chosen element from l_IQ
+            end
+        end
     end
 
-    ## Decrease dt of all exponential durations of old IQ
-    for i = 1:size(l_IQ, 1)
+    ## Decrease dt of all exponential durations of old IQ       #****v5 no longer managed as a duration but as a rate (change matrix)
+    #=for i = 1:size(l_IQ, 1)
         if l_IQ[i].detection_dur - p.dt >= 0
             l_IQ[i].detection_dur -= p.dt
         else
             l_IQ[i].detection_dur = 0
         end
-    end
+    end=#
 
-    ## Add all new IQ to the list l_IQ l_IQ
-    for wa = 1:n_wa, a = 1:n_a
-        if dN[linear_as_events[wa, a, 9]] != 0
-            for exp = 1:dN[linear_as_events[wa, a, 9]]
-                push!(l_IQ, IQ_Person(wa = wa, a = a, detection_dur = randexp() / τ))     ##need to rescale by dt??
-            end
-        end
-    end
+
 end
 
 function update_contact_states(dN::Vector{Int64}, u, p::CoVParameters_AS, t)       #**** Update the sates of all previously made contacts
