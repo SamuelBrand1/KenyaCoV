@@ -137,36 +137,24 @@ function plot_total_incidence(results,treatment_rates)
 end
 
 
-function plot_incidence_spatial(results,treatment_rates,i,ordering)
+function plot_incidence_spatial(results,treatment_rates,i)
+    ordering = sortperm(results[i][1][1:20,60,1],rev = true)
     τ = treatment_rates[i]
     inc_D = results[i][1]
-    plt = plot(1:365,inc_D[ordering[1],:,1].+1,
-                # ribbon = (inc_D[4,:,2],inc_D[4,:,3]),
-                fillalpha = 0.1,
-                lab = riskregionnames[4],
-                # lab = "",
-                lw=2,
-                xlims = (0.,100.),
-                yscale = :log10,
-                legend = :outertopright,
-                legendfontsize = 8.9);
-    for i in ordering[2:end]
-        if i != 4
-            plot!(plt,1:365,inc_D[i,:,1].+1,
-                    # lab = "",
-                    # ribbon = (inc_D[i,:,2],inc_D[i,:,3]),
+    plt = plot()
+    for i in ordering
+        plot!(plt,1:365,inc_D[i,:,1].+1,
+                    # ribbon = (inc_D[4,:,2],inc_D[4,:,3]),
+                    fillalpha = 0.1,
                     lab = riskregionnames[i],
-                    lw=2);
-        end
+                    lw=2,
+                    xlims = (0.,100.),
+                    yscale = :log10,
+                    legend = :outertopright,
+                    legendfontsize = 8.9);
     end
     xlabel!(plt,"Days")
     ylabel!(plt,"Daily incidence")
-    # ylims!(plt,(1,1e5))
-    # if τ == 0
-    #     title!(plt,"No isolation")
-    # else
-    #     title!(plt," Mean time to isolation $(round(1/τ,digits = 1)) days")
-    # end
 
     return plt
 end
