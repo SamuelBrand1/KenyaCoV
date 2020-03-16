@@ -98,7 +98,6 @@ M_Kenya_work = extend_and_convert_Prem_matrix(agemixingmatrix,prop_75_79_amongst
 
 @save "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
 
-reduced_treatment_rates = [(0.,1),(1/3.5,0.5)]
 
 """
 Load movement matrix - then derive the P,ρ and T values
