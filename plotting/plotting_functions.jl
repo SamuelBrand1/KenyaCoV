@@ -138,7 +138,7 @@ end
 
 
 function plot_incidence_spatial(results,treatment_rates,i)
-    ordering = sortperm(results[i][1][1:20,60,1],rev = true)
+    ordering = sortperm(results[i][1][1:20,100,1],rev = true)
     τ = treatment_rates[i]
     inc_D = results[i][1]
     plt = plot()
@@ -159,23 +159,25 @@ function plot_incidence_spatial(results,treatment_rates,i)
     return plt
 end
 
-function plot_total_incidence_by_age(results,treatment_rates,i)
-    d1,d2,d3 = size(results[1][4][:,:,:])
-    cases_age = zeros(d3,d2)
-    for k = 1:d3,a = 1:d2
-        cases_age[k,a] = sum(results[i][4][:,a,k])
+function plot_total_incidence_by_age(scenario_group,treatment_rates,rel_transmission_perc,i)
+    d1,d2,d3 = size(scenario_group[1][i][4][:,:,:])
+    n = length(scenario_group)
+    cases_age = zeros(d2,n,3)
+    label_scen = "$(rel_transmission_perc[1])% rel. infectiousness"
+    for l in 2:length(rel_transmission_perc)
+        label_scen = hcat(label_scen,"$(rel_transmission_perc[l])% rel. infectiousness")
     end
-    plt = boxplot(cases_age,lab = "",
-                xticks = (collect(1:2:16),age_cats[1:2:16]),color = :blue,
-                ylabel = "Detected cases",
-                xlabel = "Age")
-    τ = treatment_rates[i]
-    if τ > 0
-        title!(plt,"Mean time to isolation $(round(1/τ,digits = 1)) days")
-    else
-        title!(plt,"No isolation")
+    for (n,results) in enumerate(scenario_group)
+        for a = 1:d2
+            cases_age[a,n,1] = median([sum(results[i][4][:,a,k]) for k =1:1000])
+            cases_age[a,n,2] = quantile([sum(results[i][4][:,a,k]) for k =1:1000],0.025)
+            cases_age[a,n,3] = quantile([sum(results[i][4][:,a,k]) for k =1:1000],0.975)
+        end
     end
-
+    plt = groupedbar(cases_age[:,:,1]./1e6,
+                    fontfamily="Helvetica",
+                    lab =label_scen,
+                    xticks = (1:17,age_cats))
 
     return plt
 
