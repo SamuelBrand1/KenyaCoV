@@ -39,7 +39,7 @@ Events for each wider area and age group:
 8-> Quarantined->death
 9-> Incubation into diseased to be detected  E->IQ    #****
 10->Diseased to be Quarantined who recover DQ->R       #**** IQ->R
-11-> S to Q
+11-> S to Q Contacts
 12-> E to Q
 13-> I_A to Q
 14-> I_D to Q
@@ -312,7 +312,7 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
         max_change(dN, u, p)
         update_contact_states(dN, u, p, t)      #updates the contact states, except for contacts made during this timestep
     elseif sum(Κ_current) >= sum(Κ_max_capacity)  && t_max_capacity == -1                            #!!!! in all wa
-        println("Tracing stopped at ", t)
+        #println("Tracing stopped at ", t)
         t_max_capacity=t
     end
 

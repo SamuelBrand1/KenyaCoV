@@ -42,7 +42,7 @@ mean(d_R₀)
 SCENARIO
 """
 u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
-u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 10#Five initial infecteds in Nairobi in the 20-24 age group
+u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
 P.dt = 0.5;     P.ext_inf_rate = 0.;    P.ϵ = rand(Uniform(0.,0.5))
 P.δ = 0.2;      P.γ = 1/2.5;            P.σ = 1/rand(d_incubation)
 P.β = rand(d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
@@ -51,11 +51,12 @@ P.κ=10
 P.κₘ=7;     P.Δₜ=7
 P.κ_per_event4=50
 τₚ_list=[.0,.25,.5,.75,.9]#[.0,.25,.5,.75,.9]
-P.Κ_max_capacity=[1000 for e in P.Κ_max_capacity]
-P.Κ_max_capacity[KenyaCoV_contacts.ind_nairobi_as]=1e3
+#P.Κ_max_capacity=[1000 for e in P.Κ_max_capacity]
+#P.Κ_max_capacity[KenyaCoV_contacts.ind_nairobi_as]=1e3
 #P.Κ_max_capacity[KenyaCoV_contacts.ind_mombasa_as]=1e2
-session_nb=40
-n_traj=10
+P.Κ_max_capacity[12]=5e3
+session_nb=44
+n_traj=500
 
 for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
 prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
