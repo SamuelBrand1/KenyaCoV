@@ -46,3 +46,12 @@ plot!(plt_no_control_SD,size = (700,400))
 plot!(plt_no_control_SD,legend = :topleft)
 # xlims!(0.,30.)
 savefig(plt_no_control_SD,"plotting/baseline_scenarios_with_social_distancing.pdf")
+
+
+scenario_group_SD = [results_2S,results_3S]
+plt_control_SD = plot_total_incidence_group(scenario_group,reducted_treatment_rates,2,reduced_rel_transmission_perc)
+title!(plt_control_SD,"Social distancing and direct isolation")
+plot!(plt_control_SD,size = (700,400))
+plot!(plt_control_SD,legend = :topleft)
+# xlims!(0.,30.)
+savefig(plt_control_SD,"plotting/direct_control_scenarios_with_social_distancing.pdf")
