@@ -52,6 +52,8 @@ end
     l_IQ::Vector{IQ_Person}=[]  #****  Each IQ is added with a generated period of 1/τ [[wa,a,exponential(1/τ),[contacts]],...], with their contact s@ each timestep
     uₚ::Array{Float64,3}=zeros(n_wa,n_a,n_s) #**** For inplace calculations. Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S,E,IQ,Iᴰ,Iᴬ,.. WE DO NOT MEET H!
     t_max_capacity::Float64=-1              #**** When the tracing stopped
+
+    Q_dur::Float64=14       #****4 Quarantine duration in time
 end
 
 

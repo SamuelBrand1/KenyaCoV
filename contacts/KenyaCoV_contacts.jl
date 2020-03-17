@@ -23,7 +23,7 @@ n_t = 16 #global defining number of events per location
 n_a = 16 #global defining number of age categories
 n_wa = 20 #global defining number of wider area groupings
 #n_ta = 8 #global defining number of events per location and age group
-n_ta = 15 #global defining number of events per location and age group          #****2      #**** Added two events E->IQ and IQ->R  + modeified Iᴰ->H  to IQ->H
+n_ta = 16 #global defining number of events per location and age group          #****2      #**** Added two events E->IQ and IQ->R  + modeified Iᴰ->H  to IQ->H
 mobile_age_indices = 5:11; #This assumes that 16-49 year olds move around and others don't
 immobile_age_indices = [1,2,3,4,12,13,14,15,16]
 

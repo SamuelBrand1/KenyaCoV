@@ -1,14 +1,16 @@
-using Plots,MAT, StatsPlots, Statistics#, Images, ImageView,ImageDraw
+using Plots,MAT, StatsPlots, Statistics,JLD2#, Images, ImageView,ImageDraw
 
-results_folder=".\\contacts\\results_session40s\\results_session46\\"
+results_folder=".\\contacts\\results_session50s\\results_session51\\"
 τₚ_list=[.0,.25,.5,.75,.9]#[.0,.5]
 n_traj=20
 dt=.5
 
-colors=[:blue,:orange, :purple3, :maroon, :gold]
-markershapes=[:circle,:ltriangle, :hexagon, :star, :plus]
+colors=[:blue, :orange, :purple3, :maroon, :gold]
+markershapes=[:cross,:star4, :vcross, :star6, :hline]
 data_files=readdir(results_folder)#["sims100_taup0.0_capacity10000.mat","sims100_taup0.25_capacity10000.mat","sims100_taup0.5_capacity10000.mat","sims100_taup0.75_capacity10000.mat","sims100_taup0.9_capacity10000.mat"];
-data_files=[s for s in data_files if endswith(s,".mat")]
+#data_files=[s for s in data_files if endswith(s,".mat")]
+data_files=[s for s in data_files if endswith(s,".jld2")]
+
 riskregionnames = ["Machakos/Muranga" "Mandera" "Baringo/Nakuru" "Nairobi" "Uasin Gishu" "Marsabit" "Garissa" "Nakuru/Narok" "Turkana" "Taita Taveta" "Kitui/Meru" "Kilifi/Mombasa" "Kericho/Kisumu" "Kilifi/Lamu" "Kakamega/Kisumu" "Wajir" "Kajiado/Kisumu" "Homa bay/Migori" "Samburu/Laikipia" "Kilifi/Kwale" "Total"]
 wa_coords=[[300,450], [515,85], [165,360], [235,465], [115,300], [300,140], [510,380], [180, 430], [120, 130], [355, 615], [340, 375], [465, 630], [100, 380], [495, 530], [40, 355], [490, 255], [155, 495], [30, 440], [250, 290], [400, 670]]
 ## Plotting functions IN NAIROBI
@@ -440,18 +442,190 @@ function time_from_intro_to_peak_Kilifi(τₚ_list,results_folder,data_files,n_t
     savefig(b,results_folder*"jl_intro2peak_kilifi.png")
 end
 
-
-results_folder=".\\contacts\\results_session40s\\results_session46\\"
-τₚ_list=[.25,.5,.75,.9]#[.0,.5]
-n_traj=50
+#=
+results_folder=".\\contacts\\results_session50s\\results_session50\\"
+τₚ_list=[.0,.25,.5,.75,.9]#[.0,.5]
+n_traj=5
 one_sim_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
 time_from_intro_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
 time_from_intro_to_peak_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
-
-
+=#
+#=
 results_folder=".\\contacts\\results_session40s\\results_session43\\"
 τₚ_list=[.25,.5,.75,.9]#[.0,.5]
 n_traj=50
 one_sim_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
 time_from_intro_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
 time_from_intro_to_peak_Kilifi(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+=#
+
+
+
+
+
+#### JLD2
+function one_sim_Nairobi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+    #dt=.5
+    p1=plot(title="1sim example I=A+D+IQ Nairobi",legend=:topright);
+    p2=plot(title="1sim example Cumulative I=A+D+IQ Nairobi",legend=:topright);
+    p3=plot(title="1sim example Q Nairobi",legend=:topright);
+    ##p4=plot(title="1sim example S, R Kilifi",legend=:topleft);
+    for i=1:size(τₚ_list,1)
+        @load results_folder*data_files[i]  sims_vector
+        I=[sims_vector[1][3][t][4][1] for t=1:size(sims_vector[1][2],1)]
+        plot!(p1,I,label="detection"*string(τₚ_list[i]*100)*"%-I", color=colors[i])
+        cumIA=[sims_vector[1][1][t][4,1] for t=1:size(sims_vector[1][1],1)]
+        cumID=[sims_vector[1][1][t][4,2] for t=1:size(sims_vector[1][1],1)]
+        cumIQ=[sims_vector[1][1][t][4,3] for t=1:size(sims_vector[1][1],1)]
+        cumI=cumIA .+ cumID .+cumIQ #OR I=[sum(sims_vector[1][1][t][12,1:3]) for t=1:size(sims_vector[1][1],1)]
+        plot!(p2,cumI,label="detection"*string(τₚ_list[i]*100)*"%-cumI", color=colors[i])
+        plot!(p2,cumIA,label="detection"*string(τₚ_list[i]*100)*"%-IA", color=colors[i], line=:dash)
+        plot!(p2,cumID,label="detection"*string(τₚ_list[i]*100)*"%-ID", color=colors[i], line=:dot)
+        plot!(p2,cumIQ,label="detection"*string(τₚ_list[i]*100)*"%-IQ", color=colors[i], line=(2,:dashdotdot))
+        Q=[sims_vector[1][2][t][4][1] for t=1:size(sims_vector[1][2],1)]
+        plot!(p3,Q,label="detection"*string(τₚ_list[i]*100)*"%-Q", color=colors[i])
+
+        ##TO DELETE WHEN RUNNING LARGE SIMS:
+        #=S=[sims_vector[1][5][t][12][1] for t=1:size(sims_vector[1][1],1)]
+        plot!(p4,S,label="detection"*string(τₚ_list[i]*100)*"%-S", color=colors[i])
+        R=[sims_vector[1][6][t][12][1] for t=1:size(sims_vector[1][1],1)]
+        plot!(p4,R,label="detection"*string(τₚ_list[i]*100)*"%-R", color=colors[i])=#
+    end
+    savefig(p1,results_folder*"jl_ONE_SIM_I_Nairobi.png")
+    savefig(p2,results_folder*"jl_ONE_SIM_CumI_Nairobi.png")
+    savefig(p3,results_folder*"jl_ONE_SIM_Q_Nairobi.png")
+    ##savefig(p4,results_folder*"jl_ONE_SIM_SR_kilifi.png")
+end
+function one_sim_Kilifi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+    #dt=.5
+    p1=plot(title="1sim example I=A+D+IQ Kilifi",legend=:topright);
+    p2=plot(title="1sim example Cumulative I=A+D+IQ Kilifi",legend=:topright);
+    p3=plot(title="1sim example Q Kilifi",legend=:topright);
+    ##p4=plot(title="1sim example S, R Kilifi",legend=:topleft);
+    for i=1:size(τₚ_list,1)
+        @load results_folder*data_files[i]  sims_vector
+        I=[sims_vector[1][3][t][12][1] for t=1:size(sims_vector[1][2],1)]
+        plot!(p1,I,label="detection"*string(τₚ_list[i]*100)*"%-I", color=colors[i])
+        cumIA=[sims_vector[1][1][t][12,1] for t=1:size(sims_vector[1][1],1)]
+        cumID=[sims_vector[1][1][t][12,2] for t=1:size(sims_vector[1][1],1)]
+        cumIQ=[sims_vector[1][1][t][12,3] for t=1:size(sims_vector[1][1],1)]
+        cumI=cumIA .+ cumID .+cumIQ #OR I=[sum(sims_vector[1][1][t][12,1:3]) for t=1:size(sims_vector[1][1],1)]
+        plot!(p2,cumI,label="detection"*string(τₚ_list[i]*100)*"%-cumI", color=colors[i])
+        plot!(p2,cumIA,label="detection"*string(τₚ_list[i]*100)*"%-IA", color=colors[i], line=:dash)
+        plot!(p2,cumID,label="detection"*string(τₚ_list[i]*100)*"%-ID", color=colors[i], line=:dot)
+        plot!(p2,cumIQ,label="detection"*string(τₚ_list[i]*100)*"%-IQ", color=colors[i], line=(2,:dashdotdot))
+        Q=[sims_vector[1][2][t][12][1] for t=1:size(sims_vector[1][2],1)]
+        plot!(p3,Q,label="detection"*string(τₚ_list[i]*100)*"%-Q", color=colors[i])
+
+        ##TO DELETE WHEN RUNNING LARGE SIMS:
+        #=S=[sims_vector[1][5][t][12][1] for t=1:size(sims_vector[1][1],1)]
+        plot!(p4,S,label="detection"*string(τₚ_list[i]*100)*"%-S", color=colors[i])
+        R=[sims_vector[1][6][t][12][1] for t=1:size(sims_vector[1][1],1)]
+        plot!(p4,R,label="detection"*string(τₚ_list[i]*100)*"%-R", color=colors[i])=#
+    end
+    savefig(p1,results_folder*"jl_ONE_SIM_I_kilifi.png")
+    savefig(p2,results_folder*"jl_ONE_SIM_CumI_kilifi.png")
+    savefig(p3,results_folder*"jl_ONE_SIM_Q_kilifi.png")
+    ##savefig(p4,results_folder*"jl_ONE_SIM_SR_kilifi.png")
+end
+function time_from_intro_to_peak_Kilifi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+    b=boxplot(title="Time from introduction into Kilifi to peak (in days)")
+    for i=1:size(τₚ_list,1)
+        @load results_folder*data_files[i]  sims_vector
+
+        ##Time from intro to peak
+        intro2peak=[]
+        for sim=1:size(sims_vector,1) #for each sim
+            ##Calculating for each sim, the time of introduction:
+            Q=[sims_vector[sim][2][t][12][1] for t=1:size(sims_vector[1][2],1)]
+            indices=findall(x -> x>0 , Q)
+            tintro=0
+            if size(indices,1)>0
+                tintro=indices[1]
+            end
+            ##calculating for each sim, the time of peak
+            #I=[sum([data_per_taup[t,sim][12,a,10]+data_per_taup[t,sim][12,a,3]+data_per_taup[t,sim][12,a,4]  for a=1:16])        for t=1:size(data_per_taup,1)]
+            I=[sims_vector[sim][2][t][12][1] for t=1:size(sims_vector[1][2],1)]
+            tpeak=findall(x->x==maximum(I),I)[1]
+            push!(intro2peak,tpeak-tintro)
+        end
+        boxplot!(b,intro2peak,color=colors[i],label="detection"*string(τₚ_list[i]*100)*"%",legend=:bottomright)
+    end
+    savefig(b,results_folder*"jl_intro2peak_kilifi.png")
+end
+function final_cum_Kilifi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+    b=boxplot(title="Final total cumulative Infecteds in Kilifi (all ages)")
+    final_cum0detection=0
+    cumI_diff=[]
+    for i=1:size(τₚ_list,1)
+        @load results_folder*data_files[i]  sims_vector
+        final_cum=[]
+        for sim=1:size(sims_vector,1) #for each sim
+            push!(final_cum,sum(sims_vector[sim][4][12,:,1:3])) # final cumulative I=IA+ID+IQ, summed for all ages
+        end
+        boxplot!(b,final_cum,color=colors[i],label="detection"*string(τₚ_list[i]*100)*"%",legend=:bottomright)
+        if i==1     final_cum0detection=median(final_cum)       end
+        push!(cumI_diff,final_cum0detection-median(final_cum))
+        #)
+    end
+    #v_series_annotations=[[string(e),"","",""] for e in cumI_diff]
+    println(cumI_diff)
+    bar!(b,cumI_diff,color=colors,legend=false)#,series_annotations = text.(v_series_annotations, 10))
+    #display(b)
+    savefig(b,results_folder*"jl_cumI_kilifi.png")
+end
+function final_cum_Nairobi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+    b=boxplot(title="Final total cumulative Infecteds in Nairobi (all ages)")
+    final_cum0detection=0
+    cumI_diff=[]
+    for i=1:size(τₚ_list,1)
+        @load results_folder*data_files[i]  sims_vector
+        final_cum=[]
+        for sim=1:size(sims_vector,1) #for each sim
+            push!(final_cum,sum(sims_vector[sim][4][4,:,1:3])) # final cumulative I=IA+ID+IQ, summed for all ages
+        end
+        boxplot!(b,final_cum,color=colors[i],label="detection"*string(τₚ_list[i]*100)*"%",legend=:bottomright,size=(700,400))
+        if i==1     final_cum0detection=median(final_cum)       end
+        push!(cumI_diff,final_cum0detection-median(final_cum))
+        #)
+    end
+    #v_series_annotations=[[string(e),"","",""] for e in cumI_diff]
+    println(cumI_diff)
+    bar!(b,cumI_diff,color=colors,legend=false)#,series_annotations = text.(v_series_annotations, 10))
+    #display(b)
+    savefig(b,results_folder*"jl_cumI_nairobi.png")
+end
+
+function final_cumI_heatmap_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+    #b=boxplot(title="Final cumulative Infecteds (all ages)")
+    final_cum0detection=0
+    #cumI_diff=[]
+    all_cumI=[]
+    for i=1:size(τₚ_list,1)
+        @load results_folder*data_files[i]  sims_vector
+        final_cum_pertaup=[]
+        for sim=1:size(sims_vector,1) #for each sim
+            push!(final_cum_pertaup,[sum(sims_vector[sim][4][wa,:,1:3]) for wa=1:20]) # final cumulative I=IA+ID+IQ, summed for all ages
+        end
+        push!(all_cumI,[median(final_cum_pertaup[wa]) for wa=1:20])
+        #boxplot!(b,final_cum,color=colors[i],label="detection"*string(τₚ_list[i]*100)*"%",legend=:bottomright,size=(700,400))
+        #if i==1     final_cum0detection=median(final_cum)       end
+        #push!(cumI_diff,final_cum0detection-median(final_cum))
+        #)
+    end
+    #v_series_annotations=[[string(e),"","",""] for e in cumI_diff]
+    println(cumI_diff)
+    bar!(b,cumI_diff,color=colors,legend=false)#,series_annotations = text.(v_series_annotations, 10))
+    #display(b)
+    savefig(b,results_folder*"jl_cumI_nairobi.png")
+end
+results_folder=".\\contacts\\results_session50s\\results_session57\\"
+data_files=readdir(results_folder)
+data_files=[s for s in data_files if endswith(s,".jld2")]
+τₚ_list=[.0,.25,.5,.75,.9]#[.0,.5]
+n_traj=100
+one_sim_Kilifi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+one_sim_Nairobi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+time_from_intro_to_peak_Kilifi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+final_cum_Kilifi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)
+final_cum_Nairobi_JLD2(τₚ_list,results_folder,data_files,n_traj,wa_coords)

@@ -30,16 +30,14 @@ function run_saveMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_lis
     end
 end
 
-function run_saveJLD2daily_and_final_incidence(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list,session)
-    folder="./contacts/results_session50s/results_session"*string(session)*"/"
-    #folder="W:/BACKUP MakingContacts/2020-03-16_v5/results_session"*string(session)*"/"
+function run_saveMATdaily_and_final_incidence(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list,session)
+    folder="./contacts/results_session50s/results_session"*string(session)*"/"    #folder="W:/BACKUP MakingContacts/2020-03-16_v5/results_session"*string(session)*"/"
     mkdir(folder)
     for τₚ in τₚ_list
         P.τₚ =τₚ
         println("Session"*string(session)*" Running ",n_traj," sims for τₚ=",τₚ)
-        global sims = solve(EnsembleProblem(prob#=,prob_func=randomise_params=#,output_func = output_daily_and_final_incidence),
-                            FunctionMap(),dt=P.dt,trajectories=n_traj)
-        sims_vector=[]#sims.u[1].t
+        sims = solve(EnsembleProblem(prob#=,prob_func=randomise_params=#,output_func = output_daily_and_final_incidence),FunctionMap(),dt=P.dt,trajectories=n_traj)
+        sims_vector=[]
         for i=1:size(sims.u,1)
             push!(sims_vector, sims.u[i])
         end
@@ -53,8 +51,8 @@ function output_daily_and_final_incidence(sol,i)
     I=[[sum(sol(t)[wa,:,3],dims = 1)[:,1,:] + sum(sol(t)[wa,:,4],dims = 1)[:,1,:] + sum(sol(t)[wa,:,10],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # I = IA + ID + IQ
 
     ###to delete when running large sims
-    #S=[[sum(sol(t)[wa,:,1],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # S
-    #R=[[sum(sol(t)[wa,:,6],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # R
+    S=[[sum(sol(t)[wa,:,1],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # S
+    R=[[sum(sol(t)[wa,:,6],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # R
 
     return [cumulatives, Q, I, sol[end][:,:,7:9],S,R],false # save z (time series with only incidence with no age structure), and save the final distribution (end) age/space but no time
 end
@@ -86,9 +84,9 @@ P.κ_per_event4=50
 #P.Κ_max_capacity[KenyaCoV_contacts.ind_nairobi_as]=1e3
 #P.Κ_max_capacity[KenyaCoV_contacts.ind_mombasa_as]=1e2
 P.Κ_max_capacity[12]=1e3
-session_nb=53
-n_traj=5
+session_nb=55
+n_traj=100
 
 for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
 prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
-results_sessions = run_saveJLD2daily_and_final_incidence(P,prob,n_traj,τₚ_list,session_nb)
+results_sessions = run_saveMATdaily_and_final_incidence(P,prob,n_traj,τₚ_list,session_nb)

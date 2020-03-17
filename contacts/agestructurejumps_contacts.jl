@@ -23,9 +23,9 @@ States:
 7 -> Cumulative I_sub
 8 -> Cumulative I_dis
 9 -> Cumulative I_Q                                    #****2  Cumulative dead BECOMES Cumulative I_Q
-10 -> I_d(iseased_to_be_)h(ospitalised)                 #****  IQ
-11 -> C(daily contacteds)                               #****2
-12 -> Cumulative contacteds
+10 -> I_Q diseased to be quarantined                     #****  IQ
+11 -> Q_S Susceptibles in quarantine                    #****3      (WAS: 11 -> C(daily contacteds)     #****2)
+12 -> Cumulative contacteds                             #****2
 
 Events for each wider area and age group:
 
@@ -44,6 +44,7 @@ Events for each wider area and age group:
 13-> I_A to Q
 14-> I_D to Q
 15-> I_Q to Q
+16 -> Qs->S                     #****4
 
 """
 
@@ -64,7 +65,7 @@ end
 
 
 function rates(out, u, p::CoVParameters_AS, t)
-    @unpack λ, γ, σ, δ, τ, μ₁, χ, τₚ = p                  #**** added τₚ
+    @unpack λ, γ, σ, δ, τ, μ₁, χ, τₚ, Q_dur = p                  #**** added τₚ
     #τₚ=τ/(τ+γ)                                      #****
     calculate_infection_rates!(u, p, t)
     for k = 1:length(out)
@@ -83,7 +84,7 @@ function rates(out, u, p::CoVParameters_AS, t)
             out[k] = τ*u[i,a,10]                   #****v5 #**** was D->Q became IQ->Q, rate =0 because we do this manually in the function update_l_IQ()
         end
         if eventtype == 5
-            out[k] = γ * u[i, a, 5] # Q->R
+            out[k] = 1/Q_dur*u[i, a, 5]#γ*u[i, a, 5] # Q->R          #****4
         end
         if eventtype == 6
             out[k] = γ * u[i, a, 4] # D->R
@@ -99,6 +100,9 @@ function rates(out, u, p::CoVParameters_AS, t)
         end
         if eventtype == 10                           #**** adding the event IQ->R
             out[k] = γ * u[i, a, 10] # IQ->R
+        end
+        if eventtype == 16                           #****4 adding the event Qs -> S
+            out[k] = 1/Q_dur * u[i, a, 11]  # Qs -> S
         end
     end
 end
@@ -176,21 +180,21 @@ function change_matrix(dc)
         if eventtype == 11          #****2      S->Q (contact)
             ind_Q = linear_as[i, a, 5]
             ind_S = linear_as[i, a, 1]
-            ind_C = linear_as[i, a, 11]
+            ind_Qs = linear_as[i, a, 11]
             ind_CumC = linear_as[i, a, 12]
             dc[ind_S, k] = -1
             dc[ind_Q, k] = 1
-            dc[ind_C, k] = 1
+            dc[ind_Qs, k] = 1
             dc[ind_CumC, k] = 1
         end
         if eventtype == 12          #****2      E->Q (contact)
             ind_Q = linear_as[i, a, 5]
             ind_E = linear_as[i, a, 2]
-            ind_C = linear_as[i, a, 11]
+            #ind_C = linear_as[i, a, 11]
             ind_CumC = linear_as[i, a, 12]
             dc[ind_E, k] = -1
             dc[ind_Q, k] = 1
-            dc[ind_C, k] = 1
+            #dc[ind_C, k] = 1
             dc[ind_CumC, k] = 1
         end
         if eventtype == 13          #****2      I_A->Q (contact)
@@ -206,22 +210,28 @@ function change_matrix(dc)
         if eventtype == 14          #****2      I_D->Q (contact)
             ind_Q = linear_as[i, a, 5]
             ind_ID = linear_as[i, a, 4]
-            ind_C = linear_as[i, a, 11]
+            #ind_C = linear_as[i, a, 11]
             ind_CumC = linear_as[i, a, 12]
             dc[ind_ID, k] = -1
             dc[ind_Q, k] = 1
-            dc[ind_C, k] = 1
+            #dc[ind_C, k] = 1
             dc[ind_CumC, k] = 1
         end
         if eventtype == 15          #****2      I_Q->Q (contact)
             ind_Q = linear_as[i, a, 5]
             ind_IQ = linear_as[i, a, 10]
-            ind_C = linear_as[i, a, 11]
+            #ind_C = linear_as[i, a, 11]
             ind_CumC = linear_as[i, a, 12]
             dc[ind_IQ, k] = -1
             dc[ind_Q, k] = 1
-            dc[ind_C, k] = 1
+            #dc[ind_C, k] = 1
             dc[ind_CumC, k] = 1
+        end
+        if eventtype == 16          #****4      Qs -> S
+            ind_Qs = linear_as[i, a, 11]
+            ind_S = linear_as[i, a, 1]
+            dc[ind_Qs, k] = -1
+            dc[ind_S, k] = 1
         end
     end
 end
@@ -253,6 +263,7 @@ function max_change(out, u, p::CoVParameters_AS)
         ind_CAQ = linear_as_events[i, a, 13]               #****2
         ind_CDQ = linear_as_events[i, a, 14]               #****2
         ind_CIqQ = linear_as_events[i, a, 15]              #****2
+        ind_QsS = linear_as_events[i, a, 16]              #****4
 
         out[ind_trans] = min(out[ind_trans], u[i, a, 1])
         out[ind_QR] = min(out[ind_QR], u[i, a, 5])
@@ -267,6 +278,7 @@ function max_change(out, u, p::CoVParameters_AS)
         out[ind_CAQ] = min(out[ind_CAQ], u[i, a, 3])       #****2 No more Contacted I_A->Q than actual I_A
         out[ind_CDQ] = min(out[ind_CDQ], u[i, a, 4])       #****2 No more Contacted I_D->Q than actual I_D
         out[ind_CIqQ] = min(out[ind_CIqQ], u[i, a, 10])    #****2 No more Contacted I_Q->Q than actual I_Q
+        out[ind_QsS] = min(out[ind_QsS], u[i,a,11])        #****4 No more Qs -> S than actual S
 
 
         #spliting events using binomial sampling
