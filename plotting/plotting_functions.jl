@@ -1,6 +1,6 @@
 riskregionnames = ["Machakos/Muranga" "Mandera" "Baringo/Nakuru" "Nairobi" "Uasin Gishu" "Marsabit" "Garissa" "Nakuru/Narok" "Turkana" "Taita Taveta" "Kitui/Meru" "Kilifi/Mombasa" "Kericho/Kisumu" "Kilifi/Lamu" "Kakamega/Kisumu" "Wajir" "Kajiado/Kisumu" "Homa bay/Migori" "Samburu/Laikipia" "Kilifi/Kwale" "Total"]
 age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"]
-
+using LinearAlgebra
 function plot_total_incidence(results_group,treatments::Tuple{Float64,Real},i)
     τ,ϵ_D = treatments
     inc_D1 = results_group[1][i][1]
@@ -138,7 +138,7 @@ end
 
 
 function plot_incidence_spatial(results,treatment_rates,i)
-    ordering = sortperm(results[i][1][1:20,100,1],rev = true)
+    ordering = sortperm(results[i][1][1:20,40,1],rev = true)
     τ = treatment_rates[i]
     inc_D = results[i][1]
     plt = plot()
@@ -174,7 +174,53 @@ function plot_total_incidence_by_age(scenario_group,treatment_rates,rel_transmis
             cases_age[a,n,3] = quantile([sum(results[i][4][:,a,k]) for k =1:1000],0.975)
         end
     end
-    plt = groupedbar(cases_age[:,:,1]./1e6,
+    plt = groupedbar(cases_age[:,:,1]./1e3,
+                    fontfamily="Helvetica",
+                    lab =label_scen,
+                    xticks = (1:17,age_cats))
+
+    return plt
+
+end
+function plot_total_incidence_by_age(scenario_group,i,labels)
+    d1,d2,d3 = size(scenario_group[1][i][4][:,:,:])
+    n = length(scenario_group)
+    cases_age = zeros(d2,n,3)
+    for (n,results) in enumerate(scenario_group)
+        for a = 1:d2
+            cases_age[a,n,1] = median([sum(results[i][4][:,a,k]) for k =1:1000])
+            cases_age[a,n,2] = quantile([sum(results[i][4][:,a,k]) for k =1:1000],0.025)
+            cases_age[a,n,3] = quantile([sum(results[i][4][:,a,k]) for k =1:1000],0.975)
+        end
+    end
+    plt = groupedbar(cases_age[:,:,1]./1e3,
+                    fontfamily="Helvetica",
+                    lab =labels,
+                    xticks = (1:17,age_cats))
+
+    return plt
+
+end
+
+function plot_total_incidence_by_age_normed(scenario_group,treatment_rates,rel_transmission_perc,i)
+    d1,d2,d3 = size(scenario_group[1][i][4][:,:,:])
+    n = length(scenario_group)
+    cases_age = zeros(d2,n,3)
+    label_scen = "$(rel_transmission_perc[1])% rel. infectiousness"
+    for l in 2:length(rel_transmission_perc)
+        label_scen = hcat(label_scen,"$(rel_transmission_perc[l])% rel. infectiousness")
+    end
+    for (n,results) in enumerate(scenario_group)
+        for a = 1:d2
+            cases_age[a,n,1] = median([sum(results[i][4][:,a,k]) for k =1:1000])
+            cases_age[a,n,2] = quantile([sum(results[i][4][:,a,k]) for k =1:1000],0.025)
+            cases_age[a,n,3] = quantile([sum(results[i][4][:,a,k]) for k =1:1000],0.975)
+        end
+    end
+    for l = 1:n
+            cases_age[:,l,1] .= LinearAlgebra.normalize(cases_age[:,l,1],1)
+    end
+    plt = groupedbar(cases_age[:,:,1],
                     fontfamily="Helvetica",
                     lab =label_scen,
                     xticks = (1:17,age_cats))
