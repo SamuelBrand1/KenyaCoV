@@ -61,13 +61,19 @@ plot!(plt_control_SD,legend = :topleft)
 # xlims!(0.,30.)
 savefig(plt_control_SD,"plotting/direct_control_scenarios_with_social_distancing.pdf")
 
-scenario_group_SDI = [results_2SI,results_3S]
+scenario_group_SDI = [results_2SI,results_3SI]
 plt_no_control_SD = plot_total_incidence_group(scenario_group_SDI,reducted_treatment_rates,1,reduced_rel_transmission_perc)
 title!(plt_no_control_SD,"Social distancing only")
 plot!(plt_no_control_SD,size = (700,400))
-plot!(plt_no_control_SD,legend = :topleft)
+plot!(plt_no_control_SD,legend = :topright)
 # xlims!(0.,30.)
 savefig(plt_no_control_SD,"plotting/baseline_scenarios_with_social_distancing.pdf")
+plt_control_SD = plot_total_incidence_group(scenario_group_SDI,reducted_treatment_rates,2,reduced_rel_transmission_perc)
+title!(plt_control_SD,"Active targeting and social distancing")
+plot!(plt_control_SD,size = (700,400))
+plot!(plt_control_SD,legend = :topright)
+# xlims!(0.,30.)
+savefig(plt_control_SD,"plotting/baseline_scenarios_with_social_distancing_and_control.pdf")
 
 
 
@@ -98,6 +104,20 @@ xlims!(plt_control_SD_2,(0.,150))
 title!(plt_control_SD_2,"Social distancing: 10% rel. trans. undetecteds ")
 plot!(plt_control_SD_2,size = (700,500))
 savefig(plt_control_SD_2,"plotting/spatial_targetting_scenarios_tau_01_social_distancing.pdf")
+
+
+plt_control_SDI_2 = plot_incidence_spatial(results_2SI,treatment_rates,1)
+xlims!(plt_control_SDI_2,(0.,150))
+title!(plt_control_SDI_2,"Social distancing: 10% rel. trans. undetecteds ")
+plot!(plt_control_SDI_2,size = (700,500))
+savefig(plt_control_SDI_2,"plotting/spatial_targetting_scenarios_tau_01_imperfect_social_distancing.pdf")
+
+plt_control_SDI_3 = plot_incidence_spatial(results_3SI,treatment_rates,1)
+xlims!(plt_control_SDI_2,(0.,150))
+title!(plt_control_SDI_3,"Social distancing: 10% rel. trans. undetecteds ")
+plot!(plt_control_SDI_3,size = (700,500))
+savefig(plt_control_SDI_3,"plotting/spatial_targetting_scenarios_tau_025_imperfect_social_distancing.pdf")
+
 
 """
 PEAK TIMING
@@ -184,13 +204,19 @@ xlabel!(size_plt_control,"Rel. infectiousness of undetected cases")
 plot!(size = (700,400))
 savefig(size_plt_control,"plotting/epidemic_size_with_control.pdf")
 
-collect_SD_size = hcat(sum(results_2S[1][4],dims= [1,2])[:],
-                            sum(results_3S[1][4],dims= [1,2])[:],
-                            sum(results_2S[2][4],dims= [1,2])[:],
-                            sum(results_3S[2][4],dims= [1,2])[:])
-size_plt_SD = boxplot(collect_SD_size,lab="",
+collect_SD_size = hcat(sum(results_2SI[1][4],dims= [1,2])[:],
+                            sum(results_3SI[1][4],dims= [1,2])[:],
+                            sum(results_2SI[2][4],dims= [1,2])[:],
+                            sum(results_3SI[2][4],dims= [1,2])[:])
+size_plt_SD = boxplot(collect_SD_size./1e6,lab="",
                             # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
                             xticks = (1:4,["10% - no targeting","25% - no targeting","10% - targetting","25% - targetting"]))
+xlabel!("Rel. infectiousness")
+ylabel!("Cases (millions)")
+title!(size_plt_SD,"Social distancing and direct controls: epidemic number of cases")
+plot!(size = (700,400))
+savefig(size_plt_SD,"epidemic_size_with_control_and_SD.pdf")
+
 
 """
 Age distribution of cases
@@ -215,8 +241,14 @@ savefig(plt_age_distrib_uncontrolled,"plotting/age_distrib_cases_uncontrolled.pd
 
 plt_age_distrib_controlled = plot_total_incidence_by_age(scenario_group,treatment_rates,rel_transmission_perc,6)
 plot!(size = (800,500),legend = :topleft)
-
 xlabel!("Age of case individual")
 ylabel!("Number of cases (millions)")
 title!("Age distribution of cases: targetted controls")
 savefig(plt_age_distrib_controlled,"plotting/age_distrib_cases_targetted.pdf")
+
+plt_age_distrib_SD = plot_total_incidence_by_age(scenario_group_SDI,reducted_treatment_rates,reduced_rel_transmission_perc,1)
+plot!(size = (800,500),legend = :topleft)
+xlabel!("Age of case individual")
+ylabel!("Number of cases (millions)")
+title!("Age distribution of cases: social distancing")
+savefig(plt_age_distrib_controlled,"plotting/age_distrib_cases_social_distancing.pdf")
