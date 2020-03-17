@@ -11,23 +11,21 @@ Load age structured data, define initial state and declare the KenyaCoV problem
 u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
-@load "data/agemixingmatrix_china.jld2" M_China
-@load "data/reporting_rate_for_MERS_like_scenario.jld2" reporting_rate
+@load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
 
-function R_kenya_prediction(R₀,r::Vector{Float64},χ::Vector{Float64},δ,ϵ_A,ϵ_D,τ,γ)
-    sus_matrix = repeat(χ,1,KenyaCoV.n_a)
-    rep_matrix = repeat(δ*r' + ϵ_A*(1 .- (δ*r')),KenyaCoV.n_a,1)
-    rep_matrix_control = repeat(ϵ_D*(γ/(τ+γ))*δ*r' + ϵ_A*(1 .- (δ*r')),KenyaCoV.n_a,1)
-    eigs, = eigen(rep_matrix.*sus_matrix.*M_China)
-    R₀_scale_china = Real(eigs[end])/γ
-    β = R₀/R₀_scale_china
-    eigs, = eigen(rep_matrix_control.*sus_matrix.*P.M)
-    R₀_scale_kenya = Real(eigs[end])/γ
-    return β*R₀_scale_kenya
-end
-R_kenya_prediction(1,ones(16),ones(16),0.2,1,1.,0.,1/2.5)
 
-x_range = 1:(-0.01):0.5
+P.χ = ones(KenyaCoV.n_a)
+P.rel_detection_rate = d_0
+P.dt = 0.25;
+P.ext_inf_rate = 0.;
+P.ϵ = 0.
+P.γ = 1/2.5
+P.σ = 1/rand(KenyaCoV.d_incubation)
+P.β = 2.5*P.γ
+R₀_scale = KenyaCoV.calculate_R₀_scale(P)
+P.χ = ones(KenyaCoV.n_a)/R₀_scale
+KenyaCoV.calculate_R₀(P) #Before
+
 R_kenya_tau_0 = [R_kenya_prediction(1,ones(16),P.χ,0.2,0.,x,0,1/2.5) for x in x_range]
 R_kenya_tau_7 = [R_kenya_prediction(1,ones(16),P.χ,0.2,0.,x,1/7,1/2.5) for x in x_range]
 R_kenya_tau_3_5 = [R_kenya_prediction(1,ones(16),P.χ,0.2,0.,x,1/3.5,1/2.5) for x in x_range]

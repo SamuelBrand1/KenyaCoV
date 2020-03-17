@@ -31,6 +31,9 @@ Plots ---
 
 # gr()
 include("plotting_functions.jl");
+"""
+Country wide incidence
+"""
 scenario_group = [results_1,results_2,results_3,results_4,results_5]
 plt_no_control = plot_total_incidence_group(scenario_group,treatment_rates,1,rel_transmission_perc)
 title!(plt_no_control,"Uncontrolled epidemic: 5 generations of undetected transmission")
