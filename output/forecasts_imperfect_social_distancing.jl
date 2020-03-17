@@ -23,6 +23,7 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
 
 
 @load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
+@load "data/susceptibility_rates.jld2" σ
 
 #Initial infecteds
 

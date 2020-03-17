@@ -50,7 +50,7 @@ function plot_total_incidence_group(scenario_group,treatment_group,treatment_num
         tracing_rate,e_D = treatment_group[treatment_num]
         for (i,scenarioresults) in enumerate(scenario_group)
                 inc_D = scenarioresults[treatment_num][1]
-                plot!(plt,1:365,inc_D[21,:,1].+1,
+                plot!(plt,inc_D[21,:,1].+1,
                 fontfamily="Helvetica",
                 lw = 3,
                 lab= "rel. infect. of undetecteds: $(rel_transmission_perc[i])%",
@@ -143,7 +143,7 @@ function plot_incidence_spatial(results,treatment_rates,i)
     inc_D = results[i][1]
     plt = plot()
     for i in ordering
-        plot!(plt,1:365,inc_D[i,:,1].+1,
+        plot!(plt,inc_D[i,:,1].+1,
                     # ribbon = (inc_D[4,:,2],inc_D[4,:,3]),
                     fillalpha = 0.1,
                     lab = riskregionnames[i],
