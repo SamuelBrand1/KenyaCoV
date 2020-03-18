@@ -56,7 +56,7 @@ function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D)
     return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
 end
 
-function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D,cb::DiscreteCallback)
+function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D,cb)
     P.τ_initial = τ
     P.ϵ_D = ϵ_D
     ensemble_prob = EnsembleProblem(prob,
@@ -84,7 +84,7 @@ function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates)
     return results
 end
 
-function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,cb::DiscreteCallback)
+function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,cb)
     results = []
     for (τ,ϵ_D) in treatment_rates
         sims = run_simulations(P,prob,n_traj,τ,ϵ_D,cb)

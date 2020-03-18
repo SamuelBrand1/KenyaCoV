@@ -25,6 +25,10 @@ Plots ---
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3S.jld2") results_3S
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI.jld2") results_2SI
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI.jld2") results_3SI
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI_short.jld2") results_2SI_short
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI_short.jld2") results_3SI_short
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_4SI_short.jld2") results_4SI_short
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_5SI_short.jld2") results_5SI_short
 
 
 
@@ -174,6 +178,11 @@ collect_uncontrol_final_size = hcat(sum(results_1[1][4],dims= [1,2])[:],
                                     sum(results_4[1][4],dims= [1,2])[:],
                                     sum(results_5[1][4],dims= [1,2])[:])
 
+median_estimates_uncontrolled = [median(collect_uncontrol_final_size[:,i]) for i = 1:5]
+lb_ub = [quantile(collect_uncontrol_final_size[:,i],[0.025,0.975]) for i = 1:5]
+
+
+
 size_plt_no_control = boxplot(collect_uncontrol_final_size./1e6,lab="",
                             # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
                             xticks = (1:5,["0%","10%","25%","50%","100%"]))
@@ -189,6 +198,11 @@ collect_control_final_size = hcat(sum(results_1[6][4],dims= [1,2])[:],
                                     sum(results_4[6][4],dims= [1,2])[:],
                                     sum(results_5[6][4],dims= [1,2])[:])
 
+median_estimates_case_isolation = [median(collect_control_final_size[:,i]) for i = 1:5]
+lb_ub = [quantile(collect_control_final_size[:,i],[0.025,0.975]) for i = 1:5]
+
+
+
 size_plt_control = boxplot(collect_control_final_size./1e6,lab="",
                             # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
                             xticks = (1:5,["0%","10%","25%","50%","100%"]))
@@ -203,6 +217,11 @@ collect_SD_size = hcat(sum(results_2S[1][4],dims= [1,2])[:],
                             sum(results_3S[1][4],dims= [1,2])[:],
                             sum(results_2S[2][4],dims= [1,2])[:],
                             sum(results_3S[2][4],dims= [1,2])[:])
+
+median_estimates_case_isolation_and_perfect_social_distancing = [median(collect_SD_size[:,i]) for i = 1:4]
+
+
+
 size_plt_SD = boxplot(collect_SD_size,lab="",
                             # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
                             xticks = (1:4,["10% - no targeting","25% - no targeting","10% - targetting","25% - targetting"]))
@@ -211,6 +230,14 @@ collect_SDI_size = hcat(sum(results_2SI[1][4],dims= [1,2])[:],
                             sum(results_3SI[1][4],dims= [1,2])[:],
                             sum(results_2SI[2][4],dims= [1,2])[:],
                             sum(results_3SI[2][4],dims= [1,2])[:])
+
+median_estimates_case_isolation_and_social_distancing = [median(collect_SDI_size[:,i]) for i = 1:4]
+
+ratio_10_rel_infect_with_SD_CI = median_estimates_case_isolation_and_social_distancing[3]/median_estimates_case_isolation[2]
+ratio_10_rel_infect_with_SD_CI = median_estimates_case_isolation_and_social_distancing[4]/median_estimates_case_isolation[3]
+
+
+
 size_plt_SD = boxplot(collect_SDI_size./1e6,lab="",
                             # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
                             xticks = (1:4,["10% - SD","25% - SD","10% - SD+CI","25% - SD+CI"]))
