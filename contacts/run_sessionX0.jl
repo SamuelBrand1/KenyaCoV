@@ -5,14 +5,15 @@ import KenyaCoV_contacts
 using LinearAlgebra:eigen
 using Statistics: median, quantile
 
+#############
 function randomise_params(prob,i,repeat)
     _P = deepcopy(prob.p)
-    #_P.σ = 1/rand(d_incubation)
-    #_P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
+    _P.σ = 1/rand(d_incubation)
+    _P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
     return remake(prob,p=_P)
 end
 function run_saveMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list,session)
-    folder="./contacts/results_session50s/results_session"*string(session)*"/"
+    folder="./contacts/results_session"*string(Int(floor(session/10)))*"0s/results_session"*string(session)*"/"
     #folder="W:/BACKUP MakingContacts/2020-03-16_v5/results_session"*string(session)*"/"
     mkdir(folder)
     for τₚ in τₚ_list
@@ -31,13 +32,13 @@ function run_saveMAT(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_lis
 end
 
 function run_saveJLD2daily_and_final_incidence(P::KenyaCoV_contacts.CoVParameters_AS,prob,n_traj,τₚ_list,session)
-    folder="./contacts/results_session50s/results_session"*string(session)*"/"
+    folder="./contacts/results_session"*string(Int(floor(session/10)))*"0s/results_session"*string(session)*"/"
     #folder="W:/BACKUP MakingContacts/2020-03-16_v5/results_session"*string(session)*"/"
     mkdir(folder)
     for τₚ in τₚ_list
         P.τₚ =τₚ
         println("Session"*string(session)*" Running ",n_traj," sims for τₚ=",τₚ)
-        global sims = solve(EnsembleProblem(prob#=,prob_func=randomise_params=#,output_func = output_daily_and_final_incidence),
+        @time sims = solve(EnsembleProblem(prob#=,prob_func=randomise_params=#,output_func = output_daily_and_final_incidence),
                             FunctionMap(),dt=P.dt,trajectories=n_traj)
         sims_vector=[]#sims.u[1].t
         for i=1:size(sims.u,1)
@@ -53,42 +54,54 @@ function output_daily_and_final_incidence(sol,i)
     I=[[sum(sol(t)[wa,:,3],dims = 1)[:,1,:] + sum(sol(t)[wa,:,4],dims = 1)[:,1,:] + sum(sol(t)[wa,:,10],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # I = IA + ID + IQ
 
     ###to delete when running large sims
-    #S=[[sum(sol(t)[wa,:,1],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # S
-    #R=[[sum(sol(t)[wa,:,6],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # R
+    S=[[sum(sol(t)[wa,:,1],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # S
+    R=[[sum(sol(t)[wa,:,6],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # R
 
     return [cumulatives, Q, I, sol[end][:,:,7:9],S,R],false # save z (time series with only incidence with no age structure), and save the final distribution (end) age/space but no time
 end
 
-"""
-Define uncertainty of parameter estimates
-"""
-d_incubation = LogNormal(log(4.8),0.25) #Liu et al
-mean(d_incubation)
-(quantile(d_incubation,0.025),median(d_incubation),quantile(d_incubation,0.975))
-d_R₀ = Gamma(100,2.92/100) ##Liu et al
-mean(d_R₀)
-(quantile(d_R₀,0.025),median(d_R₀),quantile(d_R₀,0.975))
+###############
+function run_sessions(sessions,Κ_max_capacity_KENYA,Κ_max_capacity_Nairobi,Κ_max_capacity_Kilifi,κ_per_event4,τₚ_list,n_traj)
+    for i=1:size(sessions,1)
+        d_incubation = LogNormal(log(4.8),0.25) #Liu et al
+        mean(d_incubation)
+        (quantile(d_incubation,0.025),median(d_incubation),quantile(d_incubation,0.975))
+        d_R₀ = Gamma(100,2.92/100) ##Liu et al
+        mean(d_R₀)
+        (quantile(d_R₀,0.025),median(d_R₀),quantile(d_R₀,0.975))
 
-"""
-SCENARIO
-"""
-u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
-u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
-P.dt = 0.5;     P.ext_inf_rate = 0.;    P.ϵ = rand(Uniform(0.,0.5))
-P.δ = 0.2;      P.γ = 1/2.5;            P.σ = 1/rand(d_incubation)
-P.β = rand(d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
-P.τ=1/3.
-P.κ=10
-P.κₘ=7;     P.Δₜ=7
-P.κ_per_event4=50
+        u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
+        u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
+        P.dt = 0.5;     P.ext_inf_rate = 0.;    P.ϵ = rand(Uniform(0.,0.5))
+        P.δ = 0.2;      P.γ = 1/2.5;            P.σ = 1/rand(d_incubation)
+        P.β = rand(d_R₀)*P.γ/(P.δ + P.ϵ*(1-P.δ))
+        P.τ=1/3.
+        P.κ=10;        P.κₘ=7;     P.Δₜ=7;
+
+        P.Κ_max_capacity=[Κ_max_capacity_KENYA[i] for e in P.Κ_max_capacity]
+        P.Κ_max_capacity[4]=Κ_max_capacity_Nairobi[i]
+        P.Κ_max_capacity[12]=Κ_max_capacity_Kilifi[i]
+
+        P.κ_per_event4=κ_per_event4[i]
+
+        for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
+        prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
+        if i==1
+            run_saveJLD2daily_and_final_incidence(P,prob,n_traj,τₚ_list,sessions[i])
+        else
+            println();println("Skipping taup=0 --> TO BE COPIED")
+            run_saveJLD2daily_and_final_incidence(P,prob,n_traj,τₚ_list[2:end],sessions[i])
+        end
+    end
+end
+
+###########
+sessions=[73,74,75,76,77,78]
+
+Κ_max_capacity_KENYA=[0,0,0,0,0,0]
+Κ_max_capacity_Nairobi=[0,0,0,0,0,0]
+Κ_max_capacity_Kilifi=[1e3,5e3,1e4,1e3,5e3,1e4]
+κ_per_event4=[50,50,50,100,100,100]
 τₚ_list=[.0,.25,.5,.75,.9]
-#P.Κ_max_capacity=[1000 for e in P.Κ_max_capacity]
-#P.Κ_max_capacity[KenyaCoV_contacts.ind_nairobi_as]=1e3
-#P.Κ_max_capacity[KenyaCoV_contacts.ind_mombasa_as]=1e2
-P.Κ_max_capacity[12]=1e3
-session_nb=53
-n_traj=5
-
-for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
-prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
-results_sessions = run_saveJLD2daily_and_final_incidence(P,prob,n_traj,τₚ_list,session_nb)
+n_traj=50
+run_sessions(sessions,Κ_max_capacity_KENYA,Κ_max_capacity_Nairobi,Κ_max_capacity_Kilifi,κ_per_event4,τₚ_list,n_traj)
