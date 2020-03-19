@@ -100,7 +100,7 @@ sessions=[77,78]
 Κ_max_capacity_Kilifi=[5e3,5e3]
 κ_per_event4=[100,100,100]
 τₚ_list=[.0,.25,.5,.75,.9];#τₚ_list=[.0,.0,.0,.0,.25]
-n_traj=5
+n_traj=50
 for i=1:size(sessions,1)
     run_sessions(sessions[i],Κ_max_capacity_KENYA[i],Κ_max_capacity_Nairobi[i],Κ_max_capacity_Kilifi[i],κ_per_event4[i],τₚ_list,n_traj)
 end
