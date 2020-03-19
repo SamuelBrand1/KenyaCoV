@@ -15,7 +15,8 @@ function plot_total_incidence(results_group,treatments::Tuple{Float64,Real},i)
                 # xlims = (0.,100),
                 yscale = :log10,
                 xlabel = "Days",
-                ylabel = "Daily incidence + 1")
+                yticks = ([1,10,100,1000,10000],["0" "10" "100" "1000" "10000"]),
+                ylabel = "Daily incidence")
         # plot!(plt,1:365,inc_D2[21,:,1].+1,
         #             lw = 3,
         #             lab="MERS-like scenario",
@@ -57,10 +58,10 @@ function plot_total_incidence_group(scenario_group,treatment_group,treatment_num
                 legend = :topright,
                 ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
                 fillalpha = 0.15,
-                # xlims = (0.,100),
+                yticks = ([1,10,100,1000,10000],["0" "10" "100" "1000" "10000"]),
                 yscale = :log10,
-                xlabel = "Days",
-                ylabel = "Daily incidence + 1")
+                xlabel = "Days after detecting established CoV transmission",
+                ylabel = "Daily incidence")
         end
         return plt
 end
@@ -144,7 +145,7 @@ function plot_incidence_spatial(results,treatment_rates,i)
     plt = plot()
     for i in ordering
         plot!(plt,inc_D[i,:,1].+1,
-                    # ribbon = (inc_D[4,:,2],inc_D[4,:,3]),
+                    yticks = ([1,10,100,1000],["0" "10" "100" "1000"]),
                     fillalpha = 0.1,
                     lab = riskregionnames[i],
                     lw=2,
@@ -153,7 +154,7 @@ function plot_incidence_spatial(results,treatment_rates,i)
                     legend = :outertopright,
                     legendfontsize = 8.9);
     end
-    xlabel!(plt,"Days")
+    xlabel!(plt,"Days after detecting established CoV transmission")
     ylabel!(plt,"Daily incidence")
 
     return plt

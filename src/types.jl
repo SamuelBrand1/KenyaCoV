@@ -46,6 +46,7 @@ end
     into_nai::Vector{Int}#Number of people flying into Nairobi each day
     global_prev::Vector{Float64}
     isolating_detecteds::Bool = true #This determines if people are still being isolated
+    lockdown::Bool = true  #This determines if social distancing and travel restrictions are still in force
     dt::Float64 = 1. #Useful for the non-negative method
     Î::Matrix{Float64} = zeros(n_wa,n_a) #For inplace calculations
     N̂::Matrix{Float64} = zeros(n_wa,n_a)#For inplace calculations

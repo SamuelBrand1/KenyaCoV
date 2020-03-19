@@ -47,14 +47,14 @@ end
 """
 Scenario functions
 """
-function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D)
-    P.τ_initial = τ
-    P.ϵ_D = ϵ_D
-    ensemble_prob = EnsembleProblem(prob,
-                                    prob_func = randomise_params,
-                                    output_func = output_daily_and_final_incidence)
-    return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
-end
+# function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D)
+#     P.τ_initial = τ
+#     P.ϵ_D = ϵ_D
+#     ensemble_prob = EnsembleProblem(prob,
+#                                     prob_func = randomise_params,
+#                                     output_func = output_daily_and_final_incidence)
+#     return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
+# end
 
 function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D,cb)
     P.τ_initial = τ
@@ -65,24 +65,24 @@ function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D,cb)
     return solve(ensemble_prob,FunctionMap(),dt = P.dt,callback = cb,trajectories = n_traj)
 end
 
-function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D,prob_func)
-    P.τ_initial = τ
-    P.ϵ_D = ϵ_D
-    ensemble_prob = EnsembleProblem(prob,
-                                    prob_func = prob_func,
-                                    output_func = output_daily_and_final_incidence)
-    return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
-end
+# function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D,prob_func)
+#     P.τ_initial = τ
+#     P.ϵ_D = ϵ_D
+#     ensemble_prob = EnsembleProblem(prob,
+#                                     prob_func = prob_func,
+#                                     output_func = output_daily_and_final_incidence)
+#     return solve(ensemble_prob,FunctionMap(),dt = P.dt,trajectories = n_traj)
+# end
 
-function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates)
-    results = []
-    for (τ,ϵ_D) in treatment_rates
-        sims = run_simulations(P,prob,n_traj,τ,ϵ_D)
-        analysisdata = incidence_from_sims(sims)
-        push!(results,analysisdata)
-    end
-    return results
-end
+# function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates)
+#     results = []
+#     for (τ,ϵ_D) in treatment_rates
+#         sims = run_simulations(P,prob,n_traj,τ,ϵ_D)
+#         analysisdata = incidence_from_sims(sims)
+#         push!(results,analysisdata)
+#     end
+#     return results
+# end
 
 function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,cb)
     results = []
@@ -94,15 +94,15 @@ function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,c
     return results
 end
 
-function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,prob_func)
-    results = []
-    for (τ,ϵ_D) in treatment_rates
-        sims = run_simulations(P,prob,n_traj,τ,ϵ_D,prob_func)
-        analysisdata = incidence_from_sims(sims)
-        push!(results,analysisdata)
-    end
-    return results
-end
+# function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,prob_func)
+#     results = []
+#     for (τ,ϵ_D) in treatment_rates
+#         sims = run_simulations(P,prob,n_traj,τ,ϵ_D,prob_func)
+#         analysisdata = incidence_from_sims(sims)
+#         push!(results,analysisdata)
+#     end
+#     return results
+# end
 
 
 """

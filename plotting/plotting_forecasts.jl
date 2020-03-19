@@ -30,6 +30,10 @@ Plots ---
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_4SI_short.jld2") results_4SI_short
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_5SI_short.jld2") results_5SI_short
 
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI_SL_three_months.jld2") results_2SI_SL_three_months
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI_SL_three_months.jld2") results_3SI_SL_three_months
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_4SI_SL_three_months.jld2") results_4SI_SL_three_months
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_5SI_SL_three_months.jld2") results_5SI_SL_three_months
 
 
 
@@ -42,7 +46,6 @@ scenario_group = [results_1,results_2,results_3,results_4,results_5]
 plt_no_control = plot_total_incidence_group(scenario_group,treatment_rates,1,rel_transmission_perc)
 title!(plt_no_control,"Kenya-wide incidence: no intervention")
 plot!(plt_no_control,size = (700,500))
-xlims!(0.,30.)
 savefig(plt_no_control,"plotting/baseline_scenarios.pdf")
 
 
@@ -83,6 +86,20 @@ plot!(plt_control_SD,legend = :topright)
 # xlims!(0.,30.)
 savefig(plt_control_SD,"plotting/baseline_scenarios_with_social_distancing_and_case_isolation.pdf")
 
+
+scenario_group_lockdown = [results_2SI_SL_three_months,
+                            results_3SI_SL_three_months,
+                            results_4SI_SL_three_months,
+                            results_5SI_SL_three_months]
+plt_lockdown = plot_total_incidence_group(scenario_group_lockdown,[(0.5,1/3.5)],1,[10,25,50,100])
+plot!([90,90],[1,2.5e4],color = :black,ls = :dot,lw = 3,lab="")
+xlims!(0,400)
+title!("Daily incidence before and after 90 days restrictions (SD+MR+CI)")
+
+plot!(size = (700,400))
+savefig(plt_lockdown,"plotting/baseline_scenarios_with_lockdown.pdf")
+
+
 """
 Spatial plots
 """
@@ -98,11 +115,11 @@ title!(plt_control_1,"Targetted intervention: 0% rel. trans. undetecteds ")
 plot!(plt_control_1,size = (700,500))
 savefig(plt_control_1,"plotting/spatial_targetting_scenarios_tau_0.pdf")
 
-plt_no_control_2 = plot_incidence_spatial(results_2,treatment_rates,1)
-title!(plt_no_control_2,"Spatial distribution of incidence: (10% rel. infect.)")
-plot!(plt_no_control_2,size = (700,500))
+plt_no_control_3 = plot_incidence_spatial(results_3,treatment_rates,1)
+title!(plt_no_control_3,"Spatial distribution of incidence: (25% rel. infect.)")
+plot!(size = (700,500))
 xlims!(0.,60.)
-savefig(plt_no_control_2,"plotting/spatial_baseline_scenarios_tau_01.pdf")
+savefig(plt_no_control_3,"plotting/spatial_baseline_scenarios_epsilon_A_25.pdf")
 
 plt_control_2 = plot_incidence_spatial(results_2,treatment_rates,6)
 title!(plt_control_2,"Targetted intervention: 10% rel. trans. undetecteds ")
@@ -165,6 +182,22 @@ ylabel!(peak_plt_SD,"Time to peak in days")
 xlabel!(peak_plt_SD,"Rel. infectiousness of undetected cases")
 plot!(size = (700,400))
 savefig(peak_plt_SD,"plotting/time_to_peak_social_distancing_and_case_isolation.pdf")
+
+collect_lockdown_peak_timing = hcat(results_2SI_SL_three_months[1][3][:,21],
+                                      results_3SI_SL_three_months[1][3][:,21],
+                                      results_4SI_SL_three_months[1][3][:,21],
+                                      results_5SI_SL_three_months[1][3][:,21])
+
+peak_plt_SD = boxplot(collect_lockdown_peak_timing,lab="",
+                          # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
+                          xticks = (1:4,["10%","25%","50%","100%"]))
+title!(peak_plt_SD,"Epidemic peak timing with social distancing and case isolation")
+ylabel!(peak_plt_SD,"Time to peak in days")
+xlabel!(peak_plt_SD,"Rel. infectiousness of subclinical cases")
+plot!(size = (700,400))
+savefig(peak_plt_SD,"plotting/time_to_peak_lockdown.pdf")
+
+
 
 """
 Final size plots
@@ -248,6 +281,39 @@ ylims!((0.,1.5))
 plot!(size = (700,400))
 savefig(size_plt_SD,"plotting/epidemic_size_with_SD_and_case_isolation.pdf")
 
+collect_SDI_comparison_size = hcat(sum(results_2[6][4],dims= [1,2])[:],
+                                sum(results_2SI[2][4],dims= [1,2])[:],
+                                sum(results_3[6][4],dims= [1,2])[:],
+                            sum(results_3SI[2][4],dims= [1,2])[:])
+size_plt_SD_comparison = boxplot(collect_SDI_comparison_size./1e6,lab="",
+                        # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
+                                xticks = (1:4,["10% - CI","10% - CI+SD","25% - CI","25% - CI+SD"]))
+title!(size_plt_SD_comparison,"Epidemic number of cases with long-lasting social distancing and case isolation")
+ylabel!(size_plt_SD_comparison,"Total cases (millions)")
+xlabel!(size_plt_SD_comparison,"Rel. infectiousness of undetected cases and controls")
+ylims!((0.,1.5))
+plot!(size = (700,400))
+savefig(size_plt_SD_comparison,"plotting/epidemic_size_comparison_SD_and_case_isolation.pdf")
+
+collect_lockdown_comparison_size = hcat(sum(results_2[6][4],dims= [1,2])[:],
+                            sum(results_2SI_SL_three_months[1][4],dims= [1,2])[:],
+                            sum(results_3[6][4],dims= [1,2])[:],
+                            sum(results_3SI_SL_three_months[1][4],dims= [1,2])[:],
+                            sum(results_4[6][4],dims= [1,2])[:],
+                            sum(results_4SI_SL_three_months[1][4],dims= [1,2])[:],
+                            sum(results_5[6][4],dims= [1,2])[:],
+                            sum(results_5SI_SL_three_months[1][4],dims= [1,2])[:])
+size_plt_SD_compare = boxplot(collect_lockdown_comparison_size./1e6,lab="",
+                        # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
+                        xticks = (1:8,["10% - CI","10% - CI+tSD+tMR","25% - CI","25% - CI+tSD+tMR",
+                                "50%","50% - CI+tSD+tMR","100%","100% - CI+tSD+tMR"]))
+
+title!(size_plt_SD_compare,"Epidemic number of cases with 90 days controls")
+ylabel!(size_plt_SD_compare,"Total cases (millions)")
+xlabel!(size_plt_SD_compare,"Rel. infectiousness of subclinical cases and controls")
+ylims!((0.,1.5))
+plot!(size = (900,400))
+savefig(size_plt_SD_compare,"plotting/epidemic_size_comparison_lockdown.pdf")
 """
 Age distribution of cases
 """

@@ -1,7 +1,52 @@
 #Script for building the population pyramid into data
-using DataFrames,Plots,JLD2,MAT,LinearAlgebra,Distances,StatsPlots
+using DataFrames,Plots,JLD2,MAT,LinearAlgebra,Distances,StatsPlots,CSV
 using LinearAlgebra:normalize,normalize!
+using TransformVariables, DynamicHMC, DynamicHMC.Diagnostics, Distributions
+age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"]
 
+"""
+Load the MCMC outputs for the age-specific relative symptomatic rate
+"""
+@load "data/MCMC_results_fit_d.jld2" results_d_tau_0 results_d_tau_01 results_d_tau_025 results_d_tau_05 results_d_tau_1
+trans = as((θ = as(Array, asℝ₊, 17),))#Transforms the relative values into definitely positive numbers 16th value is fixed as 1
+gr()
+function MCMCchain2estimates(results)
+    posterior = first.(transform.(trans, results.chain))
+    posterior_array = zeros(length(posterior),17)
+    for i = 1:length(posterior),j=1:17
+        posterior_array[i,j] = posterior[i][j]
+    end
+    for i = 1:length(posterior),j=1:17
+        posterior_array[i,j] = posterior_array[i,j]/posterior_array[i,17]
+    end
+    θ̂ = [mean(posterior_array[:,i]) for i = 1:17]
+    lb = [quantile(posterior_array[:,i],0.025) for i = 1:17]
+    ub = [quantile(posterior_array[:,i],0.975) for i = 1:17]
+    return θ̂,θ̂ .- lb,ub.-θ̂
+end
+
+d_0,lb_0,ub_0 = MCMCchain2estimates(results_d_tau_0)
+d_01,lb_01,ub_01 = MCMCchain2estimates(results_d_tau_01)
+d_025,lb_025,ub_025 = MCMCchain2estimates(results_d_tau_025)
+d_05,lb_05,ub_05 = MCMCchain2estimates(results_d_tau_05)
+d_1,lb_1,ub_1 = MCMCchain2estimates(results_d_tau_1)
+
+# fig_d = groupedbar(hcat(θ̂_0,θ̂_01,θ̂_025,θ̂_05,θ̂_1),fillalpha = 0.7,yscale = :log10)
+# fig_d = scatter(θ̂_0,fillalpha = 0.7,yscale = :log10)
+
+
+fig_d = scatter(d_0,yerr = (lb_0,ub_0),fillalpha = 0.3,lab="rel. infectiousness = 0%",legend = :bottomright,
+        xticks = (1:17,age_cats),
+        ylabel = "Relative symptomatic rate", title = "Symptomatic rates for subclinical rel. infectiousness scenarios",
+        yscale = :log10,
+        ms = 10)
+scatter!(fig_d,d_01,yerr = (lb_01,ub_01),fillalpha = 0.3,lab="rel. infectiousness = 10%",ms=10)
+scatter!(fig_d,d_025,yerr = (lb_025,ub_025),fillalpha = 0.3,lab="rel. infectiousness = 25%",ms=10)
+scatter!(fig_d,d_05,yerr = (lb_05,ub_05),fillalpha = 0.3,lab="rel. infectiousness = 50%",ms=10)
+scatter!(fig_d,d_1,yerr = (lb_1,ub_1),fillalpha = 0.3,lab="rel. infectiousness = 100%",ms=10)
+scatter!(size=(700,400))
+xlabel!("Age group (years)")
+savefig("plotting/symptomatic_rates.pdf")
 
 """
 Load age-specific susceptibilities (for use in that scenario) and age-specific relative detection rates

@@ -12,6 +12,7 @@ function transportstructure_params!(P::CoVParameters,ρ::Vector{Float64},transpo
 end
 
 function transportstructure_params!(P::CoVParameters_AS,ρ::Vector{Float64},transport_matrix)
+    P.ρ = ρ
    #Put in the correct location matrix
    for i = 1:n_wa,j = 1:n_wa
        if i != j
