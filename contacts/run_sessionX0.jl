@@ -35,7 +35,9 @@ function run_saveJLD2daily_and_final_incidence(P::KenyaCoV_contacts.CoVParameter
     folder="./contacts/results_session"*string(Int(floor(session/10)))*"0s/results_session"*string(session)*"/"
     #folder="W:/BACKUP MakingContacts/2020-03-16_v5/results_session"*string(session)*"/"
     mkdir(folder)
+    i=0
     for τₚ in τₚ_list
+        i+=1
         P.τₚ =τₚ
         println("Session"*string(session)*" Running ",n_traj," sims for τₚ=",τₚ)
         @time sims = solve(EnsembleProblem(prob#=,prob_func=randomise_params=#,output_func = output_daily_and_final_incidence),
@@ -44,7 +46,7 @@ function run_saveJLD2daily_and_final_incidence(P::KenyaCoV_contacts.CoVParameter
         for i=1:size(sims.u,1)
             push!(sims_vector, sims.u[i])
         end
-        @save folder*"sims"*string(n_traj)*"_taup"*string(τₚ)*".jld2" sims_vector
+        @save folder*"sims"*string(n_traj)*"_taup"*string(τₚ)*"_"*string(i)*".jld2" sims_vector
     end
 end
 function output_daily_and_final_incidence(sol,i)
@@ -61,8 +63,8 @@ function output_daily_and_final_incidence(sol,i)
 end
 
 ###############
-function run_sessions(sessions,Κ_max_capacity_KENYA,Κ_max_capacity_Nairobi,Κ_max_capacity_Kilifi,κ_per_event4,τₚ_list,n_traj)
-    for i=1:size(sessions,1)
+function run_sessions(session,Κ_max_capacity_KENYA,Κ_max_capacity_Nairobi,Κ_max_capacity_Kilifi,κ_per_event4,τₚ_list,n_traj)
+    #for i=1:size(sessions,1)
         d_incubation = LogNormal(log(4.8),0.25) #Liu et al
         mean(d_incubation)
         (quantile(d_incubation,0.025),median(d_incubation),quantile(d_incubation,0.975))
@@ -78,30 +80,27 @@ function run_sessions(sessions,Κ_max_capacity_KENYA,Κ_max_capacity_Nairobi,Κ_
         P.τ=1/3.
         P.κ=10;        P.κₘ=7;     P.Δₜ=7;
 
-        P.Κ_max_capacity=[Κ_max_capacity_KENYA[i] for e in P.Κ_max_capacity]
-        P.Κ_max_capacity[4]=Κ_max_capacity_Nairobi[i]
-        P.Κ_max_capacity[12]=Κ_max_capacity_Kilifi[i]
+        P.Κ_max_capacity=[Κ_max_capacity_KENYA for e in P.Κ_max_capacity]
+        P.Κ_max_capacity[4]=Κ_max_capacity_Nairobi
+        P.Κ_max_capacity[12]=Κ_max_capacity_Kilifi
 
-        P.κ_per_event4=κ_per_event4[i]
+        P.κ_per_event4=κ_per_event4
 
         for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
         prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
-        if i==1
-            run_saveJLD2daily_and_final_incidence(P,prob,n_traj,τₚ_list,sessions[i])
-        else
-            println();println("Skipping taup=0 --> TO BE COPIED")
-            run_saveJLD2daily_and_final_incidence(P,prob,n_traj,τₚ_list[2:end],sessions[i])
-        end
-    end
+            run_saveJLD2daily_and_final_incidence(P,prob,n_traj,τₚ_list,session)
+    #end
 end
 
 ###########
-sessions=[73,74,75,76,77,78]
+sessions=[77,78]
 
 Κ_max_capacity_KENYA=[0,0,0,0,0,0]
 Κ_max_capacity_Nairobi=[0,0,0,0,0,0]
-Κ_max_capacity_Kilifi=[1e3,5e3,1e4,1e3,5e3,1e4]
-κ_per_event4=[50,50,50,100,100,100]
-τₚ_list=[.0,.25,.5,.75,.9]
-n_traj=50
-run_sessions(sessions,Κ_max_capacity_KENYA,Κ_max_capacity_Nairobi,Κ_max_capacity_Kilifi,κ_per_event4,τₚ_list,n_traj)
+Κ_max_capacity_Kilifi=[5e3,5e3]
+κ_per_event4=[100,100,100]
+τₚ_list=[.0,.25,.5,.75,.9];#τₚ_list=[.0,.0,.0,.0,.25]
+n_traj=5
+for i=1:size(sessions,1)
+    run_sessions(sessions[i],Κ_max_capacity_KENYA[i],Κ_max_capacity_Nairobi[i],Κ_max_capacity_Kilifi[i],κ_per_event4[i],τₚ_list,n_traj)
+end
