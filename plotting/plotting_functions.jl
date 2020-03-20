@@ -54,7 +54,7 @@ function plot_total_incidence_group(scenario_group,treatment_group,treatment_num
                 plot!(plt,inc_D[21,:,1].+1,
                 fontfamily="Helvetica",
                 lw = 3,
-                lab= "rel. infect. of undetecteds: $(rel_transmission_perc[i])%",
+                lab= "rel. infect. of subclinical: $(rel_transmission_perc[i])%",
                 legend = :topright,
                 ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
                 fillalpha = 0.15,
@@ -65,6 +65,26 @@ function plot_total_incidence_group(scenario_group,treatment_group,treatment_num
         end
         return plt
 end
+
+function plot_total_incidence_group(plt,scenario_group,treatment_group,treatment_num,rel_transmission_perc)
+        tracing_rate,e_D = treatment_group[treatment_num]
+        for (i,scenarioresults) in enumerate(scenario_group)
+                inc_D = scenarioresults[treatment_num][1]
+                plot!(plt,inc_D[21,:,1].+1,
+                fontfamily="Helvetica",
+                lw = 3,
+                lab= "rel. infect. of subclinical: $(rel_transmission_perc[i])%",
+                legend = :topright,
+                ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
+                fillalpha = 0.15,
+                yticks = ([1,10,100,1000,10000],["0" "10" "100" "1000" "10000"]),
+                yscale = :log10,
+                xlabel = "Days after detecting established CoV transmission",
+                ylabel = "Daily incidence")
+        end
+        return plt
+end
+
 
 function plot_total_incidence(results)
     inc_D1 = results[1][1]

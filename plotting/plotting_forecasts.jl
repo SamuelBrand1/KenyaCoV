@@ -79,22 +79,56 @@ plot!(plt_no_control_SD,legend = :topright)
 # xlims!(0.,30.)
 savefig(plt_no_control_SD,"plotting/baseline_scenarios_with_social_distancing.pdf")
 
+
 plt_control_SD = plot_total_incidence_group(scenario_group_SDI,reducted_treatment_rates,2,reduced_rel_transmission_perc)
 title!(plt_control_SD,"Social distancing and case isolation")
 plot!(plt_control_SD,size = (700,400))
 plot!(plt_control_SD,legend = :topright)
-# xlims!(0.,30.)
 savefig(plt_control_SD,"plotting/baseline_scenarios_with_social_distancing_and_case_isolation.pdf")
+
+plt_1 = plot([1. for i =1:(2*365)],
+        fontfamily="Helvetica",
+        lw = 3,
+        lab= "rel. infect. of subclinical: 0%",
+        legend = :topright,
+        fillalpha = 0.15,
+        yticks = ([1,10,100,1000,10000],["0" "10" "100" "1000" "10000"]),
+        yscale = :log10,
+        xlabel = "Days after detecting established CoV transmission",
+        ylabel = "Daily incidence")
+plt_control_SD = plot_total_incidence_group(plt_1,scenario_group_SDI,reducted_treatment_rates,2,reduced_rel_transmission_perc)
+title!(plt_control_SD,"Social distancing and case isolation")
+plot!(plt_control_SD,size = (700,400))
+plot!(plt_control_SD,legend = :topright)
+plot!(plt_control_SD,results_2[6][1][21,:,1].+1,ls=:dash,color = :red,lab = "")
+plot!(plt_control_SD,results_3[6][1][21,:,1].+1,ls=:dash,color = :green,lab = "")
+savefig(plt_control_SD,"plotting/baseline_scenarios_with_social_distancing_and_case_isolation.pdf")
+
 
 
 scenario_group_lockdown = [results_2SI_SL_three_months,
                             results_3SI_SL_three_months,
                             results_4SI_SL_three_months,
                             results_5SI_SL_three_months]
-plt_lockdown = plot_total_incidence_group(scenario_group_lockdown,[(0.5,1/3.5)],1,[10,25,50,100])
+
+plt_2 = plot([1. for i =1:(2*365)],
+    fontfamily="Helvetica",
+    lw = 3,
+    lab= "rel. infect. of subclinical: 0%",
+    legend = :topright,
+    fillalpha = 0.15,
+    yticks = ([1,10,100,1000,10000],["0" "10" "100" "1000" "10000"]),
+    yscale = :log10,
+    xlabel = "Days after detecting established CoV transmission",
+    ylabel = "Daily incidence")
+plt_lockdown = plot_total_incidence_group(plt_2,scenario_group_lockdown,[(0.5,1/3.5)],1,[10,25,50,100])
 plot!([90,90],[1,2.5e4],color = :black,ls = :dot,lw = 3,lab="")
 xlims!(0,400)
 title!("Daily incidence before and after 90 days restrictions (SD+MR+CI)")
+plot!(plt_lockdown,results_2[6][1][21,:,1].+1,ls=:dash,color = :red,lab = "")
+plot!(plt_lockdown,results_3[6][1][21,:,1].+1,ls=:dash,color = :green,lab = "")
+plot!(plt_lockdown,results_4[6][1][21,:,1].+1,ls=:dash,color = :purple,lab = "")
+plot!(plt_lockdown,results_5[6][1][21,:,1].+1,ls=:dash,color = :brown,lab = "")
 
 plot!(size = (700,400))
 savefig(plt_lockdown,"plotting/baseline_scenarios_with_lockdown.pdf")
@@ -147,7 +181,7 @@ peak_plt_no_control = boxplot(collect_no_control_peak_timing,lab="",
                             xticks = (1:5,["0%","10%","25%","50%","100%"]))
 title!(peak_plt_no_control,"Uncontrolled epidemic peak timing")
 ylabel!(peak_plt_no_control,"Time to peak in days")
-xlabel!(peak_plt_no_control,"Rel. infectiousness of undetected cases")
+xlabel!(peak_plt_no_control,"Rel. infectiousness of subclinical cases")
 plot!(size = (700,400))
 savefig(peak_plt_no_control,"plotting/time_to_peak_uncontrolled.pdf")
 
