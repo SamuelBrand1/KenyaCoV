@@ -219,20 +219,114 @@ function make_plots(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
         data_files=[s for s in data_files if endswith(s,".jld2")]
         @load results_folder*data_files[1]  sims_vector
         n_traj=size(sims_vector,1)
+        wa=12;wa_name="Kilifi"
+        #one_sim_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi");#one_sim_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,4,"Nairobi")
+        #time_intro2peak_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi")
+        ##final_cumI_map(τₚ_list,results_folder,data_files,n_traj,wa_coords,S0)
 
-        one_sim_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi");#one_sim_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,4,"Nairobi")
-        time_intro2peak_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi")
-        final_cumI_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi");# final_cumI_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,4,"Nairobi")
-        final_cumI_map(τₚ_list,results_folder,data_files,n_traj,wa_coords,S0)
-        final_cumI_barplot(τₚ_list,results_folder,data_files,n_traj,wa_coords,S0)
+        #final_cumI_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi");# final_cumI_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,4,"Nairobi")
+        #final_cumI_barplot(τₚ_list,results_folder,data_files,n_traj,wa_coords,S0)
+        ##final_cumI_wa:
+        b=boxplot(title="Final total cumulative Infecteds in "*wa_name*" (all ages)")
+        final_cum0detection=0;        cumI_diff=[];        cumIs=[]
+        ##final_cumI_barplot:
+        S02=[]; for wa=1:20,i=1:size(τₚ_list,1) push!(S02,S0[wa]);   end
+        barplotALL=bar(S02,color=:green,xticks = ([1:size(τₚ_list,1):20*size(τₚ_list,1);], riskregionnames),rotation = 60,legend=false)
+        medians_cumI=[]
+        for i=1:size(τₚ_list,1)
+            @load results_folder*data_files[i]  sims_vector
+            ##final_cumI_wa:
+            final_cum=[]
+            for sim=1:size(sims_vector,1) #for each sim
+                push!(final_cum,sum(sims_vector[sim][4][wa,:,1:3])) # final cumulative I=IA+ID+IQ, summed for all ages
+            end
+            push!(cumIs,median(final_cum))
+            boxplot!(b,final_cum,color=colors[i],label="detection"*string(τₚ_list[i]*100)*"%",legend=:bottomright)
+            if i==1     final_cum0detection=median(final_cum)       end
+            push!(cumI_diff,final_cum0detection-median(final_cum))
 
+            ##final_cumI_barplot:
+            @load results_folder*data_files[i]  sims_vector
+            cumI=[[sum(sims_vector[sim][1][end][wa,1:3]) for wa=1:20]   for sim=1:size(sims_vector,1)]
+            median_cumI=[median([cumI[sim][wa] for sim=1:size(sims_vector,1)])      for wa=1:20]
+            push!(medians_cumI,median_cumI)
+        end
+        ##final_cumI_wa:
+        println("cumI_diff=",cumI_diff,"   cumIs=",cumIs)
+        b2=bar(cumI_diff,color=colors,legend=false,title="Gain in total Infecteds (cum) in "*wa_name*" (all ages)",
+                xticks = ([1:1:size(τₚ_list,1);], [string(e*100)*"%" for e in τₚ_list]))
+        b3=bar(cumIs,color=colors,legend=false,title="Total Infecteds (cum) in "*wa_name*" (all ages)",
+                xticks = ([1:1:size(τₚ_list,1);], [string(e*100)*"%" for e in τₚ_list]))
+        savefig(b,results_folder*"jl_cumI_"*wa_name*"_box.png")
+        savefig(b2,results_folder*"jl_cumI_gain_"*wa_name*"_bar.png")
+        savefig(b3,results_folder*"jl_cumI_"*wa_name*"_bar.png")
+        ##final_cumI_barplot:
+        medians_cumI2=[]
+        colors2=[]
+        for wa=1:20,i=1:size(τₚ_list,1)    push!(medians_cumI2,medians_cumI[i][wa]);      push!(colors2,colors[i]);   end
+        bar!(barplotALL,medians_cumI2,color=colors2)
+        savefig(barplotALL,results_folder*"jl_cumI_barplot.png")
+
+
+
+
+        ##FOR cumIgain_many_sessions and peaks_many_sessions
         push!(cumI_diffs,get_cumIgain_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi"))
         peaks,peak_diffs=get_peaks_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi")
         push!(peakss,peaks);push!(peak_diffss,peak_diffs)
     end
-    cumIgain_many_sessions(cumI_diffs,["5e3","5e3","1e4"],sessions,τₚ_list,12,"Kilifi")
-    peaks_many_sessions(peakss,peak_diffss,["5e3","5e3","1e4"],sessions,τₚ_list,12,"Kilifi")
+    cumIgain_many_sessions(cumI_diffs,["1e3","5e3","1e3","5e3"],sessions,τₚ_list,12,"Kilifi")
+    peaks_many_sessions(peakss,peak_diffss,["1e3","5e3","1e3","5e3"],sessions,τₚ_list,12,"Kilifi")
     return peakss,peak_diffss
+end
+
+function make_plots_oneExample(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
+    wa=12;wa_name="Kilifi"
+    p1=plot(title="1sim example I=A+D+IQ "*wa_name,legend=:topright);
+    p2=plot(title="1sim example Cumulative I=A+D+IQ "*wa_name,legend=:topright);
+    p3=plot(title="1sim example Q "*wa_name,legend=:topright);
+    p4=plot(title="1sim example S, R Kilifi",legend=:topleft);
+    j=0
+    for session in sessions
+        j+=1
+        println("Working plots for session ",session)
+        results_folder=".\\contacts\\results_session"*string(Int(floor(session/10)))*"0s\\results_session"*string(session)*"\\"
+        data_files=readdir(results_folder)
+        data_files=[s for s in data_files if endswith(s,".jld2")]
+        @load results_folder*data_files[1]  sims_vector
+        n_traj=size(sims_vector,1)
+
+        #one_sim_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi");#one_sim_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,4,"Nairobi")
+
+
+        for i=3#1:size(τₚ_list,1)
+            @load results_folder*data_files[i]  sims_vector
+            I=[sims_vector[1][3][t][wa][1] for t=1:size(sims_vector[1][2],1)]
+            plot!(p1,I,label="session"*string(session)*"-"*string(τₚ_list[i]*100)*"%-I", color=colors[j])
+            cumIA=[sims_vector[1][1][t][wa,1] for t=1:size(sims_vector[1][1],1)]
+            cumID=[sims_vector[1][1][t][wa,2] for t=1:size(sims_vector[1][1],1)]
+            cumIQ=[sims_vector[1][1][t][wa,3] for t=1:size(sims_vector[1][1],1)]
+            cumI=cumIA .+ cumID .+cumIQ #OR I=[sum(sims_vector[1][1][t][wa,1:3]) for t=1:size(sims_vector[1][1],1)]
+            plot!(p2,cumI,label="session"*string(session)*"-"*string(τₚ_list[i]*100)*"%-cumI", color=colors[j])
+            plot!(p2,cumIA,label="session"*string(session)*"-"*string(τₚ_list[i]*100)*"%-IA", color=colors[j], line=:dash)
+            plot!(p2,cumID,label="session"*string(session)*"-"*string(τₚ_list[i]*100)*"%-ID", color=colors[j], line=:dot)
+            plot!(p2,cumIQ,label="session"*string(session)*"-"*string(τₚ_list[i]*100)*"%-IQ", color=colors[j], line=(2,:dashdotdot))
+            Q=[sims_vector[1][2][t][wa][1] for t=1:size(sims_vector[1][2],1)]
+            plot!(p3,Q,label="detection"*string(τₚ_list[i]*100)*"%-Q", color=colors[j])
+
+            ##TO DELETE WHEN RUNNING LARGE SIMS:
+            S=[sims_vector[1][5][t][wa][1] for t=1:size(sims_vector[1][1],1)]
+            plot!(p4,S,label="detection"*string(τₚ_list[i]*100)*"%-S", color=colors[j])
+            R=[sims_vector[1][6][t][wa][1] for t=1:size(sims_vector[1][1],1)]
+            plot!(p4,R,label="detection"*string(τₚ_list[i]*100)*"%-R", color=colors[j])
+        end
+
+    end
+    savefig(p1,".\\contacts\\results_session80s\\"*"jl_ONE_SIM_I_"*wa_name*"_50.png")
+    savefig(p2,".\\contacts\\results_session80s\\"*"jl_ONE_SIM_CumI_"*wa_name*"_50.png")
+    savefig(p3,".\\contacts\\results_session80s\\"*"jl_ONE_SIM_Q_"*wa_name*"_50.png")
+    savefig(p4,".\\contacts\\results_session80s\\"*"jl_ONE_SIM_SR_"*wa_name*"_50.png")
+
 end
 
 ########
@@ -242,7 +336,11 @@ end
 S0=[4.138758e6, 867417.0, 2.326182e6, 8.084069e6, 3.229145e6, 459761.0, 999280.0, 1.979082e6, 926952.0, 340661.0, 2.381706e6, 2.126254e6, 2.960717e6, 786461.0, 7.478259e6, 781212.0, 2.114588e6, 4.094022e6, 569586.0, 917976.0]
 #sessions=[51,52,53]
 #sessions=[55,56,57]
-sessions=[77,78]
+#sessions=[77,78]
+sessions=[80,81,83,84]
+Κ_max_capacity_Kilifi=[1e3,5e3,1e3,5e3,1e4]
+
+#make_plots(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
 
 
-make_plots(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
+make_plots_oneExample(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
