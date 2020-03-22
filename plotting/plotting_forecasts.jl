@@ -197,7 +197,7 @@ peak_plt_control = boxplot(collect_control_peak_timing,lab="",
                             xticks = (1:5,["0%","10%","25%","50%","100%"]))
 title!(peak_plt_control,"Epidemic peak timing with case isolation")
 ylabel!(peak_plt_control,"Time to peak in days")
-xlabel!(peak_plt_control,"Rel. infectiousness of undetected cases")
+xlabel!(peak_plt_control,"Rel. infectiousness of subclinical cases")
 ylims!((0.,300.))
 plot!(size = (700,400))
 savefig(peak_plt_control,"plotting/time_to_peak_controlled.pdf")
