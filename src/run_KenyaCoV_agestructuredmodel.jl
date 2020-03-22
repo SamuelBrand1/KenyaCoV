@@ -48,8 +48,23 @@ Run model
 
 u0[KenyaCoV.ind_nairobi_as,5,4] = 5#10 diseased
 P.ϵ_D = 1
+function ramp_down(t)
+    if t < 60.
+        return (1-t/60) + 0.5*t/60
+    else
+        return 0.5
+    end
+end
+P.c_t = ramp_down
+P.c_t = t -> 1.
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 @time sol = solve(prob,FunctionMap(),dt = P.dt)
+
+cum_inc = [sum(sol(t)[:,:,8]) for t = 0.:1.:365]
+plot(diff(cum_inc))
+plot!(diff(cum_inc).+1,yscale = :log10)
+
+
 sum(sol[end][:,:,8])/sum(u0)
 sum(sol[end][:,:,8])
 

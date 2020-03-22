@@ -26,6 +26,7 @@ end
 
 @with_kw mutable struct CoVParameters_AS
     β::Float64 = 1.
+    c_t::Function = t -> 1. #Time varying basic contact rate
     γ::Float64 = 1/2.5
     σ::Float64 = 1/5.
     δ::Float64 = 0.9#Proportion of over 80s who get identified
