@@ -116,8 +116,8 @@ u0[KenyaCoV.ind_nairobi_as,detected_age_group,4] = num_initial_detected
 u0[KenyaCoV.ind_nairobi_as,:,3] = undetected_age_profile
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,2*365.),P)
 
-results_1SI_SL_DC_three_months = KenyaCoV.run_scenario(P,prob,2,reduced_treatment_rates,both_cbs)
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_1SI_SL_three_months.jld2") results_1SI_SL_three_months
+results_1SI_SL_DC_three_months = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,both_cbs)
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_1SI_SL_DC_three_months.jld2") results_1SI_SL_DC_three_months
 
 
 println("Finished 1 imperfect social distancing + spatial lockdown for 3 months")
@@ -169,8 +169,8 @@ u0[KenyaCoV.ind_nairobi_as,detected_age_group,4] = num_initial_detected
 u0[KenyaCoV.ind_nairobi_as,:,3] = undetected_age_profile
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,2*365.),P)
 
-results_2SI_SL_three_months = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,both_cbs)
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI_SL_three_months.jld2") results_2SI_SL_three_months
+results_2SI_SL_DC_three_months = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,both_cbs)
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI_SL_DC_three_months.jld2") results_2SI_SL_DC_three_months
 
 
 println("Finished 2 imperfect social distancing + spatial lockdown for 3 months")
@@ -216,8 +216,8 @@ u0[KenyaCoV.ind_nairobi_as,detected_age_group,4] = num_initial_detected
 u0[KenyaCoV.ind_nairobi_as,:,3] = undetected_age_profile
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,2*365.),P)
 
-results_3SI_SL_three_months = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,both_cbs)
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI_SL_three_months.jld2") results_3SI_SL_three_months
+results_3SI_SL_DC_three_months = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,both_cbs)
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI_SL_DC_three_months.jld2") results_3SI_SL_DC_three_months
 
 
 println("Finished 3 imperfect social distancing + spatial lockdown for 3 months")
@@ -266,8 +266,8 @@ u0[KenyaCoV.ind_nairobi_as,detected_age_group,4] = num_initial_detected
 u0[KenyaCoV.ind_nairobi_as,:,3] = undetected_age_profile
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,2*365.),P)
 
-results_4SI_SL_three_months = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,both_cbs)
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_4SI_SL_three_months.jld2") results_4SI_SL_three_months
+results_4SI_SL_DC_three_months = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,both_cbs)
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_4SI_SL_DC_three_months.jld2") results_4SI_SL_DC_three_months
 
 
 println("Finished 4 imperfect social distancing + spatial lockdown for 3 months")
@@ -316,8 +316,8 @@ u0[KenyaCoV.ind_nairobi_as,detected_age_group,4] = num_initial_detected
 u0[KenyaCoV.ind_nairobi_as,:,3] = undetected_age_profile
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,2*365.),P)
 
-results_5SI_SL_three_months = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,both_cbs)
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_5SI_SL_three_months.jld2") results_5SI_SL_three_months
+results_5SI_SL_DC_three_months = KenyaCoV.run_scenario(P,prob,1000,reduced_treatment_rates,both_cbs)
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/results_5SI_SL_DC_three_months.jld2") results_5SI_SL_DC_three_months
 
 
 println("Finished 5 imperfect social distancing + spatial lockdown for 3 months")
