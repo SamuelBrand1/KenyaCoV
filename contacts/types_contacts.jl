@@ -61,6 +61,8 @@ end
 
     Q_dur::Float64=14       #****4 Quarantine duration in time
     l_Q=[Q_Person(wa,a,s,[]) for wa=1:n_wa,a=1:n_a,s=1:n_s]   #****5
+    stop_Q::Bool=false      #****5 do we stop detecting after we stopped tracing
+    IDs_contacted_first::Bool=false
 end
 
 #=States:

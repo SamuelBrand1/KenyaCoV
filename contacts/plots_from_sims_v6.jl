@@ -271,8 +271,8 @@ function make_plots(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
         peaks,peak_diffs=get_peaks_wa(τₚ_list,results_folder,data_files,n_traj,wa_coords,12,"Kilifi")
         push!(peakss,peaks);push!(peak_diffss,peak_diffs)
     end
-    cumIgain_many_sessions(cumI_diffs,["0","20","50","500","1e3","1e4","200","500","1","5","10"],sessions,τₚ_list,12,"Kilifi")
-    peaks_many_sessions(peakss,peak_diffss,["0","20","50","500","1e3","1e4","200","500","1","5","10"],sessions,τₚ_list,12,"Kilifi")
+    cumIgain_many_sessions(cumI_diffs,["500","1e3","5e3","1e4"],sessions,τₚ_list,12,"Kilifi")
+    peaks_many_sessions(peakss,peak_diffss,["500","1e3","5e3","1e4"],sessions,τₚ_list,12,"Kilifi")
     return peakss,peak_diffss
 end
 function make_plots_oneExample(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
@@ -281,6 +281,7 @@ function make_plots_oneExample(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
     p2=plot(title="1sim example Cumulative I=A+D+IQ "*wa_name,legend=:topright);
     p3=plot(title="1sim example Q "*wa_name,legend=:topright);
     p4=plot(title="1sim example S, R Kilifi",legend=:topleft);
+    p5=plot(title="1sim example infecteds quarantined after contact Kilifi",legend=:topleft);
     j=0
     for session in sessions
         j+=1
@@ -312,23 +313,22 @@ function make_plots_oneExample(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
             plot!(p4,S,label="detection"*string(τₚ_list[i]*100)*"%-S", color=colors[j])
             R=[sims_vector[1][6][t][wa][1] for t=1:size(sims_vector[1][1],1)]
             plot!(p4,R,label="detection"*string(τₚ_list[i]*100)*"%-R", color=colors[j])
+            cumIC=[sims_vector[1][7][t][wa][1] for t=1:size(sims_vector[1][1],1)]
+            plot!(p5,cumIC,label="detection"*string(τₚ_list[i]*100)*"%-cumIC", color=colors[j])
         end
     end
-    savefig(p1,".\\contacts\\results_session20s\\"*"jl_ONE_SIM_I_"*wa_name*".png")
-    savefig(p2,".\\contacts\\results_session20s\\"*"jl_ONE_SIM_CumI_"*wa_name*".png")
-    savefig(p3,".\\contacts\\results_session20s\\"*"jl_ONE_SIM_Q_"*wa_name*".png")
-    savefig(p4,".\\contacts\\results_session20s\\"*"jl_ONE_SIM_SR_"*wa_name*".png")
+    savefig(p1,".\\contacts\\results_session50s\\"*"jl_ONE_SIM_I_"*wa_name*".png")
+    savefig(p2,".\\contacts\\results_session50s\\"*"jl_ONE_SIM_CumI_"*wa_name*".png")
+    savefig(p3,".\\contacts\\results_session50s\\"*"jl_ONE_SIM_Q_"*wa_name*".png")
+    savefig(p4,".\\contacts\\results_session50s\\"*"jl_ONE_SIM_SR_"*wa_name*".png")
+    savefig(p5,".\\contacts\\results_session50s\\"*"jl_ONE_SIM_cumIC_"*wa_name*".png")
 end
 
 ########
-τₚ_list=[.0,.25,.75]#,.75,.9]#,.95]
-#Κ_max_capacity_Kilifi=[1e3,5e3,1e4,1e3,5e3,1e4];
+τₚ_list=[.0,.25,.5,.75,.9]
 S0=[4.138758e6, 867417.0, 2.326182e6, 8.084069e6, 3.229145e6, 459761.0, 999280.0, 1.979082e6, 926952.0, 340661.0, 2.381706e6, 2.126254e6, 2.960717e6, 786461.0, 7.478259e6, 781212.0, 2.114588e6, 4.094022e6, 569586.0, 917976.0]
-#sessions=[51,52,53]
-#sessions=[55,56,57]
-#sessions=[77,78]
-sessions=[40,41,42,43,44]
-Κ_max_capacity_Kilifi=[0,20,50,500,1e3,1e4]
+sessions=[50,51,52,53]
+Κ_max_capacity_Kilifi=[500,1e3,5e3,1e4]
 
 make_plots(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
 make_plots_oneExample(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)

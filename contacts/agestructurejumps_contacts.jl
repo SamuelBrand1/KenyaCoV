@@ -25,7 +25,7 @@ States:
 9 -> Cumulative I_Q                                    #****2  Cumulative dead BECOMES Cumulative I_Q
 10 -> I_Q diseased to be quarantined                     #****  IQ
 11 -> Q_S Susceptibles in quarantine                    #****3      (WAS: 11 -> C(daily contacteds)     #****2)
-12 -> Cumulative contacteds                             #****2
+12 -> Cumulative infected contacteds                     #****2 #****6 for infecteds only E IA ID IQ
 
 Events for each wider area and age group:
 
@@ -178,14 +178,14 @@ function change_matrix(dc)
             dc[ind_R, k] = 1
         end
         if eventtype == 11          #****2      S->Q (contact)
-            ind_Q = linear_as[i, a, 5]
+            #ind_Q = linear_as[i, a, 5]
             ind_S = linear_as[i, a, 1]
             ind_Qs = linear_as[i, a, 11]
-            ind_CumC = linear_as[i, a, 12]
+            #ind_CumC = linear_as[i, a, 12]
             dc[ind_S, k] = -1
-            dc[ind_Q, k] = 1
+            #dc[ind_Q, k] = 1
             dc[ind_Qs, k] = 1
-            dc[ind_CumC, k] = 1
+            #dc[ind_CumC, k] = 1    #****6
         end
         if eventtype == 12          #****2      E->Q (contact)
             ind_Q = linear_as[i, a, 5]
@@ -200,11 +200,11 @@ function change_matrix(dc)
         if eventtype == 13          #****2      I_A->Q (contact)
             ind_Q = linear_as[i, a, 5]
             ind_IA = linear_as[i, a, 3]
-            ind_C = linear_as[i, a, 11]
+            #ind_C = linear_as[i, a, 11]
             ind_CumC = linear_as[i, a, 12]
             dc[ind_IA, k] = -1
             dc[ind_Q, k] = 1
-            dc[ind_C, k] = 1
+            #dc[ind_C, k] = 1
             dc[ind_CumC, k] = 1
         end
         if eventtype == 14          #****2      I_D->Q (contact)
@@ -311,7 +311,7 @@ function max_change(out, u, p::CoVParameters_AS)
 end
 
 function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
-    @unpack dc, dN, poi_rates, du_linear, τₚ, τ, Κ_current, Κ_max_capacity, t_max_capacity = p
+    @unpack dc, dN, poi_rates, du_linear, τₚ, τ, Κ_current, Κ_max_capacity, t_max_capacity, stop_Q = p
     rates(poi_rates, u, p, t)       #calculate rates of underlying Poisson processes
     PP_drivers(dN, poi_rates, p)    #Generate Poisson rvs with rates scaled by time step dt
     max_change(dN, u, p)            #Cap the size of the Poisson rvs to maintain non-negativity
@@ -326,7 +326,7 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
         #println("Tracing stopped at ", t," with traced=",sum(Κ_current))
         t_max_capacity=t
     end
-    if τₚ != 0 && sum(Κ_current)>=sum(Κ_max_capacity)   τₚ=0;τ=0;   println("Tracing stopped at ", t," with traced=",sum(Κ_current)); end
+    if stop_Q==true && τₚ != 0 && sum(Κ_current)>=sum(Κ_max_capacity)   τₚ=0;τ=0;   #=println("Tracing stopped at ", t," with traced=",sum(Κ_current));=# end
 
     mul!(du_linear, dc, dN)#Calculates the effect on the state in the inplace du vector
     du .= reshape(du_linear, n_wa, n_a, n_s)
@@ -461,7 +461,7 @@ function update_contact_states(dN::Vector{Int64}, u, p::CoVParameters_AS, t)    
                 deleteat!(l_IQ[i].contacts, j)
             elseif e.contact_t != t                 ## if the contact hasnt been made during the current timestep
                 if u[e.wa,e.a,1]!=0 && e.s == 1 && rand(Binomial(1,dN[linear_as_events[e.wa,e.a,1]]/u[e.wa,e.a,1]))==1 ## If contact is S(1) and event S->E(1) occured
-                    e.s = 2
+                    e.s = 2#;println("cS->cE")
                 end
                 if u[e.wa, e.a, 2] != 0 && e.s == 2 ## if contact is E(2) then he can have E->Iᴬ(event 2), E->Iᴰ(3) or E->IQ(9)
                     p_Iᴬ = dN[linear_as_events[e.wa, e.a, 2]] / u[e.wa, e.a, 2]  # probability of becoming Iᴬ
@@ -470,11 +470,12 @@ function update_contact_states(dN::Vector{Int64}, u, p::CoVParameters_AS, t)    
                     p_E = 1 - p_Iᴬ - p_Iᴰ - p_IQ                                 #probability of staying E
                     new_ps = random_choice([p_E, p_Iᴬ, p_Iᴰ, p_IQ])
                     if new_ps == 2
-                        e.s = 3
+                        e.s = 3;#println("cE->cIA")
                     elseif new_ps == 3
-                        e.s = 4
+                        e.s = 4;#println("cE->cID")
                     elseif new_ps == 4
-                        e.s = 10
+                        e.s = 10;#println("cE->cIQ")
+                    #else println("cE TO cE")
                     end
                 end
 
@@ -510,28 +511,54 @@ end
 
 
 function intervention_trace_contacts(traced_index::Int, dN::Vector{Int64}, u, p::CoVParameters_AS, t)   #****
-    @unpack l_IQ, Δₜ, κ_per_event4, Κ_current, Κ_max_capacity, dt = p
+    @unpack l_IQ, Δₜ, κ_per_event4, Κ_current, Κ_max_capacity, dt, IDs_contacted_first = p
     contacteds = [c for c in l_IQ[traced_index].contacts if t - c.contact_t <= Δₜ/dt]
     if contacteds != []
         shuffle!(contacteds)
         contacteds = @view contacteds[1:min(κ_per_event4, size(contacteds, 1))]      #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        for c in contacteds                                                     ## for each contact, remove the S, E, Iᴬ, Iᴰ or IQ to Q
-            if c.s in [1, 2, 3, 4, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]   #!!!! per wa
-                Κ_current[c.wa] += 1                                                  ## Increment the total number of traceds
-                if c.s==1
-                    dN[linear_as_events[c.wa, c.a, 11]] +=1
-                elseif c.s==2
-                    dN[linear_as_events[c.wa, c.a, 12]] +=1
-                elseif c.s==3
-                    dN[linear_as_events[c.wa, c.a, 13]] +=1
-                elseif c.s==4
-                    dN[linear_as_events[c.wa, c.a, 14]] +=1
-                elseif c.s==10
-                    dN[linear_as_events[c.wa, c.a, 15]] +=1
+        if IDs_contacted_first==false   #If we do not prioritize contacted symptomatics (ID)
+            for c in contacteds                                                     ## for each contact, remove the S, E, Iᴬ, Iᴰ or IQ to Q
+                if c.s in [1, 2, 3, 4, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]   #!!!! per wa
+                    Κ_current[c.wa] += 1                                                  ## Increment the total number of traceds
+                    if c.s==1
+                        dN[linear_as_events[c.wa, c.a, 11]] +=1
+                    elseif c.s==2
+                        dN[linear_as_events[c.wa, c.a, 12]] +=1
+                    elseif c.s==3
+                        dN[linear_as_events[c.wa, c.a, 13]] +=1
+                    elseif c.s==4
+                        dN[linear_as_events[c.wa, c.a, 14]] +=1
+                    elseif c.s==10
+                        dN[linear_as_events[c.wa, c.a, 15]] +=1
+                    end
+                    #print("traced ",Κ_current[c.wa],"s=",c.s)
+                    #u[c.wa, c.a, c.s] -= 1
+                    #u[c.wa, c.a, 5] += 1
                 end
-                #print("traced ",Κ_current[c.wa],"s=",c.s)
-                #u[c.wa, c.a, c.s] -= 1
-                #u[c.wa, c.a, 5] += 1
+            end
+        else                            #If we prioritize contacted symptomatics (ID)
+            contactedIDs = filter(x -> x.s==4 , contacteds)  #get all the contacted ID symptomatics
+            for c in contactedIDs
+                if  u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]
+                    dN[linear_as_events[c.wa, c.a, 14]] +=1
+                end
+            end
+            contactedOther = filter(x -> x.s!=4 , contacteds)  #get all the other contacteds (other than ID)
+            for c in contactedOther                                                     ## for each contact, remove the S, E, Iᴬ, or IQ to Q
+                if c.s in [1, 2, 3, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]   #!!!! per wa
+                    Κ_current[c.wa] += 1                                                  ## Increment the total number of traceds
+                    if c.s==1
+                        dN[linear_as_events[c.wa, c.a, 11]] +=1
+                    elseif c.s==2
+                        dN[linear_as_events[c.wa, c.a, 12]] +=1
+                    elseif c.s==3
+                        dN[linear_as_events[c.wa, c.a, 13]] +=1
+                    #elseif c.s==4
+                    #    dN[linear_as_events[c.wa, c.a, 14]] +=1
+                    elseif c.s==10
+                        dN[linear_as_events[c.wa, c.a, 15]] +=1
+                    end
+                end
             end
         end
     end

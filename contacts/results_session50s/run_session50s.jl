@@ -15,7 +15,7 @@ r_R₀=3
 δ = 0.2
 #β = rand(d_R₀)*γ/(δ + ϵ*(1-δ))
 β = r_R₀*γ/(δ + ϵ*(1-δ))
-println("\nϵ,σ,γ,δ,β=",ϵ,σ,γ,δ,β,"\n")
+println("\nϵ,σ,γ,δ,β=",ϵ,",",σ,",",γ,",",δ,",",β,"\n")
 ###########
 function randomise_params(prob,i,repeat)
     _P = deepcopy(prob.p)
@@ -51,16 +51,17 @@ function output_daily_and_final_incidence(sol,i)
     ###to delete when running large sims
     S=[[sum(sol(t)[wa,:,1],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # S
     R=[[sum(sol(t)[wa,:,6],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # R
+    cumIC=[[sum(sol(t)[wa,:,12],dims = 1)[:,1,:]  for wa=1:20]  for t in times]      # S # cumulative infected isolated after contact
 
-    return [cumulatives, Q, I, sol[end][:,:,7:9],S,R],false # save z (time series with only incidence with no age structure), and save the final distribution (end) age/space but no time
+    return [cumulatives, Q, I, sol[end][:,:,7:9],S,R,cumIC],false # save z (time series with only incidence with no age structure), and save the final distribution (end) age/space but no time
 end
 
 ###########
-function run_session(session,Κ_max_capacity_KENYA,Κ_max_capacity_Nairobi,Κ_max_capacity_Kilifi,κ_per_event4,τₚ_list,n_traj,ϵ,σ,γ,δ,β)
+function run_session(session,Κ_max_capacity_KENYA,Κ_max_capacity_Nairobi,Κ_max_capacity_Kilifi,κ_per_event4,τₚ_list,n_traj,ϵ,σ,γ,δ,β,stop_Q)
     u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
     u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
     P.dt = 0.5;     P.ext_inf_rate = 0.;    P.ϵ = ϵ;        P.δ = δ;      P.γ = γ;      P.σ = σ;    P.β = β
-    P.τ=1/3.;        P.κ=10;        P.κₘ=7;     P.Δₜ=7;
+    P.τ=1/3.;        P.κ=10;        P.κₘ=7;     P.Δₜ=7;     P.stop_Q=stop_Q;
     for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
 
     P.Κ_max_capacity=[Κ_max_capacity_KENYA for e in P.Κ_max_capacity]
@@ -72,15 +73,16 @@ function run_session(session,Κ_max_capacity_KENYA,Κ_max_capacity_Nairobi,Κ_ma
 end
 
 ###########
-sessions=[50,51,52]#,43,44]
+sessions=[50,51,52,53]#[54,55,56,57]
 
 Κ_max_capacity_KENYA=[0,0,0,0,0,0]; Κ_max_capacity_Nairobi=[0,0,0,0,0,0]
-Κ_max_capacity_Kilifi=[50,500,1e3,1e4]#1e3,5e3,1e4];#Κ_max_capacity_Kilifi=[1e3,1e3,1e3]
+Κ_max_capacity_Kilifi=[500,1e3,5e3,1e4]
 κ_per_event4=[50,50,50,50,50,50,50,100,100,100]
-τₚ_list=[.0,.25,.75]#,.9];
-n_traj=30
+τₚ_list=[.0,.25,.5,.75,.9]
+n_traj=10
+stop_Q=false#true    #****5 do we stop detecting after we stopped tracing
 #run_session(sessions[i],Κ_max_capacity_KENYA[i],Κ_max_capacity_Nairobi[i],Κ_max_capacity_Kilifi[i],κ_per_event4[i],τₚ_list,n_traj,ϵ,σ,γ,δ,β)
 
 for i=1:size(sessions,1)
-    run_session(sessions[i],Κ_max_capacity_KENYA[i],Κ_max_capacity_Nairobi[i],Κ_max_capacity_Kilifi[i],κ_per_event4[i],τₚ_list,n_traj,ϵ,σ,γ,δ,β)
+    run_session(sessions[i],Κ_max_capacity_KENYA[i],Κ_max_capacity_Nairobi[i],Κ_max_capacity_Kilifi[i],κ_per_event4[i],τₚ_list,n_traj,ϵ,σ,γ,δ,β,stop_Q)
 end
