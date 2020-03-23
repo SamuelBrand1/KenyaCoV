@@ -41,8 +41,8 @@ Declare the treatment/isolation rates considered, and a callback that limits int
 treatment_rates = [(0.,1),(0.,0.5),(1/7.,1.),(1/7,0.5),(1/3.5,1.),(1/3.5,0.5)]
 reduced_treatment_rates = [(1/3.5,0.5)]
 function ramp_down(t)
-    if t < 60.
-        return (1-t/60) + 0.5*t/60
+    if t < 30.
+        return (1-t/30) + 0.5*t/30
     else
         return 0.5
     end
