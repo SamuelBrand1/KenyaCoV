@@ -310,9 +310,8 @@ function max_change(out, u, p::CoVParameters_AS)
     end
 end
 
-
 function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
-    @unpack dc, dN, poi_rates, du_linear, τₚ, Κ_current, Κ_max_capacity, t_max_capacity = p
+    @unpack dc, dN, poi_rates, du_linear, τₚ, τ, Κ_current, Κ_max_capacity, t_max_capacity = p
     rates(poi_rates, u, p, t)       #calculate rates of underlying Poisson processes
     PP_drivers(dN, poi_rates, p)    #Generate Poisson rvs with rates scaled by time step dt
     max_change(dN, u, p)            #Cap the size of the Poisson rvs to maintain non-negativity
@@ -324,14 +323,15 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
         max_change(dN, u, p)
         update_contact_states(dN, u, p, t)      #updates the contact states, except for contacts made during this timestep
     elseif sum(Κ_current) >= sum(Κ_max_capacity)  && t_max_capacity == -1                            #!!!! in all wa
-        #println("Tracing stopped at ", t)
+        #println("Tracing stopped at ", t," with traced=",sum(Κ_current))
         t_max_capacity=t
     end
+    if τₚ != 0 && sum(Κ_current)>=sum(Κ_max_capacity)   τₚ=0;τ=0;   println("Tracing stopped at ", t," with traced=",sum(Κ_current)); end
 
     mul!(du_linear, dc, dN)#Calculates the effect on the state in the inplace du vector
     du .= reshape(du_linear, n_wa, n_a, n_s)
     du .+= u #Calculates how the state should change
-    @pack! p=t_max_capacity
+    @pack! p=t_max_capacity,τₚ,τ
 end
 
 #=function ode_model(du, u, p::CoVParameters_AS, t)
@@ -529,6 +529,7 @@ function intervention_trace_contacts(traced_index::Int, dN::Vector{Int64}, u, p:
                 elseif c.s==10
                     dN[linear_as_events[c.wa, c.a, 15]] +=1
                 end
+                #print("traced ",Κ_current[c.wa],"s=",c.s)
                 #u[c.wa, c.a, c.s] -= 1
                 #u[c.wa, c.a, 5] += 1
             end
@@ -536,15 +537,3 @@ function intervention_trace_contacts(traced_index::Int, dN::Vector{Int64}, u, p:
     end
     @pack! p = Κ_current
 end
-#=
-function check_negativity(u, dN::Vector{Int64}, t)
-    for wa = 1:n_wa, a = 1:n_a, s = 1:n_s
-        if u[wa, a, s] < 0
-            u[wa, a, s] = 0
-        end
-        if dN[linear_as_events[wa, a, s]] < 0
-            dN[linear_as_events[wa, a, s]] = 0
-        end
-    end
-end
-=#

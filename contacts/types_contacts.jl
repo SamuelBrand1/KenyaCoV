@@ -12,6 +12,12 @@ end
     detection_dur::Float64=0.
     contacts::Vector{Contact}=[]
 end
+@with_kw mutable struct Q_Person      #****5
+    wa::Int=0
+    a::Int=0
+    s::Int=0
+    q_dur::Vector{Float64}=[]
+end
 
 @with_kw mutable struct CoVParameters_AS
     β::Float64 = 2.5/3.6
@@ -54,8 +60,42 @@ end
     t_max_capacity::Float64=-1              #**** When the tracing stopped
 
     Q_dur::Float64=14       #****4 Quarantine duration in time
+    l_Q=[Q_Person(wa,a,s,[]) for wa=1:n_wa,a=1:n_a,s=1:n_s]   #****5
 end
 
+#=States:
+1 -> S
+2 -> E
+3 -> I_subclinical
+4 -> I_diseased                                         #****  Iᴰ  Not to be hospitalised
+5 -> Q(uarantined)                                      #***! We renamed H to Q (in ALL CURRENT FILE)
+6 -> Recovered
+7 -> Cumulative I_sub
+8 -> Cumulative I_dis
+9 -> Cumulative I_Q                                    #****2  Cumulative dead BECOMES Cumulative I_Q
+10 -> I_Q diseased to be quarantined                     #****  IQ
+11 -> Q_S Susceptibles in quarantine                    #****3      (WAS: 11 -> C(daily contacteds)     #****2)
+12 -> Cumulative contacteds                             #****2
+
+Events for each wider area and age group:
+
+1-> Transmission
+2-> Incubation into asymptomatic E->A
+3-> Incubation into diseased E->D                       #****
+4-> Diseased become hospitalised/treated                #****  Iᴰ becomes hospitalised : was Iᴰ->Q BECOMES IQ->Q
+5-> Quarantined recover Q->R                            #****5 will be made into duration instead of rate
+6-> Diseased recover D->R
+7-> Asymptomatics recover A->R
+8-> Quarantined->death
+9-> Incubation into diseased to be detected  E->IQ    #****
+10->Diseased to be Quarantined who recover DQ->R       #**** IQ->R
+11-> S to Q Contacts
+12-> E to Q
+13-> I_A to Q
+14-> I_D to Q
+15-> I_Q to Q
+16 -> Qs->S                     #****4
+=#
 
 @with_kw mutable struct CoVParameters
     β::Float64 = 2.5/3.6
