@@ -5,7 +5,6 @@ using Statistics: median, quantile
 treatment_rates = [(0.,1),(0.,0.5),(1/7.,1.),(1/7,0.5),(1/3.5,1.),(1/3.5,0.5)]
 reducted_treatment_rates = [(0.,1),(1/3.5,0.5)]
 reduced_rel_transmission_perc = [10,25]
-
 rel_transmission_perc = [0,10,25,50,100]
 
 """
@@ -35,6 +34,10 @@ Plots ---
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_4SI_SL_three_months.jld2") results_4SI_SL_three_months
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_5SI_SL_three_months.jld2") results_5SI_SL_three_months
 
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI_SL_DC_three_months.jld2") results_2SI_SL_DC_three_months
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI_SL_DC_three_months.jld2") results_3SI_SL_DC_three_months
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_4SI_SL_DC_three_months.jld2") results_4SI_SL_DC_three_months
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_5SI_SL_DC_three_months.jld2") results_5SI_SL_DC_three_months
 
 
 # gr()
@@ -117,7 +120,7 @@ plt_2 = plot([1. for i =1:(2*365)],
     lab= "rel. infect. of subclinical: 0%",
     legend = :topright,
     fillalpha = 0.15,
-    yticks = ([1,10,100,1000,10000],["0" "10" "100" "1000" "10000"]),
+    yticks = ([1,11,101,1001,10001],["0" "10" "100" "1000" "10000"]),
     yscale = :log10,
     xlabel = "Days after detecting established CoV transmission",
     ylabel = "Daily incidence")
@@ -132,6 +135,34 @@ plot!(plt_lockdown,results_5[6][1][21,:,1].+1,ls=:dash,color = :brown,lab = "")
 
 plot!(size = (700,400))
 savefig(plt_lockdown,"plotting/baseline_scenarios_with_lockdown.pdf")
+
+scenario_group_lockdown_reduction = [results_2SI_SL_DC_three_months,
+                            results_3SI_SL_DC_three_months,
+                            results_4SI_SL_DC_three_months,
+                            results_5SI_SL_DC_three_months]
+
+plt_3 = plot([1. for i =1:(2*365)],
+    fontfamily="Helvetica",
+    lw = 3,
+    lab= "rel. infect. of subclinical: 0%",
+    legend = :topright,
+    fillalpha = 0.15,
+    yticks = ([1,11,101,1001,10001],["0" "10" "100" "1000" "10000"]),
+    yscale = :log10,
+    xlabel = "Days after detecting established CoV transmission",
+    ylabel = "Daily incidence")
+plt_lockdown_red = plot_total_incidence_group(plt_3,scenario_group_lockdown_reduction,[(0.5,1/3.5)],1,[10,25,50,100])
+plot!([90,90],[1,2.5e4],color = :black,ls = :dot,lw = 3,lab="")
+xlims!(0,400)
+title!("Daily incidence before and after 90 days restrictions (SD+MR+CI)")
+plot!(plt_lockdown_red,results_2[6][1][21,:,1].+1,ls=:dash,color = :red,lab = "")
+plot!(plt_lockdown_red,results_3[6][1][21,:,1].+1,ls=:dash,color = :green,lab = "")
+plot!(plt_lockdown_red,results_4[6][1][21,:,1].+1,ls=:dash,color = :purple,lab = "")
+plot!(plt_lockdown_red,results_5[6][1][21,:,1].+1,ls=:dash,color = :brown,lab = "")
+
+plot!(size = (700,400))
+savefig(plt_lockdown_red,"plotting/baseline_scenarios_with_lockdown_and_reduction.pdf")
+
 
 
 """
