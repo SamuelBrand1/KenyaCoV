@@ -167,6 +167,7 @@ function plot_incidence_spatial(results,treatment_rates,i)
         plot!(plt,inc_D[i,:,1].+1,
                     yticks = ([1,10,100,1000],["0" "10" "100" "1000"]),
                     fillalpha = 0.1,
+                    ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
                     lab = riskregionnames[i],
                     lw=2,
                     xlims = (0.,100.),
