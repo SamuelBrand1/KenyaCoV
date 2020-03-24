@@ -12,11 +12,19 @@ end
     detection_dur::Float64=0.
     contacts::Vector{Contact}=[]
 end
-@with_kw mutable struct Q_Person      #****5
+#=@with_kw mutable struct Q_Person      #****5
     wa::Int=0
     a::Int=0
     s::Int=0
     q_dur::Vector{Float64}=[]
+end=#
+@with_kw mutable struct SessionParams
+    sc_nb::Int=0
+    n_traj::Int=100
+    τₚ::Float64=.0;  stop_Q::Bool=true;  Κ_max_capacity12::Int=0;  κ_per_event4::Int=50;  IDs_cfirst::Bool=false;
+    dt=.5;  ext_inf_rate::Float64=0.;    ϵ::Float64=.0;  δ::Float64=.0;  γ::Float64=.0; σ::Float64=.0; β::Float64=.0 #β = r_R₀*γ/(δ + ϵ*(1-δ))
+    τ::Float64=1/2.;  κ::Int=12;  κₘ::Int=10;   Δₜ::Int=10;
+    Κ_max_capacity::Int=0; Κ_max_capacity4::Int=0;
 end
 
 @with_kw mutable struct CoVParameters_AS
@@ -60,9 +68,10 @@ end
     t_max_capacity::Float64=-1              #**** When the tracing stopped
 
     Q_dur::Float64=14       #****4 Quarantine duration in time
-    l_Q=[Q_Person(wa,a,s,[]) for wa=1:n_wa,a=1:n_a,s=1:n_s]   #****5
+    #l_Q=[Q_Person(wa,a,s,[]) for wa=1:n_wa,a=1:n_a,s=1:n_s]   #****5
     stop_Q::Bool=false      #****5 do we stop detecting after we stopped tracing
-    IDs_contacted_first::Bool=false
+    IDs_cfirst::Bool=false
+    #time::Array{Float64,1}=[]
 end
 
 #=States:

@@ -311,6 +311,9 @@ function max_change(out, u, p::CoVParameters_AS)
 end
 
 function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
+    #push!(p.time,t)
+    #if t==100   println("p.time=",p.time)   endif t>=90 && t<=100
+
     @unpack dc, dN, poi_rates, du_linear, τₚ, τ, Κ_current, Κ_max_capacity, t_max_capacity, stop_Q = p
     rates(poi_rates, u, p, t)       #calculate rates of underlying Poisson processes
     PP_drivers(dN, poi_rates, p)    #Generate Poisson rvs with rates scaled by time step dt
@@ -319,6 +322,7 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
     ##Contacts
     if τₚ != 0 && sum(Κ_current) < sum(Κ_max_capacity)    ## if the detection probability is not zero` #!!!! in all wa
         IQ_make_contacts(u,p,t)                         #!!!!
+#        push!(p.time,t)
         update_l_IQ(dN, u, p, t)                ##All IQ->R(10) are removed from l_IQ + All IQ with tau<=0 are added to dN and removed from l_IQ + decrease all tau + All E->IQ in dN are added to l_IQ:
         max_change(dN, u, p)
         update_contact_states(dN, u, p, t)      #updates the contact states, except for contacts made during this timestep
@@ -332,6 +336,8 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
     du .= reshape(du_linear, n_wa, n_a, n_s)
     du .+= u #Calculates how the state should change
     @pack! p=t_max_capacity,τₚ,τ
+    #L_IQ
+    #push!(L_IQ,deepcopy(p.l_IQ))
 end
 
 #=function ode_model(du, u, p::CoVParameters_AS, t)
@@ -352,6 +358,7 @@ end=#
 
 using PoissonRandom, SimpleRandom
 function IQ_make_contacts(u, p::CoVParameters_AS, t::Float64)                     #!!!!
+    #push!(p.time,t)
     @unpack l_IQ, κ, Mₚ, dt, uₚ,Κ_max_capacity,Κ_current = p
     #### Recalculate uₚ=zeros(n_wa,n_a,n_s)   : Matrix of probabilities: when contacting someone with a specific wa and a, what is the chance of him being S, E, IQ, Iᴰ,... WE DO NOT MEET Q!
     for wa = 1:n_wa, a = 1:n_a   ## Recalculate uₚ
@@ -368,6 +375,7 @@ function IQ_make_contacts(u, p::CoVParameters_AS, t::Float64)                   
     end
 
     ## make contacts. We suppose all contacts are made in the same area. Contacts depend on the age mixing matrix M[a_i,a_j], we suppose a_i contacts a_j
+    #println("Making contacts at t=",t);sleep(0.1)
     for i = 1:size(l_IQ, 1)
         #if (l_IQ[i].wa == 4) #!!!! this is commented so we can make contacts in all wa
         #if Κ_current[wa]<Κ_max_capacity[wa] #!!!!
@@ -503,61 +511,79 @@ function update_contact_states(dN::Vector{Int64}, u, p::CoVParameters_AS, t)    
                         end
                     end
                 end
+                j += 1 #increasing only if we didnt delete the contact
+            else
+                j += 1 #increasing only if we didnt delete the contact
             end
-            j += 1
         end
     end
 end
 
 
 function intervention_trace_contacts(traced_index::Int, dN::Vector{Int64}, u, p::CoVParameters_AS, t)   #****
-    @unpack l_IQ, Δₜ, κ_per_event4, Κ_current, Κ_max_capacity, dt, IDs_contacted_first = p
+    @unpack l_IQ, Δₜ, κ_per_event4, Κ_current, Κ_max_capacity, dt, IDs_cfirst = p
     contacteds = [c for c in l_IQ[traced_index].contacts if t - c.contact_t <= Δₜ/dt]
-    if contacteds != []
+    if contacteds != [] && IDs_cfirst==false   #If we do not prioritize contacted symptomatics (ID)
         shuffle!(contacteds)
         contacteds = @view contacteds[1:min(κ_per_event4, size(contacteds, 1))]      #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        if IDs_contacted_first==false   #If we do not prioritize contacted symptomatics (ID)
-            for c in contacteds                                                     ## for each contact, remove the S, E, Iᴬ, Iᴰ or IQ to Q
-                if c.s in [1, 2, 3, 4, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]   #!!!! per wa
-                    Κ_current[c.wa] += 1                                                  ## Increment the total number of traceds
-                    if c.s==1
-                        dN[linear_as_events[c.wa, c.a, 11]] +=1
-                    elseif c.s==2
-                        dN[linear_as_events[c.wa, c.a, 12]] +=1
-                    elseif c.s==3
-                        dN[linear_as_events[c.wa, c.a, 13]] +=1
-                    elseif c.s==4
-                        dN[linear_as_events[c.wa, c.a, 14]] +=1
-                    elseif c.s==10
-                        dN[linear_as_events[c.wa, c.a, 15]] +=1
-                    end
-                    #print("traced ",Κ_current[c.wa],"s=",c.s)
-                    #u[c.wa, c.a, c.s] -= 1
-                    #u[c.wa, c.a, 5] += 1
-                end
-            end
-        else                            #If we prioritize contacted symptomatics (ID)
-            contactedIDs = filter(x -> x.s==4 , contacteds)  #get all the contacted ID symptomatics
-            for c in contactedIDs
-                if  u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]
+        for c in contacteds                                                     ## for each contact, remove the S, E, Iᴬ, Iᴰ or IQ to Q
+            if c.s in [1, 2, 3, 4, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]   #!!!! per wa
+                Κ_current[c.wa] += 1                                                  ## Increment the total number of traceds
+                if c.s==1
+                    dN[linear_as_events[c.wa, c.a, 11]] +=1
+                elseif c.s==2
+                    dN[linear_as_events[c.wa, c.a, 12]] +=1
+                elseif c.s==3
+                    dN[linear_as_events[c.wa, c.a, 13]] +=1
+                elseif c.s==4
                     dN[linear_as_events[c.wa, c.a, 14]] +=1
+                elseif c.s==10
+                    dN[linear_as_events[c.wa, c.a, 15]] +=1
                 end
+                #print("traced ",Κ_current[c.wa],"s=",c.s)
+                #u[c.wa, c.a, c.s] -= 1
+                #u[c.wa, c.a, 5] += 1
             end
-            contactedOther = filter(x -> x.s!=4 , contacteds)  #get all the other contacteds (other than ID)
-            for c in contactedOther                                                     ## for each contact, remove the S, E, Iᴬ, or IQ to Q
-                if c.s in [1, 2, 3, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]   #!!!! per wa
-                    Κ_current[c.wa] += 1                                                  ## Increment the total number of traceds
-                    if c.s==1
-                        dN[linear_as_events[c.wa, c.a, 11]] +=1
-                    elseif c.s==2
-                        dN[linear_as_events[c.wa, c.a, 12]] +=1
-                    elseif c.s==3
-                        dN[linear_as_events[c.wa, c.a, 13]] +=1
-                    #elseif c.s==4
-                    #    dN[linear_as_events[c.wa, c.a, 14]] +=1
-                    elseif c.s==10
-                        dN[linear_as_events[c.wa, c.a, 15]] +=1
-                    end
+        end
+    elseif contacteds != [] && IDs_cfirst==true   #If we prioritize contacted symptomatics (ID)
+        #shuffle!(contacteds)
+        #contacteds = @view contacteds[1:min(κ_per_event4, size(contacteds, 1))]      #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        contactedIDs = filter(x -> (x.s==4 || x.s==10) , contacteds)  #get all the contacted ID symptomatics
+        shuffle!(contactedIDs)
+        contactedIDs2 = @view contactedIDs[1:min(κ_per_event4, size(contactedIDs, 1))]
+        n=0
+        for c in contactedIDs2
+            if  u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]
+                dN[linear_as_events[c.wa, c.a, 14]] +=1
+                Κ_current[c.wa] += 1
+                n+=1
+            end
+        end
+        shuffle!(contacteds)
+        contactedOther=[]
+        i=n;j=1
+        while i<κ_per_event4 && j<=size(contacteds,1)
+            i+=1
+            if contacteds[j]∉contactedIDs2
+                push!(contactedOther,contacteds[j])
+                i+=1
+            end
+            j+=1
+        end
+        #contactedOther = filter(x -> (x.s!=4 && x.s!=10) , contacteds)  #get all the other contacteds (other than ID)
+        for c in contactedOther                                                     ## for each contact, remove the S, E, Iᴬ, or IQ to Q
+            if c.s in [1, 2, 3, 10] && u[c.wa, c.a, c.s] > 0 && Κ_current[c.wa] < Κ_max_capacity[c.wa]   #!!!! per wa
+                Κ_current[c.wa] += 1                                                  ## Increment the total number of traceds
+                if c.s==1
+                    dN[linear_as_events[c.wa, c.a, 11]] +=1
+                elseif c.s==2
+                    dN[linear_as_events[c.wa, c.a, 12]] +=1
+                elseif c.s==3
+                    dN[linear_as_events[c.wa, c.a, 13]] +=1
+                #elseif c.s==4
+                #    dN[linear_as_events[c.wa, c.a, 14]] +=1
+                elseif c.s==10
+                    dN[linear_as_events[c.wa, c.a, 15]] +=1
                 end
             end
         end
