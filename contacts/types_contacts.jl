@@ -21,10 +21,11 @@ end=#
 @with_kw mutable struct SessionParams
     sc_nb::Int=0
     n_traj::Int=100
-    τₚ::Float64=.0;  stop_Q::Bool=true;  Κ_max_capacity12::Int=0;  κ_per_event4::Int=50;  IDs_cfirst::Bool=false;
+    R₀::Float64=.0;τₚ::Float64=.0;  stop_Q::Bool=true;  Κ_max_capacity12::Int=0;  κ_per_event4::Int=50;  IDs_cfirst::Bool=false;
     dt=.5;  ext_inf_rate::Float64=0.;    ϵ::Float64=.0;  δ::Float64=.0;  γ::Float64=.0; σ::Float64=.0; β::Float64=.0 #β = r_R₀*γ/(δ + ϵ*(1-δ))
     τ::Float64=1/2.;  κ::Int=12;  κₘ::Int=10;   Δₜ::Int=10;
     Κ_max_capacity::Int=0; Κ_max_capacity4::Int=0;
+    cumI::Float64=-1;cumI_diff::Float64=-1;#for plotting
 end
 
 @with_kw mutable struct CoVParameters_AS

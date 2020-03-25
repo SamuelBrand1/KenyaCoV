@@ -1,4 +1,4 @@
-using Plots,MAT, StatsPlots, Statistics,JLD2, Images, ImageView,ImageDraw
+using Plots,MAT, StatsPlots, Statistics,JLD2, Images, ImageView,ImageDraw,CSV
 
 colors=[:blue, :orange, :purple3, :maroon, :gold, :orangered, :grey, :purple]
 markershapes=[:cross,:star4, :vcross, :star6, :hline]
@@ -210,18 +210,43 @@ function peaks_many_sessions(peakss,peak_diffss,Κ_max_capacity_Kilifi_string,se
     end
 end
 ########
+function save_sessionParams(folder,cumIs,cumI_diffs)
+    data_files=readdir(folder)
+    data_files=[folder*s for s in data_files if endswith(s,".jld2")&&s!="stats.jld2"]
+    params=[]#("sc_nb","n_traj","taup","stop_Q","Κ_max_capacity12","k_per_event4","IDs_cfirst","dt","ext_inf_rate","E","delta","gamma","sigma","beta","tau","k","km","Dt","Κ_max_capacity","Κ_max_capacity4")]
+    for i=1:size(data_files,1)
+        @load data_files[i]  sessionParams
+        sessionParams.cumI=cumIs[i];    sessionParams.cumI_diff=cumI_diffs[i];
+        params=[params;sessionParams]
+    end
+    sort!(params, by = x -> x.sc_nb)
+    #params=[params cumIs]
+    CSV.write(folder*"sessionParams.csv", params)
+    return params
+end
+function mysort(data_files)
+    A=[]#["",0] for i=1:size(data_files,1)]
+    for i=1:size(data_files,1)
+        @load data_files[i]  sessionParams
+        #push!(A,[data_files[i],sessionParams.sc_nb])
+        A=[A; [[data_files[i] sessionParams.sc_nb]]]
+    end
+    sort!(A, by = x -> x[2]);
+    return [A[i][1] for i=1:size(A,1)]
+end
 function make_plots_v7(folder,S0)
     data_files=readdir(folder)
     data_files=[folder*s for s in data_files if endswith(s,".jld2")&&s!="stats.jld2"]
-
+    data_files=mysort(data_files)
     cumI_diffs=[];peakss=[];peak_diffss=[];
     wa=12;wa_name="Kilifi"
 
     b=boxplot(title="Final total cumulative Infecteds in "*wa_name*" (all ages)")
     final_cum0detection=0;        cumI_diffs=[];        cumIs=[];    medians_cumI=[]
     xticks_labels=[];colors2=[]
-
+    first=true;colori1=1
     for i=1:size(data_files,1)#for i=1:size(τₚ_list,1)
+        if first    colori1=i-1   end
         @load data_files[i]  sims_vector
         @load data_files[i]  sessionParams
         push!(xticks_labels,"sc"*string(sessionParams.sc_nb))
@@ -232,8 +257,8 @@ function make_plots_v7(folder,S0)
             push!(final_cum,sum(sims_vector[sim][4][wa,:,1:3])) # final cumulative I=IA+ID+IQ, summed for all ages
         end
         push!(cumIs,median(final_cum))
-        boxplot!(b,final_cum,color=colors2[i],label="detection"*string(sessionParams.τₚ*100)*"%",legend=:bottomright)
-        if i==1     final_cum0detection=median(final_cum)       end
+        boxplot!(b,final_cum,color=colors2[i-colori1],label="detection"*string(sessionParams.τₚ*100)*"%",legend=:bottomright)
+        if first     final_cum0detection=median(final_cum);first=false;       end
         push!(cumI_diffs,final_cum0detection-median(final_cum))
 
         ##final_cumI_barplot:
@@ -246,7 +271,7 @@ function make_plots_v7(folder,S0)
     @save folder*"stats.jld2"   cumI_diffs,cumIs
 
     b2=bar(cumI_diffs,color=colors2,legend=false,title="Gain in total Infecteds (cum) in "*wa_name*" (all ages)",
-            xticks = ([1:1:size(xticks_labels,1);], xticks_labels))
+            xticks = ([1:1:size(xticks_labels,1);], xticks_labels),size=(1000,400),rotation=60)
     b3=bar(cumIs,color=colors2,legend=false,title="Total Infecteds (cum) in "*wa_name*" (all ages)",
             xticks = ([1:1:size(xticks_labels,1);], xticks_labels))
     savefig(b,folder*"jl_cumI_"*wa_name*"_box.png")
@@ -269,6 +294,7 @@ function make_plots_v7(folder,S0)
     #cumIgain_many_sessions(cumI_diffs,["500","1e3","5e3","1e4"],sessions,τₚ_list,12,"Kilifi")
     #peaks_many_sessions(peakss,peak_diffss,["500","1e3","5e3","1e4"],sessions,τₚ_list,12,"Kilifi")
     #return peakss,peak_diffss
+    return cumIs,cumI_diffs
 end
 function make_plots_oneExample(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
     wa=12;wa_name="Kilifi"
@@ -323,12 +349,21 @@ function make_plots_oneExample(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
 end
 
 ########
-#folders=["./contacts/results_session0/","./contacts/results_session1/"];
-τₚ_list=[.0,.5]#.25,.5,.75,.9]
 S0=[4.138758e6, 867417.0, 2.326182e6, 8.084069e6, 3.229145e6, 459761.0, 999280.0, 1.979082e6, 926952.0, 340661.0, 2.381706e6, 2.126254e6, 2.960717e6, 786461.0, 7.478259e6, 781212.0, 2.114588e6, 4.094022e6, 569586.0, 917976.0]
-sessions=[74,75,76,77]
-Κ_max_capacity_Kilifi=[1e3,1e3,1e4,1e4]
 
 #make_plots_v7(folder,S0)
-make_plots_v7("./contacts/results_session0/",S0)
+folder="./contacts/results_session1/"
+cumIs,cumI_diffs=make_plots_v7(folder,S0)
 #make_plots_oneExample(sessions,τₚ_list,S0,Κ_max_capacity_Kilifi)
+save_sessionParams(folder,cumIs,cumI_diffs)
+
+#=
+data_files=readdir(folder)
+data_files=[folder*s for s in data_files if endswith(s,".jld2")&&s!="stats.jld2"]
+for i=1:size(data_files,1)#for i=1:size(τₚ_list,1)
+    #@load data_files[i]  sims_vector
+    @load data_files[i]  sessionParams
+    if sessionParams.stop_Q==true
+        print("sc_nb=",sessionParams.sc_nb," / ")
+    end
+end=#
