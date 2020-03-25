@@ -181,10 +181,10 @@ plot!(plt_control_1,size = (700,500))
 savefig(plt_control_1,"plotting/spatial_targetting_scenarios_tau_0.pdf")
 
 plt_no_control_3 = plot_incidence_spatial(results_3,treatment_rates,1)
-title!(plt_no_control_3,"Spatial distribution of incidence: (25% rel. infect.)")
+title!(plt_no_control_3,"Spatial distribution of incidence: (25% rel infect.)")
 plot!(size = (700,500))
 xlims!(0.,60.)
-savefig(plt_no_control_3,"plotting/spatial_baseline_scenarios_epsilon_A_25.pdf")
+savefig(plt_no_control_3,"plotting/spatial_baseline_scenarios_epsilon_A_25_ribbon_plot.pdf")
 
 plt_control_2 = plot_incidence_spatial(results_2,treatment_rates,6)
 title!(plt_control_2,"Targetted intervention: 10% rel. trans. undetecteds ")
@@ -206,6 +206,10 @@ collect_no_control_peak_timing = hcat(results_1[1][3][:,21],
                                       results_3[1][3][:,21],
                                       results_4[1][3][:,21],
                                       results_5[1][3][:,21])
+median_estimates_peak_uncontrolled = [median(collect_no_control_peak_timing[:,i]) for i = 1:5]
+lb_ub = [quantile(collect_no_control_peak_timing[:,i],[0.025,0.975]) for i = 1:5]
+
+
 
 peak_plt_no_control = boxplot(collect_no_control_peak_timing,lab="",
                             # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
@@ -222,6 +226,9 @@ collect_control_peak_timing = hcat(results_1[6][3][:,21],
                                       results_3[6][3][:,21],
                                       results_4[6][3][:,21],
                                       results_5[6][3][:,21])
+
+median_estimates_peak_CI = [median(collect_control_peak_timing[:,i]) for i = 1:5]
+lb_ub = [quantile(collect_control_peak_timing[:,i],[0.025,0.975]) for i = 1:5]
 
 peak_plt_control = boxplot(collect_control_peak_timing,lab="",
                             # lab = ["rel. infect. undetecteds = 0%" "rel. infect. undetecteds = 10%" "rel. infect. undetecteds = 25%" "rel. infect. undetecteds = 50%" "rel. infect. undetecteds = 100%"],
