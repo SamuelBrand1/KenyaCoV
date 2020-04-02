@@ -18,7 +18,7 @@ export n,n_t,n_s,n_a,
         solve_KenyaCoV_prob, L_IQ
 n = 47 #global defining number of counties
 #n_s = 9 #global defining number of state
-n_s = 12 #global defining number of state                                       #****2      #**** Added one state IQ
+n_s = 14 #global defining number of state                                       #****2      #**** Added one state IQ
 n_t = 16 #global defining number of events per location
 n_a = 16 #global defining number of age categories
 n_wa = 20 #global defining number of wider area groupings
@@ -40,9 +40,9 @@ linear_as_events = LinearIndices((1:n_wa, 1:n_a,1:n_ta))
 
 include("../src/kenya_data.jl");                                                #****
 include("../src/gravity_model.jl");
-include("types_contacts.jl");
+include("contacttracing_types.jl");
 include("../src/regularjumps.jl");
-include("agestructurejumps_contacts.jl")
+include("contacttracing_jumps_withTmax.jl")
 include("../src/transmissionmodel.jl");
 
 
