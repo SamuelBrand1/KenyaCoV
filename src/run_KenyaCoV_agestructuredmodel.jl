@@ -12,6 +12,8 @@ Load age structured data
 u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
+N = sum(u0[:,:,1],dims = 1)
+
 
 @load "data/agemixingmatrix_china.jld2" M_China
 @load "data/agemixingmatrix_Kenya_norestrictions.jld2" M_Kenya

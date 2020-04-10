@@ -18,6 +18,15 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
 
 
 @load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
+df = DataFrame(age_cats = age_cats,
+                detection_rate_0_rel_trans = d_0,
+                detection_rate_0_1_rel_trans = d_01,
+                detection_rate_0_25_rel_trans = d_025,
+                detection_rate_0_5_rel_trans = d_05,
+                detection_rate_1_rel_trans = d_1)
+
+CSV.write("age_dependent_symptomatic_rates.csv",df)
+
 
 #Initial infecteds
 

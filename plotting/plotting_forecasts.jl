@@ -1,7 +1,7 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,JLD2,DataFrames,StatsPlots,FileIO,MAT
 using Statistics: median, quantile
-
+gr()
 treatment_rates = [(0.,1),(0.,0.5),(1/7.,1.),(1/7,0.5),(1/3.5,1.),(1/3.5,0.5)]
 reducted_treatment_rates = [(0.,1),(1/3.5,0.5)]
 reduced_rel_transmission_perc = [10,25]
@@ -24,10 +24,10 @@ Plots ---
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3S.jld2") results_3S
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI.jld2") results_2SI
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI.jld2") results_3SI
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI_short.jld2") results_2SI_short
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI_short.jld2") results_3SI_short
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_4SI_short.jld2") results_4SI_short
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_5SI_short.jld2") results_5SI_short
+    # @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI_short.jld2") results_2SI_short
+    # @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI_short.jld2") results_3SI_short
+    # @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_4SI_short.jld2") results_4SI_short
+    # @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_5SI_short.jld2") results_5SI_short
 
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2SI_SL_three_months.jld2") results_2SI_SL_three_months
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3SI_SL_three_months.jld2") results_3SI_SL_three_months
@@ -43,13 +43,24 @@ Plots ---
 # gr()
 include("plotting_functions.jl");
 """
+Doubling time
+"""
+
+
+"""
 Country wide incidence
 """
+
 scenario_group = [results_1,results_2,results_3,results_4,results_5]
 plt_no_control = plot_total_incidence_group(scenario_group,treatment_rates,1,rel_transmission_perc)
 title!(plt_no_control,"Kenya-wide incidence: no intervention")
 plot!(plt_no_control,size = (700,500))
+xlabel!("Days after established SARS-CoV-2 transmission")
+ylabel!("Daily new sympomatic infections")
 savefig(plt_no_control,"plotting/baseline_scenarios.pdf")
+savefig(plt_no_control,"plotting/baseline_scenarios.png")
+
+savefig(plt_no_control,"plotting/baseline_scenarios_eps_test.eps")
 
 
 plt_controls = plot_total_incidence_group(scenario_group,treatment_rates,6,rel_transmission_perc)
@@ -161,6 +172,8 @@ plot!(plt_lockdown_red,results_4[6][1][21,:,1].+1,ls=:dash,color = :purple,lab =
 plot!(plt_lockdown_red,results_5[6][1][21,:,1].+1,ls=:dash,color = :brown,lab = "")
 
 plot!(size = (700,400))
+xlabel!("Days after established SARS-CoV-2 transmission")
+ylabel!("Daily new sympomatic infections")
 savefig(plt_lockdown_red,"plotting/baseline_scenarios_with_lockdown_and_reduction.pdf")
 
 
@@ -168,8 +181,9 @@ savefig(plt_lockdown_red,"plotting/baseline_scenarios_with_lockdown_and_reductio
 """
 Spatial plots
 """
-
-
+ordering = sortperm(results_3[1][1][1:20,40,1],rev = true)
+results_3[1][1][1:20,40,1]
+plot(results_3[1][1][5,:,1].+1,yscale = :log10)
 plt_no_control_1 = plot_incidence_spatial(results_1,treatment_rates,1)
 title!(plt_no_control_1,"Uncontrolled epidemic: 0% rel. trans. undetecteds ")
 plot!(plt_no_control_1,size = (700,500))
@@ -183,8 +197,27 @@ savefig(plt_control_1,"plotting/spatial_targetting_scenarios_tau_0.pdf")
 plt_no_control_3 = plot_incidence_spatial(results_3,treatment_rates,1)
 title!(plt_no_control_3,"Spatial distribution of incidence: (25% rel infect.)")
 plot!(size = (700,500))
+xlabel!("Days after established SARS-CoV-2 transmission")
+ylabel!("Daily new sympomatic infections")
 xlims!(0.,60.)
+
 savefig(plt_no_control_3,"plotting/spatial_baseline_scenarios_epsilon_A_25_ribbon_plot.pdf")
+plt_no_control_3 = plot_incidence_spatial(results_3,treatment_rates,1,rr2county_mat)
+title!(plt_no_control_3,"Spatial distribution of incidence: (25% rel infect.)")
+plot!(size = (1000,1050),
+        xtickfont = font(14),
+        ytickfont = font(14),
+        guidefont = font(14),
+        titlefont = font(22)
+        )
+xlabel!("")
+ylabel!("")
+xlabel!("Days after established SARS-CoV-2 transmission")
+ylabel!("Daily new sympomatic infections")
+xlims!(0.,60.)
+
+savefig(plt_no_control_3,"plotting/spatial_baseline_scenarios_epsilon_A_25_ribbon_plot_county.pdf")
+
 
 plt_control_2 = plot_incidence_spatial(results_2,treatment_rates,6)
 title!(plt_control_2,"Targetted intervention: 10% rel. trans. undetecteds ")
@@ -286,6 +319,14 @@ collect_uncontrol_final_size = hcat(sum(results_1[1][4],dims= [1,2])[:],
 median_estimates_uncontrolled = [median(collect_uncontrol_final_size[:,i]) for i = 1:5]
 lb_ub = [quantile(collect_uncontrol_final_size[:,i],[0.025,0.975]) for i = 1:5]
 
+collect_uncontrol_final_size_asymptoms = hcat(sum(results_1[1][5],dims= [1,2])[:],
+                                    sum(results_2[1][5],dims= [1,2])[:],
+                                    sum(results_3[1][5],dims= [1,2])[:],
+                                    sum(results_4[1][5],dims= [1,2])[:],
+                                    sum(results_5[1][5],dims= [1,2])[:])
+median_estimates_uncontrolled_total = [median(collect_uncontrol_final_size_asymptoms[:,i].+ collect_uncontrol_final_size[:,i]) for i = 1:5]
+lb_ub = [quantile(collect_uncontrol_final_size_asymptoms[:,i].+ collect_uncontrol_final_size[:,i],[0.025,0.975]) for i = 1:5]
+
 
 
 size_plt_no_control = boxplot(collect_uncontrol_final_size./1e6,lab="",
@@ -305,6 +346,14 @@ collect_control_final_size = hcat(sum(results_1[6][4],dims= [1,2])[:],
 
 median_estimates_case_isolation = [median(collect_control_final_size[:,i]) for i = 1:5]
 lb_ub = [quantile(collect_control_final_size[:,i],[0.025,0.975]) for i = 1:5]
+
+collect_control_final_size_asymptoms = hcat(sum(results_1[6][5],dims= [1,2])[:],
+                                    sum(results_2[6][5],dims= [1,2])[:],
+                                    sum(results_3[6][5],dims= [1,2])[:],
+                                    sum(results_4[6][5],dims= [1,2])[:],
+                                    sum(results_5[6][5],dims= [1,2])[:])
+median_estimates_controlled_total = [median(collect_control_final_size_asymptoms[:,i].+ collect_control_final_size[:,i]) for i = 1:5]
+lb_ub = [quantile(collect_control_final_size_asymptoms[:,i].+ collect_control_final_size[:,i],[0.025,0.975]) for i = 1:5]
 
 
 
@@ -395,8 +444,8 @@ scenario_group = [results_1,results_2,results_3,results_4,results_5]
 
 plt_age_distrib_uncontrolled = plot_total_incidence_by_age(scenario_group,treatment_rates,rel_transmission_perc,1)
 plot!(size = (800,500))
-xlabel!("Age of case individual")
-ylabel!("Number of cases (millions)")
+xlabel!("Age of infected individual")
+ylabel!("Number of symptomatic infections (thousands)")
 title!("Age distribution of cases: uncontrolled epidemic")
 savefig(plt_age_distrib_uncontrolled,"plotting/age_distrib_cases_uncontrolled.pdf")
 
