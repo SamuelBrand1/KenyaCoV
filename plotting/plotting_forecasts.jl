@@ -15,7 +15,7 @@ Plots ---
 """
 
 
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/results_1.jld2") results_1
+@load joinpath("KenyaCoVOutputs/results_1.jld2") results_1
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_2.jld2") results_2
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_3.jld2") results_3
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/results_4.jld2") results_4

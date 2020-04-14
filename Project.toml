@@ -1,7 +1,7 @@
 name = "KenyaCoV"
 uuid = "8af968fe-5b4e-4282-bf9e-761c92162993"
 authors = ["Samuel <sam055@mac.com>"]
-version = "0.1.0"
+version = "1.0"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
