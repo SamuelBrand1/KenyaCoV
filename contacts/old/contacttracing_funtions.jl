@@ -1,14 +1,14 @@
 
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,MAT,RecursiveArrayTools
-import KenyaCoV_contacts
+import KenyaCoV_CT
 using LinearAlgebra:eigen
 using Statistics: median, quantile
 
 ###########
 function randomise_params(prob,i,repeat)
     _P = deepcopy(prob.p)
-    #_P.σ = 1/rand(d_incubation)
-    #_P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
+    _P.σ = 1/rand(d_incubation)
+    _P.β = rand(d_R₀)*_P.γ/(_P.δ + _P.ϵ*(1-_P.δ))
     return remake(prob,p=_P)
 end
 function output_daily_and_final_incidence(sol,i)
@@ -29,13 +29,13 @@ end
 ###########
 function run_one_scenario(folder,ϵ,σ,γ,δ,β,r_R₀,first_sc_nb,τₚ,n_traj,CT_Imin_list,CT_dur_list,dt)
     if !isdir(folder)   mkdir(folder)   end
-    u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
-    u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
+    u0,P,P_dest = KenyaCoV_CT.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
+    u0[KenyaCoV_CT.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
     P.dt = dt;     P.ext_inf_rate = 0.;    P.ϵ = ϵ;        P.δ = δ;      P.γ = γ;      P.σ = σ;    P.β = β
     P.τ=1/2.;        P.κ=12;        P.κₘ=10;     P.Δₜ=10;   P.κ_per_event4=100; P.IDs_cfirst=true
-    for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
+    for wa=1:KenyaCoV_CT.n_a, a=1:KenyaCoV_CT.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
 
-    prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
+    prob = KenyaCoV_CT.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
     sc_nb=first_sc_nb
       P.τₚ =τₚ;  P.CT_Imin=CT_Imin_list[1];P.CT_dur=CT_dur_list[1]
         println("\nSession "*string(sc_nb)*" Running ",n_traj," sims for τₚ,IDs_cfirst=",P.τₚ,",",P.IDs_cfirst)
@@ -46,7 +46,7 @@ function run_one_scenario(folder,ϵ,σ,γ,δ,β,r_R₀,first_sc_nb,τₚ,n_traj,
         for i=1:size(sims.u,1)
             push!(sims_vector, sims.u[i])
         end
-        sessionParams=KenyaCoV_contacts.SessionParams(sc_nb=sc_nb,n_traj=n_traj,R₀=r_R₀,τₚ=τₚ,κ_per_event4=100,IDs_cfirst=P.IDs_cfirst,
+        sessionParams=KenyaCoV_CT.SessionParams(sc_nb=sc_nb,n_traj=n_traj,R₀=r_R₀,τₚ=τₚ,κ_per_event4=100,IDs_cfirst=P.IDs_cfirst,
                                     dt=dt,ext_inf_rate=P.ext_inf_rate,ϵ=ϵ,δ=δ,γ=γ,σ=σ,β=β,τ=1/2.,κ=12,κₘ=10,Δₜ=10)
         @save folder*"sims_sc"*string(sc_nb)*".jld2" sessionParams sims_vector
         sc_nb+=1
@@ -55,14 +55,14 @@ function run_set_scenarios(folder,ϵ,σ,γ,δ,β,r_R₀,first_sc_nb,τₚ,n_traj
     if !isdir(folder)   mkdir(folder)   end
     sc_nb=first_sc_nb
     for CT_dur in CT_dur_list
-        u0,P,P_dest = KenyaCoV_contacts.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
-        u0[KenyaCoV_contacts.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
+        u0,P,P_dest = KenyaCoV_CT.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
+        u0[KenyaCoV_CT.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
         P.dt = dt;     P.ext_inf_rate = 0.;    P.ϵ = ϵ;        P.δ = δ;      P.γ = γ;      P.σ = σ;    P.β = β
         P.τ=1/2.;        P.κ=12;        P.κₘ=10;     P.Δₜ=10;   P.κ_per_event4=100; P.IDs_cfirst=true
         P.CT_Imin=CT_Imin;  P.τₚ =τₚ;
-        for wa=1:KenyaCoV_contacts.n_a, a=1:KenyaCoV_contacts.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
+        for wa=1:KenyaCoV_CT.n_a, a=1:KenyaCoV_CT.n_a       P.Mₚ[wa,a]=P.M[wa,a]/sum(P.M[wa,:]);    end
 
-        prob = KenyaCoV_contacts.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
+        prob = KenyaCoV_CT.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 
         P.CT_dur=CT_dur
         println("\nSession "*string(sc_nb)*" Running ",n_traj," sims for τₚ,CT_dur=",P.τₚ,",",P.CT_dur)
@@ -72,7 +72,7 @@ function run_set_scenarios(folder,ϵ,σ,γ,δ,β,r_R₀,first_sc_nb,τₚ,n_traj
         for i=1:size(sims.u,1)
             push!(sims_vector, sims.u[i])
         end
-        sessionParams=KenyaCoV_contacts.SessionParams(sc_nb=sc_nb,n_traj=n_traj,R₀=r_R₀,τₚ=τₚ,κ_per_event4=100,IDs_cfirst=P.IDs_cfirst,
+        sessionParams=KenyaCoV_CT.SessionParams(sc_nb=sc_nb,n_traj=n_traj,R₀=r_R₀,τₚ=τₚ,κ_per_event4=100,IDs_cfirst=P.IDs_cfirst,
                                     dt=dt,ext_inf_rate=P.ext_inf_rate,ϵ=ϵ,δ=δ,γ=γ,σ=σ,β=β,τ=1/2.,κ=12,κₘ=10,Δₜ=10,CT_Imin=P.CT_Imin,CT_dur=P.CT_dur)
         @save folder*"sims_sc"*string(sc_nb)*".jld2" sessionParams sims_vector
         sc_nb+=1

@@ -1,4 +1,4 @@
-using Plots,MAT, StatsPlots, Statistics,JLD2, Images, ImageView,ImageDraw,CSV,DataFrames,Printf,ColorBrewer
+using Plots,MAT, StatsPlots, Statistics,JLD2,CSV,DataFrames,Printf,ColorBrewer#, Images, ImageView,ImageDraw
 Plots.default(grid=false,legendfontsize=6, legendfontcolor=:gray30,titlefontsize=8, titlefontcolor=:gray30,xtickfontsize=6, ytickfontsize=6,tickfontcolor=:gray30,titlefontfamily="Cambria")
 StatsPlots.default(grid=false,legendfontsize=6, legendfontcolor=:gray30,#:midnightblue#legendfont="Cambria"
                     titlefontsize=8, titlefontcolor=:gray30,#titlefontfamily="Cambria",
@@ -14,36 +14,52 @@ function kenya_barplot(data_files,plot_folder,S0)
     if !isdir(plot_folder)   mkdir(plot_folder)   end
     wa=12;wa_name="Kilifi"
 
-    final_cum0detection=0;    cumIs=[];   cumI_medians=[];    cumI_medians_kenya=[];
+    final_cum0detection=0;    #=cumIs=[];=#   cumI_medians=[];    cumI_medians_kenya=[];
+    cumDeaths_medians=[];cumDeaths_medians_kenya=[];cumDeaths_stds_kenya=[]
     for i=1:size(data_files,1)
         @load data_files[i]  sims_vector
         @load data_files[i]  sessionParams
-        final_cum=[];
+        #=final_cum=[];
         for sim=1:size(sims_vector,1) #for each sim
-            push!(final_cum,sum(sims_vector[sim][9][wa,:,1:3])) # final cumulative I=IA+ID+IQ, summed for all ages
+            push!(final_cum,sum(sims_vector[sim][10][wa,:,1:3])) # final cumulative I=IA+ID+IQ, summed for all ages
         end
-        push!(cumIs,median(final_cum));
+        push!(cumIs,median(final_cum));=#
 
         ##final_cumI_barplot:
         cumI=[[sum(sims_vector[sim][1][end][wa,1:3]) for wa=1:20]   for sim=1:size(sims_vector,1)]
         median_cumI=[median([cumI[sim][wa] for sim=1:size(sims_vector,1)])      for wa=1:20]
         push!(cumI_medians,median_cumI)
 
+        ##deaths for barplot:
+        cumDeaths=[[sum(sims_vector[sim][4][end][wa]) for wa=1:20]   for sim=1:size(sims_vector,1)]
+        median_cumDeaths=[median([cumDeaths[sim][wa] for sim=1:size(sims_vector,1)])      for wa=1:20]
+        push!(cumDeaths_medians,median_cumDeaths)
+
         ##All kenya cumI
         median_cumI_kenya=median([sum([cumI[sim][wa]  for wa=1:20])  for sim=1:size(sims_vector,1)])
         push!(cumI_medians_kenya,median_cumI_kenya)
+        std_cumI_kenya=std([sum([cumI[sim][wa]  for wa=1:20])  for sim=1:size(sims_vector,1)])
+        push!(cumDeaths_stds_kenya,std_cumI_kenya)
+
+        ## All Kenya cumDeaths
+        median_cumDeaths_kenya=median([sum([cumDeaths[sim][wa]  for wa=1:20])  for sim=1:size(sims_vector,1)])
+        push!(cumDeaths_medians_kenya,median_cumDeaths_kenya)
 
     end
     S02=[]; for wa=1:20 push!(S02,S0[wa]);   end
     barplotALL=bar([1.5:2:40.5;],S02,color=[:green,:chartreuse4],xticks=([1:2:40;],riskregionnames),fillalpha=.5,linewidth=false,bar_width=2,linecolor=false,
-                    size=(width1*1.2,length1*.8),rotation=40,label=false,title="Final number of cases in Kenya without intervention")
-    cumI_medians2=[];
-    for wa=1:20,i=1:1size(data_files,1)    push!(cumI_medians2,cumI_medians[i][wa]);   end
+                    size=(width1,length1),rotation=40,label=false,title="Final number of cases in Kenya without intervention")
+
+    cumI_medians2=[];cumDeaths_medians2=[]
+    for wa=1:20,i=1:1size(data_files,1)    push!(cumI_medians2,cumI_medians[i][wa]);   push!(cumDeaths_medians2,cumDeaths_medians[i][wa]);end
 
     bar!(barplotALL,cumI_medians2,color=[colors2[1],colors2[6]],linecolor=false,label=false,bar_width=1.005)#,yerrorbar=cumI_allfiles_sd,markercolor=:black)
+    bar!(barplotALL,cumDeaths_medians2,color=:red,linecolor=false,label=false,bar_width=1.005);#display(barplotALL)
     savefig(barplotALL,plot_folder*"jl_cumI_barplot.png")
-    return cumI_medians_kenya,cumI_medians
 
+    bdeaths=bar(cumDeaths_medians2,color=:red,yflip=:true,xaxis=:false,size=(width1*.95,length1*.4),label=false);#display(bdeaths)
+    savefig(bdeaths,plot_folder*"jl_cumDeaths_Kenya_barplot.png")
+    return cumI_medians_kenya,cumDeaths_stds_kenya,cumI_medians,cumDeaths_medians
 end
 
 function kilifi_ages(data_files,plot_folder,S0)
@@ -51,23 +67,40 @@ function kilifi_ages(data_files,plot_folder,S0)
     wa=12;wa_name="Kilifi"
 
     @load data_files[1]  sims_vector
-    cumIsA=[[] for i=1:16]
-    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA[a],sum(sims_vector[sim][9][wa,a,1:3]));end
+    cumIsA=[[] for i=1:16];     cumDeaths_1=[[] for i=1:16];
+    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA[a],sum(sims_vector[sim][10][wa,a,1:3]));end
+    for sim=1:size(sims_vector,1),a=1:16    push!(cumDeaths_1[a],sims_vector[sim][11][wa,a]); end
 
-    @load data_files[2]  sims_vector# 9 is sc53
-    cumIsA_2=[[] for i=1:16]
-    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA_2[a],sum(sims_vector[sim][9][wa,a,1:3])); end
+    @load data_files[2]  sims_vector#
+    cumIsA_2=[[] for i=1:16];   cumDeaths_2=[[] for i=1:16];
+    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA_2[a],sum(sims_vector[sim][10][wa,a,1:3])); end
+    for sim=1:size(sims_vector,1),a=1:16    push!(cumDeaths_2[a],sims_vector[sim][11][wa,a]); end
 
     S012A_2=[]
     for i=1:16  push!(S012A_2,S012A[i]);push!(S012A_2,S012A[i]) ;end
-    b=bar(S012A_2,bar_width=1.01,color=[:green,:chartreuse4],xticks=([1:2:32;],ages),fillalpha=.5,linecolor=false,rotation=30,label=false)#bar_edges=false)
+    b=bar(S012A_2,bar_width=1.01,color=[:green,:chartreuse4],xticks=([1.5:2:32;],ages),fillalpha=.5,linecolor=false,rotation=30,label=false)#bar_edges=false)
 
     cumIfinal=[];
     for a=1:16  push!(cumIfinal,median(cumIsA[a]));push!(cumIfinal,median(cumIsA_2[a])); end
-    bar!(b,cumIfinal,color=color=[colors2[1],colors2[6]],rotation=30,contour_labels=true,size=(width1*1.2,length1*.8),
-            linecolor=false,label=false,title="Estimated cases per age in Kilifi without intervention")
+    bar!(b,cumIfinal,color=[colors2[1],colors2[6]],rotation=30,contour_labels=true,size=(width1*1.2,length1*.8),
+            linecolor=false,label=false,title="Estimated numbers of cases and deaths per age in Kilifi without intervention")
+
+    cumDeathsfinal=[];
+    for a=1:16  push!(cumDeathsfinal,median(cumDeaths_1[a]));push!(cumDeathsfinal,median(cumDeaths_2[a])); end
+    fillalphas=[cumDeathsfinal[a]==0 ? 1 : 0  for a=1:16]
+    bar!(b,cumDeathsfinal,color=:red,rotation=30,size=(width1*1.2,length1*.8),#fillalpha=fillalphas,contour_labels=true,
+            linecolor=false,label=false)#,title="Estimated cases per age in Kilifi without intervention")
+    #        scatter!(b,cumDeathsfinal,color=:red,markershapes=:hline,fillalpha=fillalphas,#rotation=30,contour_labels=true,#size=(width1*1.2,length1*.8),
+    #                #=linecolor=false,=#label=false,text=[[string(cumDeathsfinal[a]) for a=1:16] [string(cumDeathsfinal[a]) for a=1:16] [string(cumDeathsfinal[a]) for a=1:16]])
     savefig(b,plot_folder*"jl_cumI_ages_kilifi.png")
-    return cumIsA
+
+    #plotting deaths
+    bdeaths=bar(cumDeathsfinal,color=:red,linecolor=[colors2[1],colors2[6]],yflip=:true,xaxis=:false,size=(width1*1.15,length1*.3),label=false);#display(bdeaths)
+    savefig(bdeaths,plot_folder*"jl_cumDeaths_ages_kilifi.png")
+    #=l=@layout [ a{0.75h}
+                b{0.25h}  ]
+    savefig(plot(b,bdeaths,layout=l,size=(width1,length1)),plot_folder*"jl_cumIandcumDeaths_ages_kilifi.png")=#
+    return [cumIsA,cumIsA_2]
     #=##Grouped barplot number infecteds
     cumIs2 = [median(cumIsA[a]) for a=1:16]#[20, 35, 30, 35, 27,25, 32, 34, 20, 25]
     append!(cumIs2,[median(cumIsA_2[a]) for a=1:16])
@@ -97,13 +130,13 @@ function kilifi_ages_α5_90days(data_files,plot_folder,S0)
     wa=12;wa_name="Kilifi"
 
     @load data_files[1]  sims_vector
-    cumIsA=[[] for i=1:16];    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA[a],sum(sims_vector[sim][9][wa,a,1:3]));end
+    cumIsA=[[] for i=1:16];    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA[a],sum(sims_vector[sim][10][wa,a,1:3]));end
 
     @load data_files[2]  sims_vector#
-    cumIsA_2=[[] for i=1:16];    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA_2[a],sum(sims_vector[sim][9][wa,a,1:3])); end
+    cumIsA_2=[[] for i=1:16];    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA_2[a],sum(sims_vector[sim][10][wa,a,1:3])); end
 
     @load data_files[3]  sims_vector#
-    cumIsA_3=[[] for i=1:16];    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA_3[a],sum(sims_vector[sim][9][wa,a,1:3])); end
+    cumIsA_3=[[] for i=1:16];    for sim=1:size(sims_vector,1),a=1:16    push!(cumIsA_3[a],sum(sims_vector[sim][10][wa,a,1:3])); end
 
     S012A_2=[]
     for i=1:16  push!(S012A_2,S012A[i]);push!(S012A_2,S012A[i]) ;end
@@ -171,28 +204,28 @@ S012A=[279992, 264585, 246992, 206735, 220761, 211260, 181931, 130091, 111761, 8
 width1=400;length1=400;
 width2=1000;length2=800;
 #cumI_medians_kenya,cumI_stds_kenya,cumI_medians,cumI_stds,peaks,peak_stds=make_plots_v7(folder,S0)
-data_files=["./contacts/results_session10_20sims/sims_sc1000.jld2","./contacts/results_session11_20sims/sims_sc1153.jld2"]
-data_files=["./contacts/results_session10_20sims/sims_sc1000.jld2","./contacts/results_session10_20sims/sims_sc1053.jld2","./contacts/results_session11_20sims/sims_sc1153.jld2"]
-plot_folder="./contacts/results_sessions10to11_det5_90days_20sims/"
-#cumI_medians_kenya,cumI_medians=kenya_barplot(data_files,plot_folder,S0)
-cumIfinalKilifiA=kilifi_ages_α5_90days(data_files,plot_folder,S0)
 
-data_files=["./contacts/results_session10_20sims/sims_sc1000.jld2","./contacts/results_session10_20sims/sims_sc1053.jld2","./contacts/results_session10_20sims/sims_sc1093.jld2","./contacts/results_session11_20sims/sims_sc1153.jld2","./contacts/results_session11_20sims/sims_sc1193.jld2"]
-plot_folder="./contacts/results_sessions10to11_det5_90days_20sims/"
-cumIfinalKilifiA=kilifi_ages_α5_9_90days(data_files,plot_folder,S0)
+####### Ages with No Intervention
+data_files=["./contacts/results_session20_50sims/sims_sc2000.jld2","./contacts/results_session22_50sims/sims_sc2200.jld2"]
+plot_folder="./contacts/results_sessions20-22_det0_50sims/"
+cumI_medians_kenya,cumDeaths_stds_kenya,cumI_medians,cumDeaths_medians=kenya_barplot(data_files,plot_folder,S0)
 
+#cumI_medians_kenya[2]/sum(S0)
+#cumDeaths_stds_kenya[1]
+#cumI_medians[2][12]/S0[12]
 
-#sum(cumIfinalKilifiA[13][12]+cumIfinalKilifiA[14][12]+cumIfinalKilifiA[15][12]+cumIfinalKilifiA[16][12])/sum(S012A[13:16])
-#cumI_medians[1][12]/S0[12]
-#cumI_medians_kenya[1]/sum(S0)
-#make_plots_ages(folder,S0)
+cumIsA=kilifi_ages(data_files,plot_folder,S0)
+#medians=[median(cumIsA[1][a])   for a=1:16];sum(medians[13:end])/sum(S012A[13:end]);ages[13]
 
-#cumIKenya=[2.2839415e6, 302660.0, 1.1054025e6, 4.437384e6, 1.455775e6, 191055.0, 411214.0, 946572.0, 391486.0, 178220.0, 1.1861265e6, 1.0601145e6, 1.3771935e6, 356295.0, 3.38641e6, 299167.0, 1.0465525e6, 1.783778e6, 251199.0, 414011.0]
-#cumIKenya_percentage=[cumIKenya[wa]*100/S0[wa]  for wa=1:20]
-
-#sum(cumIKenya)/sum(S0)
-#cumIKenya[12]
-#cumIKenya_sd[12]/cumIKenya[12]
+###### Ages with intervention
+#data_files=["./contacts/results_session20_50sims/sims_sc2000.jld2","./contacts/results_session21_50sims/sims_sc2153.jld2"]
+data_files=["./contacts/results_session20_50sims/sims_sc2000.jld2","./contacts/results_session20_50sims/sims_sc2053.jld2","./contacts/results_session21_50sims/sims_sc2153.jld2"]
+plot_folder="./contacts/results_sessions20to21_det5_90days_50sims/"
+#cumIfinalKilifiA=kilifi_ages_α5_90days(data_files,plot_folder,S0)
 
 
-#@load "./contacts\\results_session12_20sims\\sims_sc1293.jld2" sims_vector
+#=l = @layout [
+    a{0.3w} [grid(3,3)
+             b{0.2h}  ]
+]
+plot(    rand(10, 11),    layout = l, legend = false, seriestype = [:bar :scatter :path],    title = ["($i)" for j in 1:1, i in 1:11], titleloc = :right, titlefont = font(8))=#

@@ -28,6 +28,7 @@ States:
 12 -> Cumulative infected contacteds                     #****2 #****6 for infecteds only E IA ID IQ
 13 -> Cumulative contacteds (all)
 14 -> Cumulative deaths
+###15 -> Qᴬ                                                #****7 contacted Asymptomatics and E to be Asymptomatic
 
 Events for each wider area and age group:
 
@@ -38,15 +39,19 @@ Events for each wider area and age group:
 5-> Quarantined recover Q->R
 6-> Diseased recover D->R
 7-> Asymptomatics recover A->R
-8-> Quarantined->death
+8-> Quarantined->death  Q->Death
 9-> Incubation into diseased to be detected  E->IQ    #****
 10->Diseased to be Quarantined who recover DQ->R       #**** IQ->R
 11->S to Q Contacts
 12->E to Q
-13->I_A to Q
+13->I_A to Q###ᴬ
 14->I_D to Q
 15->I_Q to Q
 16->Qs->S                     #****4
+17 -> Iᴰ->Death
+18 -> IQ->Death
+###19 -> E->Qᴬ                     #****7
+###20 -> Qᴬ->R
 
 """
 
@@ -67,8 +72,8 @@ end
 
 
 function rates(out, u, p::CoVParameters_AS, t)
-    @unpack λ, γ, σ, δ, τ, μ₁, χ, τₚ, Q_dur = p                  #**** added τₚ
-    #τₚ=τ/(τ+γ)                                      #****
+    @unpack λ, γ, σ, δ, τ, μ₁, χ, α, Q_dur = p                  #**** added α
+    #α=τ/(τ+γ)                                      #****
     calculate_infection_rates!(u, p, t)
     for k = 1:length(out)
         i, a, eventtype = Tuple(index_as_events[k])
@@ -79,7 +84,7 @@ function rates(out, u, p::CoVParameters_AS, t)
             out[k] = (1 - δ) * σ * u[i, a, 2] # E->A
         end
         if eventtype == 3
-            out[k] = δ * σ * (1 - τₚ[i]) * u[i, a, 2] # E->D         #**** added τₚ #****7
+            out[k] = δ * σ * (1 - α[i]) * u[i, a, 2] # E->D         #**** added α #****7
         end
         if eventtype == 4
             #out[k] = τ*u[i,a,4] # D->Q
@@ -95,10 +100,10 @@ function rates(out, u, p::CoVParameters_AS, t)
             out[k] = γ * u[i, a, 3] # A->R
         end
         if eventtype == 8
-            out[k] = μ₁ * u[i, a, 5] # Q->death
+            out[k] = 0#μ₁[a] * u[i, a, 5] # Q->death
         end
         if eventtype == 9                            #**** adding the event for E -> IQ
-            out[k] = δ * σ * τₚ[i] * u[i, a, 2]     #****7
+            out[k] = δ * σ * α[i] * u[i, a, 2]     #****7
         end
         if eventtype == 10                           #**** adding the event IQ->R
             out[k] = γ * u[i, a, 10] # IQ->R
@@ -106,6 +111,15 @@ function rates(out, u, p::CoVParameters_AS, t)
         if eventtype == 16                           #****4 adding the event Qs -> S
             out[k] = 1/Q_dur * u[i, a, 11]  # Qs -> S
         end
+        if eventtype == 17
+            out[k] = μ₁[a] * u[i, a, 4] # ID->death
+        end
+        if eventtype == 18
+            out[k] = μ₁[a] * u[i, a, 10] # IQ->death
+        end
+        #=if eventtype == 20
+            out[k] = 1/Q_dur*u[i, a, 15] # Qᴬ->R          #****7
+        end=#
     end
 end
 
@@ -179,7 +193,7 @@ function change_matrix(dc)
             dc[ind_DQ, k] = -1
             dc[ind_R, k] = 1
         end
-        if eventtype == 11          #****2      S->Q (contact)
+        if eventtype == 11          #****2      S->Qs (contact)
             #ind_Q = linear_as[i, a, 5]
             ind_S = linear_as[i, a, 1]
             ind_Qs = linear_as[i, a, 11]
@@ -201,7 +215,7 @@ function change_matrix(dc)
             dc[ind_CumCI, k] = 1
             dc[ind_CumC, k] = 1    #****7
         end
-        if eventtype == 13          #****2      I_A->Q (contact)
+        if eventtype == 13          #****2      I_A->Q ( contact)
             ind_Q = linear_as[i, a, 5]
             ind_IA = linear_as[i, a, 3]
             #ind_C = linear_as[i, a, 11]
@@ -243,6 +257,36 @@ function change_matrix(dc)
             dc[ind_Qs, k] = -1
             dc[ind_S, k] = 1
         end
+        if eventtype == 17 # ID->death
+            ind_ID = linear_as[i, a, 4]
+            ind_cumdead = linear_as[i, a, 14]
+            dc[ind_ID, k] = -1
+            dc[ind_cumdead, k] = 1
+        end
+        if eventtype == 18 # IQ->death
+            ind_IQ = linear_as[i, a, 10]
+            ind_cumdead = linear_as[i, a, 14]
+            dc[ind_IQ, k] = -1
+            dc[ind_cumdead, k] = 1
+        end
+        #=if eventtype == 19          #****7      E->Qᴬ (contact)
+            ind_Qᴬ = linear_as[i, a, 15]
+            ind_E = linear_as[i, a, 2]
+            #ind_C = linear_as[i, a, 11]
+            ind_CumCI = linear_as[i, a, 12]
+            ind_CumC = linear_as[i, a, 13]  #****7 cumulative all contacts
+            dc[ind_E, k] = -1
+            dc[ind_Qᴬ, k] = 1
+            #dc[ind_C, k] = 1
+            dc[ind_CumCI, k] = 1
+            dc[ind_CumC, k] = 1    #****7
+        end
+        if eventtype == 20 # Qᴬ->R
+            ind_Qᴬ = linear_as[i, a, 15]
+            ind_R = linear_as[i, a, 6]
+            dc[ind_Qᴬ, k] = -1
+            dc[ind_R, k] = 1
+        end=#
     end
 end
 
@@ -274,6 +318,8 @@ function max_change(out, u, p::CoVParameters_AS)
         ind_CDQ = linear_as_events[i, a, 14]               #****2
         ind_CIqQ = linear_as_events[i, a, 15]              #****2
         ind_QsS = linear_as_events[i, a, 16]              #****4
+        ind_Ddeath = linear_as_events[i, a, 17]              #****7
+        ind_Iqdeath = linear_as_events[i, a, 18]              #****7
 
         out[ind_trans] = min(out[ind_trans], u[i, a, 1])
         out[ind_QR] = min(out[ind_QR], u[i, a, 5])
@@ -290,6 +336,9 @@ function max_change(out, u, p::CoVParameters_AS)
         out[ind_CIqQ] = min(out[ind_CIqQ], u[i, a, 10])    #****2 No more Contacted I_Q->Q than actual I_Q
         out[ind_QsS] = min(out[ind_QsS], u[i,a,11])        #****4 No more Qs -> S than actual S
 
+        out[ind_Ddeath] = min(out[ind_Ddeath], u[i,a,4])    #****7 No more D->Death than actual D
+        out[ind_Iqdeath] = min(out[ind_Iqdeath], u[i,a,10])    #****7  No more Iq->Death than actual Iq
+
 
         #spliting events using binomial sampling
         if out[ind_EA] + out[ind_ED] + out[ind_EIq] > u[i, a, 2] && u[i, a, 2] >= 0  #More incubations than actual rural E population
@@ -297,7 +346,7 @@ function max_change(out, u, p::CoVParameters_AS)
             #out[ind_EA] =  u[i,a,2] - out[ind_ED]
             D = rand(Binomial(u[i, a, 2], p.δ)) #Binomially distributed the incubations between Asympotomatic and symptomatic   #****
             out[ind_EA] = u[i, a, 2] - D
-            out[ind_EIq] = rand(Binomial(D, p.τₚ[i])) #****7 τₚ[i]  # Binomially distribute symptomatics between IQ and ID
+            out[ind_EIq] = rand(Binomial(D, p.α[i])) #****7 α[i]  # Binomially distribute symptomatics between IQ and ID
             out[ind_ED] = D - out[ind_EIq]
         end
         #=if out[ind_DR] + out[ind_DQ] > u[i,a,4] # More end of infection events than diseased/symptomatic infecteds
@@ -321,14 +370,14 @@ function max_change(out, u, p::CoVParameters_AS)
 end
 
 function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
-    @unpack dc,dN,poi_rates,du_linear,τₚ,τ#=,stop_Q=##=,Κ_current,Κ_max_capacity,t_max_capacity=#,CT_Imin,CT_dur=p
+    @unpack dc,dN,poi_rates,du_linear,α,τ,CT_dur=p
     rates(poi_rates, u, p, t)       #calculate rates of underlying Poisson processes
     PP_drivers(dN, poi_rates, p)    #Generate Poisson rvs with rates scaled by time step dt
     max_change(dN, u, p)            #Cap the size of the Poisson rvs to maintain non-negativity
 
     ##Contacts
-    #****7 if τₚ != 0 && sum(Κ_current) < sum(Κ_max_capacity)    ## if the detection probability is not zero` #!!!! in all wa
-    if sum(τₚ)!=0 ######&& sum(u[:,:,4])+sum(u[:,:,10])>=CT_Imin
+    #****7 if α != 0 && sum(Κ_current) < sum(Κ_max_capacity)    ## if the detection probability is not zero` #!!!! in all wa
+    if #=sum(α)!=0 &&=# sum(CT_dur)!=0######&& sum(u[:,:,4])+sum(u[:,:,10])>=CT_Imin
         #######println("sum(u[:,:,4])=",sum(u[:,:,4])," and sum(u[:,:,10])=",sum(u[:,:,10])," - CT started at ",t)
         make_contacts_and_trace(dN,u,p,t)
 
@@ -337,7 +386,7 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
         #println("Tracing stopped at ", t," with traced=",sum(Κ_current))
         t_max_capacity=t=#
     end
-    # if stop_Q==true && τₚ != 0 && sum(Κ_current)>=sum(Κ_max_capacity)   τₚ=0;τ=0;   #=println("Tracing stopped at ", t," with traced=",sum(Κ_current));=# end
+    # if stop_Q==true && α != 0 && sum(Κ_current)>=sum(Κ_max_capacity)   α=0;τ=0;   #=println("Tracing stopped at ", t," with traced=",sum(Κ_current));=# end
 
 
 
@@ -345,18 +394,18 @@ function nonneg_tauleap(du, u, p::CoVParameters_AS, t)
     mul!(du_linear, dc, dN)#Calculates the effect on the state in the inplace du vector
     du .= reshape(du_linear, n_wa, n_a, n_s)
     du .+= u #Calculates how the state should change
-    @pack! p=#=t_max_capacity,=#τₚ,τ
+    @pack! p=#=t_max_capacity,=#α,τ
     #L_IQ
     #push!(L_IQ,deepcopy(p.l_IQ))
 end
 
 function make_contacts_and_trace(dN, u, p::CoVParameters_AS, t::Float64)#****7
     for wa=1:n_wa
-        if p.t_startedCT[wa]==-1 && sum(u[wa,:,4])+sum(u[wa,:,10])>=p.CT_Imin[wa] && p.CT_Imin[wa]!=0
-            p.t_startedCT[wa]=t
+        if p.t_CT_Imin[wa]==-1 && sum(u[wa,:,4])+sum(u[wa,:,10])>=p.CT_Imin[wa] && p.CT_Imin[wa]!=0
+            p.t_CT_Imin[wa]=t
             #println("wa=",wa,", sum(u[wa,:,4])=",sum(u[wa,:,4])," and sum(u[wa,:,10])=",sum(u[wa,:,10])," - CT started at ",t)
         end
-        if p.τₚ[wa]!=0  && (p.t_startedCT[wa]==-1 || t<=p.t_startedCT[wa]+p.CT_dur[wa]) #****7 IF there's detection in wa AND CT didnt begin yet OR CT hasnt finished yet
+        if p.α[wa]!=0  && (p.t_CT_Imin[wa]==-1 || t<=p.t_CT_Imin[wa]+p.CT_dur[wa]+p.CT_delay[wa]) #****7 IF there's detection in wa AND CT didnt begin yet OR CT hasnt finished yet
             IQ_make_contacts(wa,u,p,t)                 #!!!!
             update_l_IQ(wa, dN, u, p, t)               ##All IQ->R(10) are removed from l_IQ + All IQ with tau<=0 are added to dN and removed from l_IQ + decrease all tau + All E->IQ in dN are added to l_IQ:
             max_change(dN, u, p)
@@ -432,7 +481,7 @@ function update_l_IQ(wa,dN::Vector{Int64}, u, p::CoVParameters_AS, t)           
             selected_IQ_list = filter(x -> (x.wa == wa && x.a == a), l_IQ)
             IQ_indices = findall(x -> x == selected_IQ_list[rand(1:end)], l_IQ) #draw one random IQ from l_IQ
             if size(IQ_indices, 1) > 0
-                if p.t_startedCT[wa]!=-1 && t<=p.t_startedCT[wa]+p.CT_dur[wa] #****7 IF we started contacting in wa AND during CT period
+                if p.t_CT_Imin[wa]!=-1 && t<=p.t_CT_Imin[wa]+p.CT_dur[wa]+p.CT_delay[wa] && t>=p.t_CT_Imin[wa]+p.CT_delay[wa]#****7 IF we started contacting in wa AND during CT period
                     intervention_trace_contacts(IQ_indices[1], dN, u, p, t)   ## CONTACT TRACING INTERVENTION
                 end
                 deleteat!(l_IQ, IQ_indices[1])  #delete the chosen element from l_IQ
@@ -516,7 +565,10 @@ function intervention_trace_contacts(traced_index::Int, dN::Vector{Int64}, u, p:
                 if c.s==1
                     dN[linear_as_events[c.wa, c.a, 11]] +=1
                 elseif c.s==2
-                    dN[linear_as_events[c.wa, c.a, 12]] +=1
+                    #if rand(Binomial(1, p.δ)) ==1                   #****7
+                        dN[linear_as_events[c.wa, c.a, 12]] +=1
+                    #else dN[linear_as_events[c.wa, c.a, 19]] +=1
+                    #end
                 elseif c.s==3
                     dN[linear_as_events[c.wa, c.a, 13]] +=1
                 elseif c.s==4
@@ -524,9 +576,6 @@ function intervention_trace_contacts(traced_index::Int, dN::Vector{Int64}, u, p:
                 elseif c.s==10
                     dN[linear_as_events[c.wa, c.a, 15]] +=1
                 end
-                #print("traced ",Κ_current[c.wa],"s=",c.s)
-                #u[c.wa, c.a, c.s] -= 1
-                #u[c.wa, c.a, 5] += 1
             end
         end
     elseif contacteds != [] && IDs_cfirst==true   #If we prioritize contacted symptomatics (ID)
@@ -566,6 +615,10 @@ function intervention_trace_contacts(traced_index::Int, dN::Vector{Int64}, u, p:
                     dN[linear_as_events[c.wa, c.a, 11]] +=1
                 elseif c.s==2
                     dN[linear_as_events[c.wa, c.a, 12]] +=1;#println("EVENT 12")
+                    #if rand(Binomial(1, p.δ)) ==1                   #****7
+                    #    dN[linear_as_events[c.wa, c.a, 12]] +=1
+                    #else dN[linear_as_events[c.wa, c.a, 19]] +=1
+                    #end
                 elseif c.s==3
                     dN[linear_as_events[c.wa, c.a, 13]] +=1;#println("EVENT 13")
                 #elseif c.s==4

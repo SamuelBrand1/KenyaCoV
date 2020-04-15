@@ -21,12 +21,12 @@ end=#
 @with_kw mutable struct SessionParams
     sc_nb::Int=0
     n_traj::Int=100
-    R₀::Float64=.0;τₚ::Vector{Float64}=zeros(n_a);  #=stop_Q::Bool=true;  Κ_max_capacity12::Int=0;  =#κ_per_event4::Int=50;  IDs_cfirst::Bool=false;
+    R₀::Float64=.0;α::Vector{Float64}=zeros(n_a);  #=stop_Q::Bool=true;  Κ_max_capacity12::Int=0;  =#κ_per_event4::Int=50;  IDs_cfirst::Bool=false;
     dt=.5;  ext_inf_rate::Float64=0.;    ϵ::Float64=.0;  δ::Float64=.0;  γ::Float64=.0; σ::Float64=.0; β::Float64=.0 #β = r_R₀*γ/(δ + ϵ*(1-δ))
     τ::Float64=1/2.;  κ::Int=12;  κₘ::Int=10;   Δₜ::Int=10;
     #Κ_max_capacity::Int=0; Κ_max_capacity4::Int=0;
     cumI::Float64=-1;cumI_diff::Float64=-1;#for plotting
-    CT_Imin::Array{Float64,1}=zeros(n_wa);CT_dur::Array{Float64,1}=zeros(n_wa)
+    CT_Imin::Array{Float64,1}=zeros(n_wa);CT_dur::Array{Float64,1}=zeros(n_wa);CT_delay::Array{Float64,1}=zeros(n_wa)
 end
 
 @with_kw mutable struct CoVParameters_AS
@@ -35,7 +35,8 @@ end
     σ::Float64 = 1/2.
     δ::Float64 = 0.05#Proportion of symptomatic/diseased vs non-symptomatic cases
     τ::Float64 = 1/15. #treatment/isolation rate for symptomatics
-    μ₁::Float64 = 0.0#Excess mortality due to disease
+    #μ₁::Float64 = 0.0#Excess mortality due to disease
+    μ₁::Vector{Float64} = zeros(n_a)#Disease mortality per age
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable infecteds
     χ::Vector{Float64} = ones(n_a)
     ρ::Vector{Float64} = [0.01 for i in 1:n] #Time spent outside of area
@@ -55,7 +56,7 @@ end
     dc::SparseMatrixCSC{Int64,Int64} = sparse(zeros(Int64,n_wa*n_a*n_s,n_wa*n_a*n_ta))#For inplace calculations
     du_linear::Vector{Int64} = zeros(Int64,n_wa*n_a*n_s) #for inplace calculations
 
-    τₚ::Vector{Float64} = zeros(n_a)        #****7 detection probability per area           #**** probability of detection given that you're diseased (Iᴰ)
+    α::Vector{Float64} = zeros(n_a)        #****7 detection probability per area           #**** probability of detection given that you're diseased (Iᴰ)
     κ::Float64 = 5                          #**** Mean number of contacts per day
     κₘ::Float64 = 7                        #**** nb days IQ remembers his contacts
     Mₚ::Matrix{Float64} = zeros(n_a,n_a)    #**** Age mixing probabilities matrix
@@ -76,7 +77,8 @@ end
 
     CT_Imin::Array{Float64,1}=zeros(n_wa) #****7 minimum number of detecteds (ID+IQ) PER REGION after which we start contact tracing
     CT_dur::Array{Float64,1}=zeros(n_wa)     #****7 duration in days of contact tracing after it started when we got n_min_startCT
-    t_startedCT::Array{Float64,1}=[-1  for i=1:n_wa] #****7 the time CT started per region
+    CT_delay::Array{Float64,1}=zeros(n_wa)  #****7 delay in days of CT after it started when we got n_min_startCT and before starting CT_dur
+    t_CT_Imin::Array{Float64,1}=[-1  for i=1:n_wa] #****7 the time we had CT_Imin
 end
 #=
 States:

@@ -73,7 +73,8 @@ function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrix
 end
 
 function model_ingredients_from_data(agestructuredata_filename,flight_filename,prev_filename)
-    @load agestructuredata_filename N_region_age agemixingmatrix movements_per_person P_dest ρ T age_specific_sus
+    @load "data/data_for_age_structuredmodel_16n_a.jld2" N_region_age agemixingmatrix movements_per_person P_dest ρ T age_specific_sus
+    #@load "data/data_for_age_structuredmodel.jld2" N_region_age M_Kenya movements_per_person P_dest ρ T σ#age_specific_sus=σ #rel_detection_rates M_Kenya_ho
 
     #Population state array
     suspop_kenya = zeros(Int64,n_wa,n_a,n_s) #Array by area, age group and disease state
