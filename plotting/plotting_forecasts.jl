@@ -441,6 +441,19 @@ Age distribution of cases
 
 
 scenario_group = [results_1,results_2,results_3,results_4,results_5]
+res_D = results_1[1][4]
+res_A = results_1[1][5]
+cases_age = zeros(17)
+cases_age_A = zeros(17)
+for a = 1:17
+    cases_age[a] = median([sum(res_D[:,a,k]) for k = 1:1000])
+end
+for a = 1:17
+    cases_age_A[a] = median([sum(res_A[:,a,k]) for k = 1:1000])
+end
+sum(cases_age_A .+ cases_age)
+cases_age./(cases_age+ cases_age_A)
+
 
 plt_age_distrib_uncontrolled = plot_total_incidence_by_age(scenario_group,treatment_rates,rel_transmission_perc,1)
 plot!(size = (800,500))

@@ -3,7 +3,15 @@ using DataFrames,Plots,JLD2,MAT,LinearAlgebra,Distances,StatsPlots,CSV
 using LinearAlgebra:normalize,normalize!
 using TransformVariables, DynamicHMC, DynamicHMC.Diagnostics, Distributions
 age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"]
-
+# age_cats_in
+"""
+Sub county population data
+"""
+subcounty_population = readtable("data/distribution-of-population-by-age-sex-county-and-sub-county-kenya-2019-census-volume-iii.csv")
+subcounties = unique(subcounty_population.sub_county)
+unique(subcounty_population.Age)
+subC_to_C = Dict{String,String}()
+for
 """
 Load the MCMC outputs for the age-specific relative symptomatic rate
 """
