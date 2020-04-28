@@ -50,11 +50,12 @@ dc_age = zeros(Int64,n_wa*n_a*n_s,n_ta*n*n_a)
 # diseased_indices = 0;
 
 function calculate_infection_rates!(u,p::CoVParameters_AS,t)
+    I_P = @view u[:,:,3]
     I_A = @view u[:,:,4]
     I_M = @view u[:,:,5]
     I_V = @view u[:,:,6]
-    mul!(p.Î,p.T,p.ϵ*I_A .+ p.ϵ_D*I_M .+ p.ϵ*I_V)  #Local infecteds **if** everyone moved around
-    p.Î[:,immobile_age_indices] .= p.ϵ*I_A[:,immobile_age_indices] .+ p.ϵ_D*I_M[:,immobile_age_indices] .+ p.ϵ_D*I_V[:,immobile_age_indices]#This corrects for immobility
+    mul!(p.Î,p.T,p.ϵ*I_P .+ p.ϵ*I_A .+ p.ϵ_D*I_M .+ p.ϵ*I_V)  #Local infecteds **if** everyone moved around
+    p.Î[:,immobile_age_indices] .= p.ϵ*I_P[:,immobile_age_indices] .+ p.ϵ*I_A[:,immobile_age_indices] .+ p.ϵ_D*I_M[:,immobile_age_indices] .+ p.ϵ_D*I_V[:,immobile_age_indices]#This corrects for immobility
     mul!(p.λ_loc,p.β*p.c_t(t).*(p.Î ./p.N̂),p.M)#Local force of infection due to age-mixing --- M is in to (row), from (col) format
     mul!(p.λ,p.T',p.λ_loc)#this accounts for mobile susceptibles contracting away from home
     p.λ[:,immobile_age_indices] .= p.λ_loc[:,immobile_age_indices]#This corrects for immobility
