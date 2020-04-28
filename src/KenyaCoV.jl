@@ -36,8 +36,8 @@ linear_as_events = LinearIndices((1:n_wa, 1:n_a,1:n_ta))
 
 @load "data/agemixingmatrix_china.jld2" M_China #This is for comparison setting of R₀
 
-include("kenya_data.jl");
-include("gravity_model.jl");
+# include("kenya_data.jl");
+# include("gravity_model.jl");
 include("types.jl");
 # include("regularjumps.jl");
 #include("agestructurejumps.jl")
