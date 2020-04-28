@@ -57,4 +57,7 @@ end
     poi_rates::Vector{Float64} = zeros(n_wa*n_a*n_ta)#For inplace calculations
     dc::SparseMatrixCSC{Int64,Int64} = sparse(zeros(Int64,n_wa*n_a*n_s,n_wa*n_a*n_ta))#For inplace calculations
     du_linear::Vector{Int64} = zeros(Int64,n_wa*n_a*n_s) #for inplace calculations
+
+    ## Consensus parameters:
+    hₐ::Float64 = .05   #proportion of severe cases if symptomatic
 end
