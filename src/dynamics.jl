@@ -41,6 +41,26 @@ Events for each wider area and age group:
 """
 
 dc_age = zeros(Int64,n_wa*n_a*n_s,n_ta*n*n_a)
+
+function import_rate_mom(t,into_mom,global_prev)
+    if t+1>min(length(into_mom),length(global_prev))
+        t_int=min(length(into_mom),length(global_prev))
+    else
+        t_int=Int(floor(t))+1
+    end
+    return into_mom[t_int]*global_prev[t_int]
+end
+
+function import_rate_nai(t,into_nai,global_prev)
+    if t+1>min(length(into_nai),length(global_prev))
+        t_int=min(length(into_nai),length(global_prev))
+    else
+        t_int=Int(floor(t))+1
+    end
+    return into_nai[t_int]*global_prev[t_int]
+end
+
+
 # asymp_indices = zeros(Bool,n_wa,n_a,n_s)
 # asymp_indices[:,:,3] .= true;
 # f_asymp_indices = findall(asymp_indices[:])

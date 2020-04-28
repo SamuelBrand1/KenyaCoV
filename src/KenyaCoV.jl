@@ -39,9 +39,9 @@ linear_as_events = LinearIndices((1:n_wa, 1:n_a,1:n_ta))
 include("kenya_data.jl");
 include("gravity_model.jl");
 include("types.jl");
-include("regularjumps.jl");
+# include("regularjumps.jl");
 #include("agestructurejumps.jl")
-include("concensusmodellingjumps.jl")
+include("dynamics.jl")
 include("transmissionmodel.jl");
 include("forecast_functions.jl");
 
