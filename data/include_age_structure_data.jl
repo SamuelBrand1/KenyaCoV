@@ -4,14 +4,30 @@ using LinearAlgebra:normalize,normalize!
 using TransformVariables, DynamicHMC, DynamicHMC.Diagnostics, Distributions
 age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"]
 # age_cats_in
+# Age specific rates of hospitalisation if becoming a case
+#Estimate from CDC COVID-19 Response Team. Severe Outcomes Among Patients with Coronavirus Disease 2019 (COVID-19) - United States, February 12-March 16, 2020. MMWR Morb. Mortal. Wkly. Rep. 69, 343–346 (2020).
+hosp_rate_CDC = [mean([1.6,2.5]),#0-19 year olds
+                 mean([14.3,20.8]),#20-44 yos
+                 mean([21.2,28.3]),#45-54
+                 mean([20.5,30.1]),#55-64
+                 mean([28.6,43.5]),#65-74
+                 mean([30.5,58.7]),#75-84
+                 mean([31.3,70.3])]./100 #85+
+hosp_rate_by_age = [hosp_rate_CDC[1],hosp_rate_CDC[1],hosp_rate_CDC[1],hosp_rate_CDC[1],
+                    hosp_rate_CDC[2],hosp_rate_CDC[2],hosp_rate_CDC[2],hosp_rate_CDC[2],hosp_rate_CDC[2],
+                    hosp_rate_CDC[3],hosp_rate_CDC[3],
+                    hosp_rate_CDC[4],hosp_rate_CDC[4],
+                    hosp_rate_CDC[5],hosp_rate_CDC[5],
+                    hosp_rate_CDC[6],hosp_rate_CDC[7]]
+
 """
 Sub county population data
 """
-subcounty_population = readtable("data/distribution-of-population-by-age-sex-county-and-sub-county-kenya-2019-census-volume-iii.csv")
-subcounties = unique(subcounty_population.sub_county)
-unique(subcounty_population.Age)
-subC_to_C = Dict{String,String}()
-for
+# subcounty_population = readtable("data/distribution-of-population-by-age-sex-county-and-sub-county-kenya-2019-census-volume-iii.csv")
+# subcounties = unique(subcounty_population.sub_county)
+# unique(subcounty_population.Age)
+# subC_to_C = Dict{String,String}()
+# # for
 """
 Load the MCMC outputs for the age-specific relative symptomatic rate
 """
@@ -98,15 +114,15 @@ function extend_and_convert_Prem_matrix(M,proportion)
     return Matrix(M_from_to')
 end
 
-agemixingmatrix_table_china = readtable("data/china_baseline_age_mixing.csv")
-agemixingmatrix_china = zeros(16,16)
-for i = 1:16,j=1:16
-    agemixingmatrix_china[i,j] = agemixingmatrix_table_china[i,j]
-end
-heatmap(agemixingmatrix_china,clims = (0.,2.))
-M_China = extend_and_convert_Prem_matrix(agemixingmatrix_china,prop_75_79_amongst_75_plus_china)
-heatmap(M_China,clims = (0.,2.5))
-@save "data/agemixingmatrix_china.jld2" M_China
+# agemixingmatrix_table_china = readtable("data/china_baseline_age_mixing.csv")
+# agemixingmatrix_china = zeros(16,16)
+# for i = 1:16,j=1:16
+#     agemixingmatrix_china[i,j] = agemixingmatrix_table_china[i,j]
+# end
+# heatmap(agemixingmatrix_china,clims = (0.,2.))
+# M_China = extend_and_convert_Prem_matrix(agemixingmatrix_china,prop_75_79_amongst_75_plus_china)
+# heatmap(M_China,clims = (0.,2.5))
+@load "data/agemixingmatrix_china.jld2" M_China
 
 agemixingmatrix_table = readtable("data/Kenya_age_matrix.csv")
 agemixingmatrix = zeros(16,16)
@@ -192,7 +208,7 @@ heatmap(movements_per_person)
 ρ = [sum(movements_per_person,dims = 1)[j]*5/30 for j = 1:20]
 P_dest = zeros(20,20)#probability distribution of destination
 for j = 1:20
-    P_dest[:,j] = LinearAlgebra.normalize(movements_per_person[:,j],1)
+    P_dest[:,j] = normalize(movements_per_person[:,j],1)
 end
 T = zeros(20,20) # combined location density matrix
 for i = 1:20,j=1:20
@@ -208,4 +224,4 @@ heatmap(T,clims = (0.,0.1))
 """
 Save all the data
 """
-@save "data/data_for_age_structuredmodel.jld2" N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho
+@save "data/data_for_age_structuredmodel.jld2" N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho hosp_rate_by_age

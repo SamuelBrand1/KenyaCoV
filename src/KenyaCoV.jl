@@ -16,7 +16,7 @@ export n,n_t,n_s,n_a,
         create_KenyaCoV_prob,
         solve_KenyaCoV_prob
 n = 47 #global defining number of counties
-n_s = 9 #global defining number of state
+n_s = 12 #global defining number of state
 n_t = 16 #global defining number of events per location
 n_a = 17 #global defining number of age categories
 n_wa = 20 #global defining number of wider area groupings
@@ -34,13 +34,14 @@ index_as_events = CartesianIndices((1:n_wa, 1:n_a,1:n_ta))
 linear_as = LinearIndices((1:n_wa, 1:n_a,1:n_s))
 linear_as_events = LinearIndices((1:n_wa, 1:n_a,1:n_ta))
 
-@load "data/agemixingmatrix_china.jld2" M_China
+# @load "data/agemixingmatrix_china.jld2" M_China #This is for comparison setting of R₀
 
-include("kenya_data.jl");
-include("gravity_model.jl");
+# include("kenya_data.jl");
+# include("gravity_model.jl");
 include("types.jl");
-include("regularjumps.jl");
-include("agestructurejumps.jl")
+# include("regularjumps.jl");
+#include("agestructurejumps.jl")
+include("dynamics.jl")
 include("transmissionmodel.jl");
 include("forecast_functions.jl");
 
