@@ -12,6 +12,7 @@ Hosp_2_Death=[3.8 3.8 3.8 3.8 3.8 3.8 3.8 4.0 4.5 5.6 7.8 11.3 16.9 23.2 29.1 34
 #μ₁[1:16]=#
 ####### China's death rates  [http://weekly.chinacdc.cn/en/article/id/e53946e2-c6c4-41e9-9a9b-fea8db1a8f51]
 μ₁=[.0,.0,.2,.2,.2,.2,.2,.2,.4,.4,1.3,1.3,3.6,3.6,8,#=8,14.8=#11.4] ./100 #11.4=(8+14.8)/2
+#μ₁=[.0 for i=1:16] # No deaths scenario
 ###########
 function randomise_params(prob,i,repeat)
     _P = deepcopy(prob.p)
@@ -37,7 +38,7 @@ end
 ########### WITH CT_DELAY
 function run_set_scenarios(folder,session,scenarios,ϵ,σ,γ,δ,β,r_R₀,α,n_traj,CT_Imin_list,CT_dur_list,CT_delay_list,dt)
     if !isdir(folder)   mkdir(folder)   end
-    for i=1:size(CT_dur_list,1)
+    for i=1:size(scenarios,1)
         sc_nb=session*100+scenarios[i]
         u0,P,P_dest = KenyaCoV_CT.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
         u0[KenyaCoV_CT.ind_nairobi_as,5,4] = 5#Five initial infecteds in Nairobi in the 20-24 age group
@@ -49,7 +50,7 @@ function run_set_scenarios(folder,session,scenarios,ϵ,σ,γ,δ,β,r_R₀,α,n_t
         prob = KenyaCoV_CT.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
 
 
-        println("\nScenario "*string(sc_nb)*" Running ",n_traj," sims for α,CT_dur,CT_delay=",P.α,",",P.CT_dur,P.CT_delay)
+        println("\nScenario "*string(sc_nb)*" Running ",n_traj," sims for α,CT_dur,CT_delay,μ=",P.α,",",P.CT_dur,P.CT_delay,P.μ₁)
         @time sims = solve(EnsembleProblem(prob#=,prob_func=randomise_params=#,output_func = output_daily_and_final_incidence),
                             FunctionMap(),dt=P.dt,trajectories=n_traj)
         sims_vector=[]
