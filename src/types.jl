@@ -42,7 +42,8 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     clear_quarantine = 0. # Average time to end isolation NOT USED IN THIS VERSION
     μ₁::Float64 = 0.0#Excess mortality due to disease NOT USED IN THIS VERSION
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable/undetected infecteds both pre-symptomatic and asymptomatic
-    ϵ_D::Float64 = 1.#Relative infectiousness of detectable infecteds due to social avoidance
+    ϵ_D::Float64 = 1.#Relative infectiousness of mild infecteds due to social avoidance
+    ϵ_V::Float64 = 0.4#Relative infectiousness of mild, then severe, infecteds due to social avoidance
     rel_detection_rate::Vector{Float64} = ones(n_a) #relative symptomatic rate
     hₐ::Vector{Float64} = zeros(n_a)   #proportion of severe cases if symptomatic
     χ::Vector{Float64} = ones(n_a) #relative susceptibility
