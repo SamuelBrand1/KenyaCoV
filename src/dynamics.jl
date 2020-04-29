@@ -286,5 +286,9 @@ function ode_model(du,u,p::CoVParameters_AS,t)
         du[i,a,6] = σ₂*δ*hₐ[a]*rel_detection_rate[a]*u[i,a,3] - τ*u[i,a,6]
         du[i,a,7] = τ*u[i,a,6]
         du[i,a,8] = γ*u[i,a,5] + γ*u[i,a,4]
+        du[i,a,9] = σ₂*(1-(δ*rel_detection_rate[a]))*u[i,a,3]
+        du[i,a,10] = σ₂*δ*(1-hₐ[a])*rel_detection_rate[a]*u[i,a,3]
+        du[i,a,11] = σ₂*δ*hₐ[a]*rel_detection_rate[a]*u[i,a,3]
+        du[i,a,12] = τ*u[i,a,6] #Same as being hosp. for this version
      end
 end
