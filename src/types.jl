@@ -46,6 +46,7 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     ϵ_V::Float64 = 0.4#Relative infectiousness of mild, then severe, infecteds due to social avoidance
     rel_detection_rate::Vector{Float64} = ones(n_a) #relative symptomatic rate
     hₐ::Vector{Float64} = zeros(n_a)   #proportion of severe cases if symptomatic
+    ICUₐ::Vector{Float64} = zeros(n_a) #proportion of severe cases that become critical
     χ::Vector{Float64} = ones(n_a) #relative susceptibility
     ρ::Vector{Float64} = [0.01 for i in 1:n] #Time spent outside of area
     T::Matrix{Float64} = zeros(n,n)#Probability distributions of location for mobile individuals

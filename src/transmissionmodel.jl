@@ -99,7 +99,7 @@ function model_ingredients_from_data(datatablename,mixingmatrixname,travelmatrix
 end
 
 function model_ingredients_from_data(agestructuredata_filename,flight_filename,prev_filename)
-    @load agestructuredata_filename N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho hosp_rate_by_age
+    @load agestructuredata_filename N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho hosp_rate_by_age ICU_rate_by_age_cond_hosp
     n_wa,n_a = size(N_region_age)
     #Population state array
     suspop_kenya = zeros(Int64,n_wa,n_a,n_s) #Array by area, age group and disease state
@@ -128,6 +128,7 @@ function model_ingredients_from_data(agestructuredata_filename,flight_filename,p
                         M = M_Kenya,
                         M_ho = M_Kenya_ho,
                         hₐ = hosp_rate_by_age,
+                        ICUₐ = ICU_rate_by_age_cond_hosp,
                         dc=dc,
                         N̂=N̂)
     #Matrix for in-place tau-leap calculations

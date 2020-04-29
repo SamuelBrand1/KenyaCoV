@@ -31,12 +31,24 @@ function output_daily_and_final_incidence(sol,i)
     return (z,sol[end][:,:,9:12]),false
 end
 
+function output_daily_incidence_and_hosp(sol,i)
+    times = sol.prob.tspan[1]:1:sol.prob.tspan[end]
+    z = [sol(t)[:,:,9:12]  for t in times]
+    return z,false
+end
+
 function randomise_params(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
     _P = deepcopy(prob.p)
     _P.isolating_detecteds = true
     _P.τ = _P.τ_initial
     _P.σ = 1/rand(d_incubation)
     _P.β = rand(d_R₀)*_P.γ
+    return remake(prob,p=_P)
+end
+
+function consensus_randomise_params(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
+    _P = deepcopy(prob.p)
+    _P.β = rand(d_R₀)
     return remake(prob,p=_P)
 end
 
@@ -68,6 +80,13 @@ function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,τ,ϵ_D,cb)
     ensemble_prob = EnsembleProblem(prob,
                                     prob_func = randomise_params,
                                     output_func = output_daily_and_final_incidence)
+    return solve(ensemble_prob,FunctionMap(),dt = P.dt,callback = cb,trajectories = n_traj)
+end
+
+function run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,cb)
+    ensemble_prob = EnsembleProblem(prob,
+                                    prob_func = consensus_randomise_params,
+                                    output_func = output_daily_incidence_and_hosp)
     return solve(ensemble_prob,FunctionMap(),dt = P.dt,callback = cb,trajectories = n_traj)
 end
 
