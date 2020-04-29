@@ -12,7 +12,7 @@ hosp_rate_CDC = [mean([1.6,2.5]),#0-19 year olds
                  mean([20.5,30.1]),#55-64
                  mean([28.6,43.5]),#65-74
                  mean([30.5,58.7]),#75-84
-                 mean([31.3,70.3])] #85+
+                 mean([31.3,70.3])]./100 #85+
 hosp_rate_by_age = [hosp_rate_CDC[1],hosp_rate_CDC[1],hosp_rate_CDC[1],hosp_rate_CDC[1],
                     hosp_rate_CDC[2],hosp_rate_CDC[2],hosp_rate_CDC[2],hosp_rate_CDC[2],hosp_rate_CDC[2],
                     hosp_rate_CDC[3],hosp_rate_CDC[3],
