@@ -34,7 +34,7 @@ index_as_events = CartesianIndices((1:n_wa, 1:n_a,1:n_ta))
 linear_as = LinearIndices((1:n_wa, 1:n_a,1:n_s))
 linear_as_events = LinearIndices((1:n_wa, 1:n_a,1:n_ta))
 
-@load "data/agemixingmatrix_china.jld2" M_China #This is for comparison setting of R₀
+# @load "data/agemixingmatrix_china.jld2" M_China #This is for comparison setting of R₀
 
 # include("kenya_data.jl");
 # include("gravity_model.jl");
