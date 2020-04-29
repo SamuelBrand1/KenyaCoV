@@ -206,6 +206,21 @@ function change_matrix(dc)
 end
 
 """
+    function PP_drivers(dN::Vector{Int64},rates,p)
+This method in-place generates the crude number of each type of event proposed by a Poisson process with
+rates calculated by rates(out,u,p::CoVParameters_AS,t).
+"""
+function PP_drivers(dN::Vector{Int64},rates,p)
+    for i = 1:length(dN)
+        if rates[i] >= 0.
+            dN[i] = rand(Poisson(p.dt*rates[i]))
+        else
+            dN[i] = 0
+        end
+    end
+end
+
+"""
     function max_change(out,u,p::CoVParameters_AS)
 This method in-place modifies the number of each type of event proposed by the Poisson process
     so that non-negativity is respected.
