@@ -16,20 +16,25 @@ then n_wa*n_s + 1, ...,  n_wa*n_s + n_wa entries are 0-4 year old exposed in wid
 States:
 1 -> S
 2 -> E
-3 -> I_subclinical
-4 -> I_diseased
-5 -> H(ospitalised)
-6 -> Recovered
-7 -> Cumulative I_sub
-8 -> Cumulative I_dis
-9 -> Cumulative Dead
+3 -> P
+4 -> A(symptomatic)
+5 -> M(ild)
+6 -> (se)V(ere)
+7 -> R(ecovered)
+8 -> H(ospitalised)
+9 -> Cumulative A
+10 -> Cumulative M
+11 -> Cumulative V
+12 -> Cum. V->H
 
 Events for each wider area and age group:
 
 1-> Transmission
-2-> Incubation into asymptomatic E->A
-3-> Incubation into diseased E->D
-4-> Diseased become hospitalised/treated D->H
+2-> Incubation into Prodromal
+3 -> P->A
+3-> P->M
+4-> P->V
+....
 5-> Hospitalised/treated recover
 6-> Diseased recover D->R
 7-> Asymptomatics recover A->R
