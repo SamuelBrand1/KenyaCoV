@@ -19,10 +19,16 @@ mean(d_R₀)
 Simulation functions
 """
 
+"""
+    function output_daily_and_final_incidence(sol,i)
+
+This function stores the cumulative incidence and hospitalisation (summed over areas and age groups),
+    and the final numbers by area and age group.
+"""
 function output_daily_and_final_incidence(sol,i)
     times = sol.prob.tspan[1]:1:sol.prob.tspan[end]
-    z = [sum(sol(t)[:,:,7:8],dims = 2)[:,1,:]  for t in times]
-    return (z,sol[end][:,:,7:8]),false
+    z = [sum(sol(t)[:,:,9:12],dims = 2)[:,1,:]  for t in times]
+    return (z,sol[end][:,:,9:12]),false
 end
 
 function randomise_params(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
