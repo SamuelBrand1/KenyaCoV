@@ -1,5 +1,11 @@
 riskregionnames = ["Machakos/Muranga" "Mandera" "Baringo/Nakuru" "Nairobi" "Uasin Gishu" "Marsabit" "Garissa" "Nakuru/Narok" "Turkana" "Taita Taveta" "Kitui/Meru" "Kilifi/Mombasa" "Kericho/Kisumu" "Kilifi/Lamu" "Kakamega/Kisumu" "Wajir" "Kajiado/Kisumu" "Homa bay/Migori" "Samburu/Laikipia" "Kilifi/Kwale" "Total"]
 age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"]
+rr2county_mat = matread("data/conversion_matrix.mat")["conversion_matrix"]
+T = readtable("data/2019-population_census-report-per-county.csv")
+county_names = convert.(String,T.County)
+
+
+
 using LinearAlgebra
 function plot_total_incidence(results_group,treatments::Tuple{Float64,Real},i)
     τ,ϵ_D = treatments
@@ -167,8 +173,34 @@ function plot_incidence_spatial(results,treatment_rates,i)
         plot!(plt,inc_D[i,:,1].+1,
                     yticks = ([1,10,100,1000],["0" "10" "100" "1000"]),
                     fillalpha = 0.1,
-                    ribbon =(inc_D[21,:,2],inc_D[21,:,3]),
+                    ribbon =(inc_D[i,:,2],inc_D[i,:,3]),
                     lab = riskregionnames[i],
+                    lw=2,
+                    xlims = (0.,100.),
+                    yscale = :log10,
+                    legend = :outertopright,
+                    legendfontsize = 8.9);
+    end
+    xlabel!(plt,"Days after detecting established CoV transmission")
+    ylabel!(plt,"Daily incidence")
+
+    return plt
+end
+
+function plot_incidence_spatial(results,treatment_rates,i,rr2county_mat)
+    inc_D_county = rr2county_mat*results[i][1][1:20,:,1]
+    lb = rr2county_mat*results[i][1][1:20,:,2]
+    ub = rr2county_mat*results[i][1][1:20,:,3]
+
+    ordering = sortperm(inc_D_county[:,40],rev = true)
+    τ = treatment_rates[i]
+    plt = plot()
+    for k in ordering
+        plot!(plt,inc_D_county[k,:].+1,
+                    yticks = ([1,10,100,1000],["0" "10" "100" "1000"]),
+                    fillalpha = 0.05,
+                    ribbon =(lb[k,:],ub[k,:]),
+                    lab = county_names[k],
                     lw=2,
                     xlims = (0.,100.),
                     yscale = :log10,

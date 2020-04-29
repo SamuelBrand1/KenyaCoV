@@ -1,0 +1,108 @@
+\documentclass[a4paper, 11pt]{article}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Standard Maths Packages
+
+\usepackage{amsmath, amssymb, parskip}
+
+\usepackage{array,graphicx}
+\usepackage{booktabs}
+\usepackage{pifont}
+\usepackage[table]{xcolor}
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+
+\newcommand*\rot{\rotatebox{90}}
+\newcommand*\rottwo{\rotatebox[origin=rc]{90}}
+\newcommand*\OK{\ding{51}}
+\usepackage{pdflscape}
+\usepackage[normalem]{ulem}	
+
+\renewcommand*{\familydefault}{\sfdefault} %Changes font to serif
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Redefining numbered sections to alphabetic ones
+
+\def\thepart{\Alph{part}} 
+\usepackage{setspace}
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Graphics packages
+\usepackage{graphicx,caption,subcaption}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Tikzpicture to draw nice vector-scaled diagrams in LaTex
+
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{decorations.markings}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Margins
+
+\usepackage[paperwidth=16cm, paperheight=7.6cm,margin=1cm]{geometry}
+
+ \usepackage{nopageno}
+ \pagestyle{plain}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\tikzstyle{block} = [rectangle, draw, fill=white, 
+    text width=3em, text centered, rounded corners, minimum height=3em]
+
+
+\tikzstyle{block2} = [rectangle, draw, fill=yellow!80, 
+    text width=3em, text centered,node distance=4cm, rounded corners, minimum height=3em]
+
+\tikzstyle{block3} = [rectangle, draw, fill=red!30, 
+    text width=3em, text centered, rounded corners, minimum height=3em]
+
+    
+\tikzstyle{line} = [draw, -triangle 45]
+
+
+\begin{figure}
+\begin{centering}    
+\begin{tikzpicture}[node distance = 2cm, auto]
+
+   % Place nodes
+    \node [block, text width=4.5em] (S) at (0,0) {Susceptible};
+    \node [block, text width=3.4em] (E) at (3,0) {Exposed};
+    \node [block3, text width=3em] (D) at (6,2) {Clinical};
+    \node [block2, text width=4.4em] (A) at (6,-2) {Subclinical};
+    \node [anchor=mid] at (6,-3) {$\varepsilon_A$ times as infectious as clinical};
+    \node [block, text width=3.1em] (Q) at (9,2) {Isolated};
+    \node [block, text width=4.2em] (R) at (12,0) {Recovered};
+    
+    \path [line] (S) to node {FOI} (E);
+    
+    \node [anchor=mid] at (1,2.5) {FOI = Force of Infection};
+     \path [line] (E) to node {} (D);
+     \node [anchor=mid] at (3.1,1.4) {20\% people, 5 days};
+      \path [line] (E) to node [below, near start] {} (A);
+      \node [anchor=mid] at (3.1,-1.4) {80\% people, 5 days};
+       \path [line] (D) to node {} (Q);
+        \path [line] (Q) to node  {2 weeks} (R);
+         \path [line] (A) to node [below] {} (R);
+         \node [anchor=mid] at (9.2,-1.4) {2.5 days};
+          \path [line] (D) to  [out=315,in=180,looseness=0.7] node [below] {2.5 days} (R);
+
+\end{tikzpicture}
+\end{centering}
+\end{figure}
+
+
+\end{document}
