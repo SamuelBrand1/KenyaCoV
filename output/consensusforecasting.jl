@@ -5,13 +5,12 @@ import KenyaCoV
 using LinearAlgebra:eigen
 using Statistics: median, quantile
 
-gr()#Plotting frontend
 """
 Consensus modelling
 """
 
 """
-Load age structured data, define initial state and declare the KenyaCoV problem
+Load age structured data, define callback control measures, and effect of regional lockdown
 """
 
 u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
@@ -30,9 +29,12 @@ T_regional_lockdown[:,20] *= 0.1;T_regional_lockdown[20,20] += 1 - sum(T_regiona
 #Incoming travel
 for leaving_area in 1:20,arriving_area in 1:20
     if !(leaving_area in [4,12,20]) && arriving_area in [4,12,20]
-        T_regional_lockdown[arriving_area,leaving_area] *= 0.1
+        amount_reduced = 0.9*T_regional_lockdown[arriving_area,leaving_area]
+        T_regional_lockdown[arriving_area,leaving_area] -= amount_reduced
+        T_regional_lockdown[leaving_area,leaving_area] += amount_reduced #All avoided trips to locked down areas lead to staying at home
     end
 end
+
 
 
 
@@ -49,14 +51,14 @@ Load age mixing matrices (these are all in to (row) from (col) format)
 @load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
 
 
-#Function for chaning contacts from 100% to 45% over 14 days
+#Function for changing contacts so as to have -45% over 14 days
 function ramp_down(t)
     if t < 0.
         return 1.
     elseif t>= 0. || t <= 14.
-        return (1-t/14.) + 0.45*t/14
+        return (1-t/14.) + 0.55*t/14.
     elseif t > 14.
-        return 0.45
+        return 0.55
     end
 end
 
@@ -99,7 +101,7 @@ inf_matrix = repeat(R_vector',17,1)
 
 eigs, = eigen(sus_matrix.*P.M.*inf_matrix)
 max_eigval = Real(eigs[end])
-P.χ = ones(KenyaCoV.n_a)/max_eigval
+P.χ = ones(KenyaCoV.n_a)/max_eigval #This rescales everything so β is the same as R₀
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 range
 
@@ -108,9 +110,9 @@ u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
-sims_baseline = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1,CallbackSet())
+sims_baseline = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet())
 P.χ .*= 1.384
-sims_baseline_scaled = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1,CallbackSet())
+sims_baseline_scaled = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet())
 
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline.jld2") sims_baseline
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_scaled.jld2") sims_baseline_scaled
@@ -121,9 +123,7 @@ println("Finished baseline sims for consensus modelling ")
 
 
 """
-SCENARIO 2 --- Imperfect social distancing + spatial lockdown:
-* No age-specific susceptibilties --- its disease difference
-* Asymptomatics are 10% as infectious as symptomatics
+SCENARIO 2 --- regional lockdowns
 """
 
 
@@ -137,7 +137,6 @@ P.rel_detection_rate = d_1
 P.dt = 0.25;
 P.ext_inf_rate = 0.;
 P.ϵ = 1.
-P.c_t = ramp_d
 #Set the susceptibility vector --- just to specify the correct R₀
 sus_matrix = repeat(P.χ,1,17)
 R_A = P.ϵ*((1/P.σ₂) + (1/P.γ) ) #effective duration of asymptomatic
@@ -157,14 +156,9 @@ u0[4,8,3] = 30 #30 initial Asymptomatics in Nairobi
 u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
-sims_controls = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1,cb_regional_lockdown)
-P.χ .*= 1.384
-sims_controls_scaled = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1,cb_regional_lockdown)
+sims_controls = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,cb_regional_lockdown)
+P.χ .*= 1.384 #This accounts for the difference in scale between China and Kenya of basic contact rate
+sims_controls_scaled = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,cb_regional_lockdown)
 
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control.jld2") sims_controls
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control.jld2") sims_controls_scaled
-
-
-"""
-Analysis of output
-"""
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control_scaled.jld2") sims_controls_scaled
