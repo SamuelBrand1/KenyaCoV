@@ -64,7 +64,7 @@ end
 
 #Put in the regional lockdown on day 25 (April 7th)
 function regional_lockdown_timing(u,t,integrator)
-  integrator.p.lockdown && t > 25.
+  !integrator.p.lockdown && t > 25.
 end
 function affect_regional_lockdown!(integrator)
   integrator.p.T = T_regional_lockdown

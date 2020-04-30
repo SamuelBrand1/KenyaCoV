@@ -20,8 +20,9 @@ function total_incidence_for_each_sim(sims)
     end
     return diff(cum_incidence_for_each_sim,dims = 2)
 end
-incidence = total_incidence_for_each_sim(sims_baseline)
+incidence = total_incidence_for_each_sim(sims_controls)
 
-incidence_for_each_sim = diff(cum_incidence_for_each_sim,dims = 2)
 y = median(incidence,dims = 1)
-plot(y[:].+1,yscale = :log10)
+y_up = [maximum(incidence[:,t]) for t = 1:365]
+plot(y_up)
+sims_controls = 0
