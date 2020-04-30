@@ -105,6 +105,7 @@ P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 range
 
 u0[4,8,3] = 30 #10 initial Asymptomatics in Nairobi
 u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
+
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
 sims_baseline = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1,CallbackSet())
@@ -149,7 +150,7 @@ eigs, = eigen(sus_matrix.*P.M.*inf_matrix)
 max_eigval = Real(eigs[end])
 P.χ = ones(KenyaCoV.n_a)/max_eigval
 
-P.β = 5.#rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
+P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
 P.c_t = ramp_down
 
 u0[4,8,3] = 30 #30 initial Asymptomatics in Nairobi
@@ -162,3 +163,8 @@ sims_controls_scaled = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParamet
 
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control.jld2") sims_controls
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control.jld2") sims_controls_scaled
+
+
+"""
+Analysis of output
+"""
