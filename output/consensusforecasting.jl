@@ -105,7 +105,7 @@ P.χ = ones(KenyaCoV.n_a)/max_eigval #This rescales everything so β is the same
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 range
 
-u0[4,8,3] = 30 #10 initial Asymptomatics in Nairobi
+u0[4,8,3] = 30 #10 initial pre-symptomatics in Nairobi
 u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
@@ -150,7 +150,7 @@ max_eigval = Real(eigs[end])
 P.χ = ones(KenyaCoV.n_a)/max_eigval
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-P.c_t = ramp_down
+P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
 
 u0[4,8,3] = 30 #30 initial Asymptomatics in Nairobi
 u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
