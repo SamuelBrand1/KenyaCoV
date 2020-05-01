@@ -26,10 +26,10 @@ end
 function cum_incidence_for_each_sim_by_type(sims)
     n = length(sims.u)
     T = length(sims.u[1])
-    cum_incidence_A = zeros(1000,366)
-    cum_incidence_M = zeros(1000,366)
-    cum_incidence_V = zeros(1000,366)
-    cum_incidence_H = zeros(1000,366)
+    cum_incidence_A = zeros(n,T)
+    cum_incidence_M = zeros(n,T)
+    cum_incidence_V = zeros(n,T)
+    cum_incidence_H = zeros(n,T)
 
     for k = 1:n,t = 1:T
         cum_incidence_A[k,t] = sum(sims.u[k][t][:,:,1])
@@ -43,9 +43,6 @@ end
 generate_hospitalisation_outcomes(H)
 """
 death_rate_critical_cases = mean([0.5,0.75])
-
-_H = [50 for t = 1:365]
-scatter(_H)
 
 function split_incoming_hospitalisations_into_outcomes(H,age,area)
     T = length(H)
@@ -61,7 +58,6 @@ function split_incoming_hospitalisations_into_outcomes(H,age,area)
     end
     return new_hosp,new_ICU,new_to_die
 end
-@time new_hosp,new_ICU,new_to_die = split_incoming_hospitalisations_into_outcomes(_H,17,1)
 
 function generate_hospitalisation_outcomes(H,age,area)
     T = length(H)
