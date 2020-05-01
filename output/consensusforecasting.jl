@@ -38,8 +38,6 @@ end
 
 
 
-
-
 @load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
 @load "data/susceptibility_rates.jld2" σ
 
@@ -55,7 +53,7 @@ Load age mixing matrices (these are all in to (row) from (col) format)
 function ramp_down(t)
     if t < 0.
         return 1.
-    elseif t>= 0. || t <= 14.
+    elseif t>= 0. && t <= 14.
         return (1-t/14.) + 0.55*t/14.
     elseif t > 14.
         return 0.55
