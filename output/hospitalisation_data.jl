@@ -33,3 +33,6 @@ ICU_rate_by_age = [ICU_rate_CDC[1],ICU_rate_CDC[1],ICU_rate_CDC[1],ICU_rate_CDC[
 
 ICU_rate_by_age_cond_hosp = ICU_rate_by_age./hosp_rate_by_age
 ICU_rate_by_age_cond_hosp.*0.625
+
+
+bar(hosp_rate_by_age,lab = "",xticks = (1:2:17,))

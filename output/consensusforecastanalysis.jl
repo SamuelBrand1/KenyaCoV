@@ -288,3 +288,22 @@ savefig(plt_health_usage_both,"output/plt_health_usage_with_controls.png")
 
 plt_incidence_both = deepcopy(plt_incidence)
 plt_health_usage_both = deepcopy(plt_health_usage)
+
+
+
+function cum_incidence_for_each_sim_by_type(sims)
+    n = length(sims.u)
+    T = length(sims.u[1])
+    cum_incidence_A = zeros(n,T)
+    cum_incidence_M = zeros(n,T)
+    cum_incidence_V = zeros(n,T)
+    cum_incidence_H = zeros(n,T)
+
+    for k = 1:n,t = 1:T
+        cum_incidence_A[k,t] = sum(sims.u[k][t][:,:,1])
+        cum_incidence_M[k,t] = sum(sims.u[k][t][:,:,2])
+        cum_incidence_V[k,t] = sum(sims.u[k][t][:,:,3])
+        cum_incidence_H[k,t] = sum(sims.u[k][t][:,:,4])
+    end
+    return cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H
+end
