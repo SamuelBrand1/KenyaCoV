@@ -23,6 +23,11 @@ function find_peak_time_by_sim(sims)
     return [findmax(incidence[k,:]) for k = 1:n]
 end
 
+function find_peaks(incidence_array)
+    n,T = size(incidence_array)
+    return [findmax(incidence_array[k,:])[1] for k = 1:n]
+end
+
 function cum_incidence_for_each_sim_by_type(sims)
     n = length(sims.u)
     T = length(sims.u[1])
