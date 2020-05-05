@@ -34,7 +34,7 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     β::Float64 = 1. #Basic transmission probability per contact OR infectious contact rate (can be greater than one depending on scaling)
     c_t::Function = t -> 1. #Time varying basic contact rate
     γ::Float64 = 1/2. #recovery rate for mild and asymptomatic cases (Consensus estimate mean 4 days infectious, default is 1/σ₂ + 1/γ = 4 days)
-    σ₁::Float64 = 1/5. #end of latency rate (Consensus estimate mean 5 days)
+    σ₁::Float64 = 1/3. #end of latency rate (Consensus estimate mean 3 days)
     σ₂::Float64 = 1/2. #end of pre-symptomatic rate (Consensus estimate mean 4 days infectious, default is 1/σ₂ + 1/γ = 4 days)
     δ::Float64 = 0.9#Proportion of over 80s who get identified
     τ::Float64 = 1/5. #Rate of hospitalisation treatment, conditional on eventually needing it (V category)
