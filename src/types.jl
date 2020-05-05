@@ -33,7 +33,7 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     #Epidemiological parameters and social contact/mixing rates
     β::Float64 = 1. #Basic transmission probability per contact OR infectious contact rate (can be greater than one depending on scaling)
     c_t::Function = t -> 1. #Time varying basic contact rate
-    γ::Float64 = 1/2. #recovery rate for mild and asymptomatic cases (Consensus estimate mean 4 days infectious, default is 1/σ₂ + 1/γ = 4 days)
+    γ::Float64 = 1/7. #recovery rate for mild and asymptomatic cases (Consensus estimate mean 9 days infectious, default is 1/σ₂ + 1/γ = 9 days)
     σ₁::Float64 = 1/3. #end of latency rate (Consensus estimate mean 3 days)
     σ₂::Float64 = 1/2. #end of pre-symptomatic rate (Consensus estimate mean 4 days infectious, default is 1/σ₂ + 1/γ = 4 days)
     δ::Float64 = 0.9#Proportion of over 80s who get identified
@@ -43,7 +43,7 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     μ₁::Float64 = 0.0#Excess mortality due to disease NOT USED IN THIS VERSION
     ϵ::Float64 = 0.1 #Relative infectiousness of undetectable/undetected infecteds both pre-symptomatic and asymptomatic
     ϵ_D::Float64 = 1.#Relative infectiousness of mild infecteds due to social avoidance
-    ϵ_V::Float64 = 0.4#Relative infectiousness of mild, then severe, infecteds due to social avoidance
+    ϵ_V::Float64 = 7./5.#Relative infectiousness of mild, then severe, infecteds due to social avoidance --- default is to set so that M and V have same number of infectious contacts per age group
     rel_detection_rate::Vector{Float64} = ones(n_a) #relative symptomatic rate
     hₐ::Vector{Float64} = zeros(n_a)   #proportion of severe cases if symptomatic
     ICUₐ::Vector{Float64} = zeros(n_a) #proportion of hospitalised cases that become critical
