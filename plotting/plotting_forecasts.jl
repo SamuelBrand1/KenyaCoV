@@ -184,6 +184,7 @@ Spatial plots
 ordering = sortperm(results_3[1][1][1:20,40,1],rev = true)
 results_3[1][1][1:20,40,1]
 plot(results_3[1][1][5,:,1].+1,yscale = :log10)
+
 plt_no_control_1 = plot_incidence_spatial(results_1,treatment_rates,1)
 title!(plt_no_control_1,"Uncontrolled epidemic: 0% rel. trans. undetecteds ")
 plot!(plt_no_control_1,size = (700,500))
@@ -217,6 +218,30 @@ ylabel!("Daily new sympomatic infections")
 xlims!(0.,60.)
 
 savefig(plt_no_control_3,"plotting/spatial_baseline_scenarios_epsilon_A_25_ribbon_plot_county.pdf")
+
+#Example of plotting for one county
+inc_D_county1 = rr2county_mat*results_1[1][1][1:20,:,1]
+inc_D_county1_low = rr2county_mat*results_1[1][1][1:20,:,2]
+inc_D_county1_high = rr2county_mat*results_1[1][1][1:20,:,3]
+laikipia_1 = vcat(zeros(35),inc_D_county1[county_names .== "Laikipia",:]')
+laikipia_1_low = vcat(zeros(35),inc_D_county1_low[county_names .== "Laikipia",:]')
+laikipia_1_high = vcat(zeros(35),inc_D_county1_high[county_names .== "Laikipia",:]')
+
+plot(1:(365+35),laikipia_1,lab = "Asymptomatics don't transmit",
+            ribbon = (laikipia_1_low,laikipia_1_high),
+                fillalpha = 0.3,title = "Laikipia county", ylabel = "New infections",xlims = (0.,365),lw = 3,
+                xlabel = "Time since first detected case in Kenya")
+inc_D_county5 = rr2county_mat*results_5[1][1][1:20,:,1]
+inc_D_county5_low = rr2county_mat*results_5[1][1][1:20,:,2]
+inc_D_county5_high = rr2county_mat*results_5[1][1][1:20,:,3]
+laikipia_5 = vcat(zeros(35),inc_D_county5[county_names .== "Laikipia",:]')
+laikipia_5_low = vcat(zeros(35),inc_D_county5_low[county_names .== "Laikipia",:]')
+laikipia_5_high = vcat(zeros(35),inc_D_county5_high[county_names .== "Laikipia",:]')
+
+plot!(1:(365+35),laikipia_5,lab = "Asymptomatics 100% transmit",
+                ribbon = (laikipia_5_low,laikipia_5_high),
+                fillalpha = 0.2,color=:red,lw = 3)
+savefig("laikipia_plot.png")
 
 
 plt_control_2 = plot_incidence_spatial(results_2,treatment_rates,6)

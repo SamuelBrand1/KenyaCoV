@@ -1,4 +1,16 @@
 #Estimate from CDC COVID-19 Response Team. Severe Outcomes Among Patients with Coronavirus Disease 2019 (COVID-19) - United States, February 12-March 16, 2020. MMWR Morb. Mortal. Wkly. Rep. 69, 343–346 (2020).
+
+age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"]
+
+verity_IFR = [0.00161,0.00695,0.0309,
+            0.0844,
+            0.161,
+            0.595,
+            1.93,
+            4.28,
+            7.8]./100
+
+
 hosp_rate_CDC = [mean([1.6,2.5]),#0-19 year olds
                  mean([14.3,20.8]),#20-44 yos
                  mean([21.2,28.3]),#45-54
@@ -35,4 +47,31 @@ ICU_rate_by_age_cond_hosp = ICU_rate_by_age./hosp_rate_by_age
 ICU_rate_by_age_cond_hosp.*0.625
 
 
-bar(hosp_rate_by_age,lab = "",xticks = (1:2:17,))
+plt_hosp_estimates = bar(hosp_rate_by_age,lab = "",xticks = (1:2:17,age_cats[1:2:17]),
+    title = "Hospitalisation rate by age (CDC estimate)",xlabel = "Age of infected")
+plt_ICU_estimates = bar(ICU_rate_by_age_cond_hosp,lab = "",xticks = (1:2:17,age_cats[1:2:17]),
+    title = "ICU rate by age, given hospitalisation (CDC estimate)",xlabel = "Age of infected")
+savefig(plt_hosp_estimates,"output/hosp_estimates_by_age.png")
+savefig(plt_ICU_estimates,"output/ICU_estimates_by_age.png")
+
+IFR = 0.9*d_1.*hosp_rate_by_age.*ICU_rate_by_age_cond_hosp*0.625
+bar(IFR)
+verity_comparison = zeros(17)
+for a = 1:8
+    verity_comparison[2*(a-1)+1] = verity_IFR[a]
+    verity_comparison[2*(a-1)+2] = verity_IFR[a]
+end
+verity_comparison[17] = verity_IFR[9]
+brand_verity_comparison = groupedbar(hcat(IFR,verity_comparison),lab = ["Brand et al." "Verity et al."],
+            legend = :topleft,xticks = (1:2:17,age_cats[1:2:17]),
+            title = "Infection Fatality Ratio predictions",
+            ylabel = "Prob. of mortality per infection",
+            xlabel = "Age group")
+
+brand_verity_rel_comparison = bar(verity_comparison./(IFR.+0.00001),lab = "",
+            legend = :topleft,xticks = (1:2:17,age_cats[1:2:17]),
+            title = "Infection Fatality Ratio predictions",
+            ylabel = "OR (Brand vs Verity)",
+            xlabel = "Age group")
+
+savefig(brand_verity_comparison,"data/IFR_comparison_Brand_vs_verity.png")
