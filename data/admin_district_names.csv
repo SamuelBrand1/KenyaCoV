@@ -1,0 +1,492 @@
+ADM0_EN,ADM1_EN,ADM2_EN
+Kenya,Uasin Gishu,Ainabkoi
+Kenya,Kericho,Ainamoi
+Kenya,Nandi,Aldai
+Kenya,Siaya,Alego Usonga
+Kenya,Migori,Awendo
+Kenya,Nakuru,Bahati
+Kenya,Garissa,Balambala
+Kenya,Mandera,Banissa
+Kenya,Baringo,Baringo Central
+Kenya,Baringo,Baringo North
+Kenya,Baringo,Baringo South
+Kenya,Kericho,Belgut
+Kenya,Kisii,Bobasi
+Kenya,Kisii,Bomachoge Borabu
+Kenya,Kisii,Bomachoge Chache
+Kenya,Bomet,Bomet Central
+Kenya,Bomet,Bomet East
+Kenya,Kisii,Bonchari
+Kenya,Siaya,Bondo
+Kenya,Nyamira,Borabu
+Kenya,Busia,Budalangi
+Kenya,Bungoma,Bumula
+Kenya,Tana River,Bura
+Kenya,Kericho,Buret
+Kenya,Kakamega,Butere
+Kenya,Busia,Butula
+Kenya,Meru,Buuri
+Kenya,Meru,Cental Imenti
+Kenya,Mombasa,Changamwe
+Kenya,Bomet,Chepalungu
+Kenya,Trans Nzoia,Cherangany
+Kenya,Nandi,Chesumei
+Kenya,Garissa,Dadaab
+Kenya,Nairobi,Dagoretti
+Kenya,Garissa,Dujis
+Kenya,Baringo,Eldama Ravine
+Kenya,Wajir,Eldas
+Kenya,Nairobi,Embakasi Central
+Kenya,Nairobi,Embakasi East
+Kenya,Nairobi,Embakasi North
+Kenya,Nairobi,Embakasi South
+Kenya,Nairobi,Embakasi West
+Kenya,Nandi,Emgwen
+Kenya,Vihiga,Emuhaya
+Kenya,Narok,Emurua Dikirr
+Kenya,Trans Nzoia,Endebess
+Kenya,Garissa,Fafi
+Kenya,Busia,Funyula
+Kenya,Embu,Gachoka
+Kenya,Tana River,Galole
+Kenya,Kilifi,Ganze
+Kenya,Tana River,Garsen
+Kenya,Murang'a,Gatanga
+Kenya,Kiambu,Gatundu North
+Kenya,Kiambu,Gatundu South
+Kenya,Siaya,Gem
+Kenya,Kirinyaga,Gichugu
+Kenya,Nakuru,Gilgil
+Kenya,Kiambu,Githunguri
+Kenya,Vihiga,Hamisi
+Kenya,Homa Bay,Homa Bay
+Kenya,Meru,Igembe Central
+Kenya,Meru,Igembe North
+Kenya,Meru,Igembe South
+Kenya,Garissa,Ijara
+Kenya,Kakamega,Ikolomani
+Kenya,Isiolo,Isiolo North
+Kenya,Isiolo,Isiolo South
+Kenya,Mombasa,Jomvu
+Kenya,Kiambu,Juja
+Kenya,Kiambu,Kabete
+Kenya,Homa Bay,Kabondo Kasipul
+Kenya,Bungoma,Kabuchai
+Kenya,West Pokot,Kacheliba
+Kenya,Makueni,Kaiti
+Kenya,Kajiado,Kajiado Central
+Kenya,Kajiado,Kajiado East
+Kenya,Kajiado,Kajiado North
+Kenya,Kajiado,Kajiado South
+Kenya,Kajiado,Kajiado West
+Kenya,Kilifi,Kaloleni
+Kenya,Nairobi,Kamukunji
+Kenya,Murang'a,Kandara
+Kenya,Bungoma,Kanduyi
+Kenya,Murang'a,Kangema
+Kenya,Machakos,Kangundo
+Kenya,West Pokot,Kapenguria
+Kenya,Uasin Gishu,Kapseret
+Kenya,Homa Bay,Karachuonyo
+Kenya,Nairobi,Kasarani
+Kenya,Homa Bay,Kasipul
+Kenya,Machakos,Kathiani
+Kenya,Elgeyo-Marakwet,Keiyo North
+Kenya,Elgeyo-Marakwet,Keiyo South
+Kenya,Uasin Gishu,Kesses
+Kenya,Kakamega,Khwisero
+Kenya,Kiambu,Kiambaa
+Kenya,Kiambu,Kiambu
+Kenya,Nairobi,Kibra
+Kenya,Makueni,Kibwezi East
+Kenya,Makueni,Kibwezi West
+Kenya,Nyeri,Kieni
+Kenya,Murang'a,Kigumo
+Kenya,Murang'a,Kiharu
+Kenya,Kiambu,Kikuyu
+Kenya,Narok,Kilgoris
+Kenya,Kilifi,Kilifi North
+Kenya,Kilifi,Kilifi South
+Kenya,Nairobi,Kilimani
+Kenya,Makueni,Kilome
+Kenya,Bungoma,Kimilili
+Kenya,Trans Nzoia,Kiminini
+Kenya,Kwale,Kinango
+Kenya,Nyandarua,Kinangop
+Kenya,Nyandarua,Kipipiri
+Kenya,Kericho,Kipkelion East
+Kenya,Kericho,Kipkelion West
+Kenya,Kirinyaga,Kirinyaga Central
+Kenya,Mombasa,Kisauni
+Kenya,Kisumu,Kisumu Central
+Kenya,Kisumu,Kisumu East
+Kenya,Kisumu,Kisumu West
+Kenya,Kitui,Kitui Central
+Kenya,Kitui,Kitui East
+Kenya,Kitui,Kitui Rural
+Kenya,Kitui,Kitui South
+Kenya,Kitui,Kitui West
+Kenya,Kisii,Kitutu Chache North
+Kenya,Kisii,Kitutu Chache South
+Kenya,Nyamira,Kitutu Masaba
+Kenya,Bomet,Konoin
+Kenya,Nakuru,Kuresoi North
+Kenya,Nakuru,Kuresoi South
+Kenya,Migori,Kuria East
+Kenya,Migori,Kuria West
+Kenya,Trans Nzoia,Kwanza
+Kenya,Mandera,Lafey
+Kenya,Garissa,Lagdera
+Kenya,Laikipia,Laikipia East
+Kenya,Laikipia,Laikipia North
+Kenya,Laikipia,Laikipia West
+Kenya,Marsabit,Laisamis
+Kenya,Lamu,Lamu East
+Kenya,Lamu,Lamu West
+Kenya,Nairobi,Langata
+Kenya,Kiambu,Lari
+Kenya,Mombasa,Likoni
+Kenya,Kakamega,Likuyani
+Kenya,Kiambu,Limuru
+Kenya,Turkana,Loima
+Kenya,Vihiga,Luanda
+Kenya,Kakamega,Lugari
+Kenya,Kwale,Lunga Lunga
+Kenya,Kakamega,Lurambi
+Kenya,Tharaka-Nithi,Maara
+Kenya,Machakos,Machakos Town
+Kenya,Kilifi,Magarini
+Kenya,Nairobi,Makadara
+Kenya,Makueni,Makueni
+Kenya,Kakamega,Malava
+Kenya,Kilifi,Malindi
+Kenya,Mandera,Mandera East
+Kenya,Mandera,Mandera North
+Kenya,Mandera,Mandera South
+Kenya,Mandera,Mandera West
+Kenya,Embu,Manyatta
+Kenya,Murang'a,Maragwa
+Kenya,Elgeyo-Marakwet,Marakwet East
+Kenya,Elgeyo-Marakwet,Marakwet West
+Kenya,Machakos,Masinga
+Kenya,Busia,Matayos
+Kenya,Nairobi,Mathare
+Kenya,Murang'a,Mathioya
+Kenya,Nyeri,Mathira
+Kenya,Kwale,Matuga
+Kenya,Kakamega,Matungu
+Kenya,Machakos,Matungulu
+Kenya,Machakos,Mavoko
+Kenya,Makueni,Mbooni
+Kenya,Baringo,Mogotio
+Kenya,Uasin Gishu,Moiben
+Kenya,Nakuru,Molo
+Kenya,Nandi,Mosop
+Kenya,Marsabit,Moyale
+Kenya,Kwale,Msambweni
+Kenya,Bungoma,Mt. Elgon
+Kenya,Kisumu,Muhoroni
+Kenya,Nyeri,Mukurweni
+Kenya,Kakamega,Mumias East
+Kenya,Kakamega,Mumias West
+Kenya,Mombasa,Mvita
+Kenya,Machakos,Mwala
+Kenya,Taita Taveta,Mwatate
+Kenya,Kirinyaga,Mwea
+Kenya,Kitui,Mwingi East
+Kenya,Kitui,Mwingi North
+Kenya,Kitui,Mwingi West
+Kenya,Nakuru,Naivasha
+Kenya,Nakuru,Nakuru Town East
+Kenya,Nakuru,Nakuru Town West
+Kenya,Busia,Nambale
+Kenya,Nandi,Nandi Hills
+Kenya,Narok,Narok East
+Kenya,Narok,Narok North
+Kenya,Narok,Narok South
+Kenya,Narok,Narok West
+Kenya,Kakamega,Navakholo
+Kenya,Nyandarua,Ndaragwa
+Kenya,Homa Bay,Ndhiwa
+Kenya,Kirinyaga,Ndia
+Kenya,Tharaka-Nithi,Nithi
+Kenya,Nakuru,Njoro
+Kenya,Marsabit,North Horr
+Kenya,Meru,North Imenti
+Kenya,Nyamira,North Mugirango
+Kenya,Kisumu,Nyakach
+Kenya,Mombasa,Nyali
+Kenya,Kisumu,Nyando
+Kenya,Kisii,Nyaribari Chache
+Kenya,Kisii,Nyaribari Masaba
+Kenya,Migori,Nyatike
+Kenya,Nyeri,Nyeri Town
+Kenya,Nyandarua,Ol Jorok
+Kenya,Nyandarua,Ol Kalou
+Kenya,Nyeri,Othaya
+Kenya,West Pokot,Pokot South
+Kenya,Kilifi,Rabai
+Kenya,Homa Bay,Rangwe
+Kenya,Siaya,Rarieda
+Kenya,Nakuru,Rongai
+Kenya,Migori,Rongo
+Kenya,Nairobi,Roysambu
+Kenya,Nairobi,Ruaraka
+Kenya,Kiambu,Ruiru
+Kenya,Embu,Runyenjes
+Kenya,Vihiga,Sabatia
+Kenya,Trans Nzoia,Saboti
+Kenya,Marsabit,Saku
+Kenya,Samburu,Samburu East
+Kenya,Samburu,Samburu North
+Kenya,Samburu,Samburu West
+Kenya,Kisumu,Seme
+Kenya,Kakamega,Shinyalu
+Kenya,Embu,Siakago
+Kenya,West Pokot,Sigor
+Kenya,Kericho,Sigowet/Soin
+Kenya,Bungoma,Sirisia
+Kenya,Bomet,Sotik
+Kenya,Meru,South Imenti
+Kenya,Kisii,South Mugirango
+Kenya,Uasin Gishu,Soy
+Kenya,Nairobi,Starehe
+Kenya,Homa Bay,Suba North
+Kenya,Homa Bay,Suba South
+Kenya,Nakuru,Subukia
+Kenya,Migori,Suna East
+Kenya,Migori,Suna West
+Kenya,Wajir,Tarbaj
+Kenya,Taita Taveta,Taveta
+Kenya,Busia,Teso North
+Kenya,Busia,Teso South
+Kenya,Nyeri,Tetu
+Kenya,Tharaka-Nithi,Tharaka
+Kenya,Kiambu,Thika Town
+Kenya,Baringo,Tiaty
+Kenya,Meru,Tigania East
+Kenya,Meru,Tigania West
+Kenya,Nandi,Tinderet
+Kenya,Bungoma,Tongaren
+Kenya,Uasin Gishu,Turbo
+Kenya,Turkana,Turkana Central
+Kenya,Turkana,Turkana East
+Kenya,Turkana,Turkana North
+Kenya,Turkana,Turkana South
+Kenya,Turkana,Turkana West
+Kenya,Siaya,Ugenya
+Kenya,Siaya,Ugunja
+Kenya,Migori,Uriri
+Kenya,Vihiga,Vihiga
+Kenya,Taita Taveta,Voi
+Kenya,Wajir,Wajir East
+Kenya,Wajir,Wajir North
+Kenya,Wajir,Wajir South
+Kenya,Wajir,Wajir West
+Kenya,Bungoma,Webuye East
+Kenya,Bungoma,Webuye West
+Kenya,Nyamira,West Mugirango
+Kenya,Nairobi,Westlands
+Kenya,Taita Taveta,Wundanyi
+Kenya,Machakos,Yatta
+Uganda,ABIM,LABWOR
+Uganda,ADJUMANI,EAST MOYO
+Uganda,AGAGO,AGAGO
+Uganda,ALEBTONG,MOROTO
+Uganda,AMOLATAR,KIOGA
+Uganda,AMUDAT,POKOT
+Uganda,AMURIA,AMURIA
+Uganda,AMURIA,KAPELEBYONG
+Uganda,AMURU,KILAK
+Uganda,APAC,APAC MUNICIPALITY
+Uganda,APAC,KWANIA
+Uganda,APAC,MARUZI
+Uganda,ARUA,ARUA MUNICIPALITY
+Uganda,ARUA,AYIVU
+Uganda,ARUA,MADI-OKOLLO
+Uganda,ARUA,TEREGO
+Uganda,ARUA,VURRA
+Uganda,BUDAKA,BUDAKA
+Uganda,BUDAKA,IKI-IKI
+Uganda,BUDUDA,MANJIYA
+Uganda,BUGIRI,BUGIRI MUNICIPALITY
+Uganda,BUGIRI,BUKOOLI
+Uganda,BUHWEJU,BUHWEJU
+Uganda,BUIKWE,BUIKWE
+Uganda,BUIKWE,LUGAZI MUNICIPALITY
+Uganda,BUIKWE,NJERU MUNICIPALITY
+Uganda,BUKEDEA,BUKEDEA
+Uganda,BUKOMANSIMBI,BUKOMANSIMBI
+Uganda,BUKWO,KONGASIS
+Uganda,BULAMBULI,BULAMBULI
+Uganda,BULIISA,BULIISA
+Uganda,BUNDIBUGYO,BUGHENDERA
+Uganda,BUNDIBUGYO,BWAMBA
+Uganda,BUNYANGABU,BUNYANGABU
+Uganda,BUSHENYI,BUSHENYI-ISHAKA MUNICIPALITY
+Uganda,BUSHENYI,IGARA
+Uganda,BUSIA,BUSIA MUNICIPALITY
+Uganda,BUSIA,SAMIA-BUGWE
+Uganda,BUTALEJA,BUNYOLE
+Uganda,BUTAMBALA,BUTAMBALA
+Uganda,BUTEBO,BUTEBO
+Uganda,BUVUMA,BUVUMA
+Uganda,BUYENDE,BUDIOPE
+Uganda,DOKOLO,DOKOLO
+Uganda,GOMBA,GOMBA
+Uganda,GULU,ASWA
+Uganda,GULU,GULU MUNICIPALITY
+Uganda,HOIMA,BUGAHYA
+Uganda,HOIMA,BUHAGUZI
+Uganda,HOIMA,HOIMA MUNICIPALITY
+Uganda,IBANDA,IBANDA
+Uganda,IBANDA,IBANDA MUNICIPALITY
+Uganda,IGANGA,BUGWERI
+Uganda,IGANGA,IGANGA MUNICIPALITY
+Uganda,IGANGA,KIGULU
+Uganda,ISINGIRO,BUKANGA
+Uganda,ISINGIRO,ISINGIRO
+Uganda,JINJA,BUTEMBE
+Uganda,JINJA,JINJA MUNICIPALITY
+Uganda,JINJA,KAGOMA
+Uganda,KAABONG,DODOTH
+Uganda,KABALE,KABALE MUNICIPALITY
+Uganda,KABALE,NDORWA
+Uganda,KABAROLE,BURAHYA
+Uganda,KABAROLE,FORT PORTAL MUNICIPALITY
+Uganda,KABERAMAIDO,KABERAMAIDO
+Uganda,KABERAMAIDO,KALAKI
+Uganda,KAGADI,BUYAGA
+Uganda,KAKUMIRO,BUGANGAIZI
+Uganda,KALANGALA,BUJJUMBA
+Uganda,KALANGALA,KYAMUSWA
+Uganda,KALIRO,BULAMOGI
+Uganda,KALUNGU,KALUNGU
+Uganda,KAMPALA,KAMPALA CAPITAL CITY
+Uganda,KAMULI,BUGABULA
+Uganda,KAMULI,BUZAAYA
+Uganda,KAMULI,KAMULI MUNICIPALITY
+Uganda,KAMWENGE,KIBALE
+Uganda,KAMWENGE,KITAGWENDA
+Uganda,KANUNGU,KINKIZI
+Uganda,KAPCHORWA,KAPCHORWA MUNICIPALITY
+Uganda,KAPCHORWA,TINGEY
+Uganda,KASESE,BUKONZO
+Uganda,KASESE,BUSONGORA
+Uganda,KASESE,KASESE MUNICIPALITY
+Uganda,KATAKWI,TOROMA
+Uganda,KATAKWI,USUK
+Uganda,KAYUNGA,BBAALE
+Uganda,KAYUNGA,NTENJERU
+Uganda,KIBAALE,BUYANJA
+Uganda,KIBOGA,KIBOGA
+Uganda,KIBUKU,KIBUKU
+Uganda,KIRUHURA,KAZO
+Uganda,KIRUHURA,NYABUSHOZI
+Uganda,KIRYANDONGO,KIBANDA
+Uganda,KISORO,BUFUMBIRA
+Uganda,KISORO,KISORO MUNICIPALITY
+Uganda,KITGUM,CHUA
+Uganda,KITGUM,KITGUM MUNICIPALITY
+Uganda,KOBOKO,KOBOKO
+Uganda,KOBOKO,KOBOKO MUNICIPALITY
+Uganda,KOLE,KOLE
+Uganda,KOTIDO,JIE
+Uganda,KOTIDO,KOTIDO MUNICIPALITY
+Uganda,KUMI,KUMI
+Uganda,KUMI,KUMI MUNICIPALITY
+Uganda,KWEEN,KWEEN
+Uganda,KYANKWANZI,KIBOGA
+Uganda,KYEGEGWA,KYAKA
+Uganda,KYENJOJO,MWENGE
+Uganda,KYOTARA,KYOTERA
+Uganda,LAMWO,LAMWO
+Uganda,LIRA,ERUTE
+Uganda,LIRA,LIRA MUNICIPALITY
+Uganda,LUUKA,LUUKA
+Uganda,LUWERO,BAMUNANIKA
+Uganda,LUWERO,KATIKAMU
+Uganda,LWENGO,BUKOTO
+Uganda,LYANTONDE,KABULA
+Uganda,MANAFWA,BUBULO
+Uganda,MARACHA,MARACHA
+Uganda,MASAKA,BUKOTO
+Uganda,MASAKA,MASAKA MUNICIPALITY
+Uganda,MASINDI,BUJENJE
+Uganda,MASINDI,BURUULI
+Uganda,MASINDI,MASINDI MUNICIPALITY
+Uganda,MAYUGE,BUNYA
+Uganda,MBALE,BUNGOKHO
+Uganda,MBALE,MBALE MUNICIPALITY
+Uganda,MBARARA,KASHARI
+Uganda,MBARARA,MBARARA MUNICIPALITY
+Uganda,MBARARA,RWAMPARA
+Uganda,MITOOMA,RUHINDA
+Uganda,MITYANA,BUSUJJU
+Uganda,MITYANA,MITYANA
+Uganda,MITYANA,MITYANA MUNICIPALITY
+Uganda,MOROTO,MATHENIKO
+Uganda,MOROTO,MOROTO MUNICIPALITY
+Uganda,MOYO,OBONGI
+Uganda,MOYO,WEST MOYO
+Uganda,MPIGI,MAWOKOTA
+Uganda,MUBENDE,BUWEKULA
+Uganda,MUBENDE,KASAMBYA
+Uganda,MUBENDE,KASSANDA
+Uganda,MUBENDE,MUBENDE MUNICIPALITY
+Uganda,MUKONO,MUKONO
+Uganda,MUKONO,MUKONO MUNICIPALITY
+Uganda,MUKONO,NAKIFUMA
+Uganda,NAKAPIRIPIRIT,CHEKWII
+Uganda,NAKAPIRIPIRIT,PIAN
+Uganda,NAKASEKE,NAKASEKE
+Uganda,NAKASONGOLA,BULURI
+Uganda,NAMAYINGO,BUKOOLI
+Uganda,NAMISINDWA,BUBULO
+Uganda,NAMUTUMBA,BUSIKI
+Uganda,NAPAK,BOKORA
+Uganda,NEBBI,NEBBI MUNICIPALITY
+Uganda,NEBBI,PADYERE
+Uganda,NGORA,NGORA
+Uganda,NTOROKO,NTOROKO
+Uganda,NTUNGAMO,KAJARA
+Uganda,NTUNGAMO,NTUNGAMO MUNICIPALITY
+Uganda,NTUNGAMO,RUHAAMA
+Uganda,NTUNGAMO,RUSHENYI
+Uganda,NWOYA,NWOYA
+Uganda,OMORO,OMORO
+Uganda,OTUKE,OTUKE
+Uganda,OYAM,OYAM
+Uganda,PADER,ARUU
+Uganda,PAKWACH,JONAM
+Uganda,PALLISA,AGULE
+Uganda,PALLISA,PALLISA
+Uganda,RAKAI,KAKUUTO
+Uganda,RAKAI,KOOKI
+Uganda,RUBANDA,RUBANDA
+Uganda,RUBIRIZI,BUNYARUGURU
+Uganda,RUBIRIZI,KATERERA
+Uganda,RUKIGA,RUKIGA
+Uganda,RUKUNGIRI,BUJUMBURA
+Uganda,RUKUNGIRI,RUBABO
+Uganda,RUKUNGIRI,RUKUNGIRI MUNICIPALITY
+Uganda,SERERE,KASILO
+Uganda,SERERE,SERERE
+Uganda,SHEEMA,SHEEMA
+Uganda,SHEEMA,SHEEMA MUNICIPALITY
+Uganda,SIRONKO,BUDADIRI
+Uganda,SOROTI,SOROTI
+Uganda,SOROTI,SOROTI MUNICIPALITY
+Uganda,SSEMBABULE,LWEMIYAGA
+Uganda,SSEMBABULE,MAWOGOLA
+Uganda,TORORO,TORORO
+Uganda,TORORO,TORORO MUNICIPALITY
+Uganda,TORORO,WEST BUDAMA (KISOLO)
+Uganda,WAKISO,BUSIRO
+Uganda,WAKISO,ENTEBBE MUNICIPALITY
+Uganda,WAKISO,KIRA MUNICIPALITY
+Uganda,WAKISO,KYADONDO
+Uganda,WAKISO,NANSANA MUNICIPALITY
+Uganda,WAKISO,SSABAGABO-MAKINDYE MUNICIPALITY
+Uganda,YUMBE,ARINGA
+Uganda,ZOMBO,OKORO

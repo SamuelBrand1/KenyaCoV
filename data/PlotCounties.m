@@ -1,8 +1,8 @@
 % Script for plotting counties
 S = shaperead('County.shp');
-l = length(S);
-% Sort so in the same order as data
-[~,index] = sortrows({S.COUNTY}.'); S = S(index); clear index
+% l = length(S);
+% % Sort so in the same order as data
+% [~,index] = sortrows({S.COUNTY}.'); S = S(index); clear index
 
 %% Give the struct its Infecteds timeseries
 
