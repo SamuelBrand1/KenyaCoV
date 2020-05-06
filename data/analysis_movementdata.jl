@@ -2,6 +2,8 @@ push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
 using DataFrames,CSV,MAT,Statistics,LinearAlgebra,Optim,Plots,JLD2,RData,Distances
 gr()
 
+
+
 movement_data =  RData.load("data/movement_matrix_2020-03.rda")
 movements = movement_data["incidence_matrix_dayOnly"]
 heatmap(log10.(movements.+1))
