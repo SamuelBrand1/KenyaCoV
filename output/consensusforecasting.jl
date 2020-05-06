@@ -155,8 +155,11 @@ u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
 sims_controls = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,cb_regional_lockdown)
-P.χ .*= 1.384 #This accounts for the difference in scale between China and Kenya of basic contact rate
+# P.χ .*= 1.384 #This accounts for the difference in scale between China and Kenya of basic contact rate
 sims_controls_scaled = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,cb_regional_lockdown)
 
+sims_controls_no_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet())
+
+
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control.jld2") sims_controls
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control_scaled.jld2") sims_controls_scaled
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control_no_lockdown.jld2") sims_controls_no_lockdown
