@@ -4,7 +4,7 @@
 Method for collecting flight data from relevant .csv file
 """
 function get_flightdata(filename)
-    flights=readtable(filename)
+    flights=CSV.read(filename)
     into_mombassa=convert(Vector,flights[:,1])
     into_nairobi=convert(Vector,flights[:,2])
     return into_mombassa,into_nairobi
@@ -15,7 +15,7 @@ end
 Method for collecting global prevalence from relevant .csv file
 """
 function get_prevdata(filename)
-    prev_table=readtable(filename)
+    prev_table=CSV.read(filename)
     global_prev=convert(Vector,prev_table[:,1])
     return global_prev
 end
