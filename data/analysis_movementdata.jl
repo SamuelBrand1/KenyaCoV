@@ -1,7 +1,12 @@
 push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
-# import KenyaCoV
-using DataFrames,CSV,MAT,Statistics,LinearAlgebra,Optim,Plots,JLD2
+using DataFrames,CSV,MAT,Statistics,LinearAlgebra,Optim,Plots,JLD2,RData,Distances
 gr()
+
+movement_data =  RData.load("data/movement_matrix_2020-03.rda")
+movements = movement_data["incidence_matrix_dayOnly"]
+heatmap(log10.(movements.+1))
+
+sum(movements,dims = 2)
 """
 Get data from 2009 and 2019 --- rescale and get movement data from mobile phone movements
 """
