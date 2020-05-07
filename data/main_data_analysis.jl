@@ -54,14 +54,7 @@ ICU_rate_by_age_cond_hosp = ICU_rate_by_age./hosp_rate_by_age
 death_rate_by_age_cond_ICU = death_rate_by_age./hosp_rate_by_age
 death_rate_by_age_cond_ICU[isnan.(death_rate_by_age_cond_ICU)] .= 0.
 # death_rate_by_age_cond_ICU
-"""
-Sub county population data
-"""
-# subcounty_population = readtable("data/distribution-of-population-by-age-sex-county-and-sub-county-kenya-2019-census-volume-iii.csv")
-# subcounties = unique(subcounty_population.sub_county)
-# unique(subcounty_population.Age)
-# subC_to_C = Dict{String,String}()
-# # for
+
 """
 Load the MCMC outputs for the age-specific relative symptomatic rate
 """
