@@ -1,5 +1,4 @@
 # Read in the data for the model
-# Test once again
 
 function get_Kenyadata(filename)
     KenyaTbl = readtable(filename)
