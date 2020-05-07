@@ -252,3 +252,20 @@ heatmap(T,clims = (0.,0.1))
 Save all the data
 """
 @save "data/data_for_age_structuredmodel.jld2" N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho hosp_rate_by_age ICU_rate_by_age_cond_hosp
+
+
+"""
+After using analysis of movements --- data for county model
+"""
+N_region_age = N_pop
+T = T_opt
+ρ = ρ_county
+P_dest = P_opt
+@load "data/agemixingmatrix_Kenya_norestrictions.jld2" M_Kenya
+@load "data/agemixingmatrix_Kenya_homeonly.jld2" M_Kenya_ho
+
+σ =  vcat(0.34*ones(3),ones(10),1.47*ones(4))
+@load "data/detection_rates_for_different_epsilons_model2.jld2" d_0 d_01 d_025 d_05 d_1
+rel_detection_rates = hcat(d_0,d_01,d_025,d_05,d_1)
+
+@save "data/data_for_age_structuredmodel_with_counties.jld2" N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho hosp_rate_by_age ICU_rate_by_age_cond_hosp
