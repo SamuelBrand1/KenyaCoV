@@ -227,7 +227,8 @@ This method in-place modifies the number of each type of event proposed by the P
 """
 function max_change(out,u,p::CoVParameters_AS)
     @unpack δ,rel_detection_rate,hₐ = p
-    for i = 1:n_wa,a = 1:n_a
+    n,n_a,n_s = size(u)
+    for i = 1:n,a = 1:n_a
         ind_trans = linear_as_events[i,a,1]
         ind_EP = linear_as_events[i,a,2]
         ind_PA = linear_as_events[i,a,3]
@@ -265,7 +266,7 @@ function nonneg_tauleap(du,u,p::CoVParameters_AS,t)
     PP_drivers(dN,poi_rates,p)#Generate Poisson rvs with rates scaled by time step dt
     max_change(dN,u,p)#Cap the size of the Poisson rvs to maintain non-negativity
     mul!(du_linear,dc,dN)#Calculates the effect on the state in the inplace du vector
-    du .= reshape(du_linear,n_wa,n_a,n_s)
+    du .= reshape(du_linear,n,n_a,n_s)
     du .+= u #Calculates how the state should change
 end
 
@@ -277,7 +278,8 @@ This is the vector field of the related KenyaCoV ODE model
 function ode_model(du,u,p::CoVParameters_AS,t)
     @unpack λ,γ,σ₁,σ₂,δ,τ,μ₁,χ,rel_detection_rate,hₐ = p
     calculate_infection_rates!(u,p,t)
-    for i = 1:n_wa,a = 1:n_a
+    n,n_a,n_s = size(u)
+    for i = 1:n,a = 1:n_a
         du[i,a,1] = (-1)*χ[a]*λ[i,a]*u[i,a,1]
         du[i,a,2] = χ[a]*λ[i,a]*u[i,a,1] - σ₁*u[i,a,2]
         du[i,a,3] = σ₁*u[i,a,2] - σ₂*u[i,a,3]

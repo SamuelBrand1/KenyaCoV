@@ -1,5 +1,5 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
-using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,MAT,RecursiveArrayTools
+using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,MAT,RecursiveArrayTools,CSV
 using Revise
 import KenyaCoV
 using LinearAlgebra:eigen
@@ -17,22 +17,35 @@ Consensus modelling --- May week 1
 Load age structured data, define callback control measures, and effect of regional lockdown
 """
 
-u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
+u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel_with_counties.jld2",
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
+counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
+Nairobi_index = findfirst(counties.county .== "Nairobi")
+Mombassa_index = findfirst(counties.county .== "Mombasa")
+Kwale_index = findfirst(counties.county .== "Kwale")
+Kilifi_index = findfirst(counties.county .== "Kilifi")
+Mandera_index  = findfirst(counties.county .== "Mandera")
+
+
 #Put in the lockdown effects
 T_normal = deepcopy(P.T)
 T_regional_lockdown = deepcopy(P.T)
+
 #Outgoing travel
 #Nairobi
-T_regional_lockdown[:,4] *= 0.1;T_regional_lockdown[4,4] += 1 - sum(T_regional_lockdown[:,4])
-#Mombasa + Kwale
-T_regional_lockdown[:,12] *= 0.1;T_regional_lockdown[12,12] += 1 - sum(T_regional_lockdown[:,12])
-#Kilifi + Kwale
-T_regional_lockdown[:,20] *= 0.1;T_regional_lockdown[20,20] += 1 - sum(T_regional_lockdown[:,20])
+T_regional_lockdown[:,Nairobi_index] *= 0.1;T_regional_lockdown[Nairobi_index,Nairobi_index] += 1 - sum(T_regional_lockdown[:,Nairobi_index])
+#Mombasa
+T_regional_lockdown[:,Mombassa_index] *= 0.1;T_regional_lockdown[Mombassa_index,Mombassa_index] += 1 - sum(T_regional_lockdown[:,Mombassa_index])
+#Kilifi
+T_regional_lockdown[:,Kilifi_index] *= 0.1;T_regional_lockdown[Kilifi_index,Kilifi_index] += 1 - sum(T_regional_lockdown[:,Kilifi_index])
+#Kwale
+T_regional_lockdown[:,Kwale_index] *= 0.1;T_regional_lockdown[Kwale_index,Kwale_index] += 1 - sum(T_regional_lockdown[:,Kwale_index])
+
+
 #Incoming travel
 for leaving_area in 1:20,arriving_area in 1:20
-    if !(leaving_area in [4,12,20]) && arriving_area in [4,12,20]
+    if !(leaving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]) && arriving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]
         amount_reduced = 0.9*T_regional_lockdown[arriving_area,leaving_area]
         T_regional_lockdown[arriving_area,leaving_area] -= amount_reduced
         T_regional_lockdown[leaving_area,leaving_area] += amount_reduced #All avoided trips to locked down areas lead to staying at home
@@ -42,8 +55,8 @@ end
 
 
 
-@load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
-@load "data/susceptibility_rates.jld2" σ
+@load "data/detection_rates_for_different_epsilons_model2.jld2" d_0 d_01 d_025 d_05 d_1
+χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))
 
 #Initial infecteds
 """
@@ -63,6 +76,11 @@ function ramp_down(t)
         return 0.55
     end
 end
+using Dates
+Date(2020,4,7) - Date(2020,3,13)
+Date(2020,6,2) - Date(2020,3,13)
+Date(2020,8,31) - Date(2020,3,13)
+Date(2020,5,16) - Date(2020,3,13)
 
 #Put in the regional lockdown on day 25 (April 7th)
 function regional_lockdown_timing(u,t,integrator)
@@ -74,21 +92,43 @@ function affect_regional_lockdown!(integrator)
 end
 cb_regional_lockdown = DiscreteCallback(regional_lockdown_timing,affect_regional_lockdown!)
 
+#Put in the regional lockdown on day 64 (May 16th)
+function regional_lockdown_ending(u,t,integrator)
+  integrator.p.lockdown && t > 64.
+end
+function affect_regional_lockdown_end!(integrator)
+  integrator.p.T = T_normal
+  integrator.p.lockdown = false
+end
+cb_regional_lockdown_end = DiscreteCallback(regional_lockdown_ending,affect_regional_lockdown_end!)
 
-# both_cbs = CallbackSet(cb_iso_limit,cb_SD_limit)
+regional_lockdown_starts_and_finishes = CallbackSet(cb_regional_lockdown,cb_regional_lockdown_end)
+#Open schools on June 2nd or August 31st
+function open_schools_june(u,t,integrator)
+  integrator.p.schools_closed && t > 81.
+end
+function open_schools_august(u,t,integrator)
+  integrator.p.schools_closed && t > 171.
+end
+function affect_open_schools!(integrator)
+  integrator.p.M = M_Kenya
+  integrator.p.schools_closed = false
+end
+cb_open_schools_june = DiscreteCallback(open_schools_june,affect_open_schools!)
+cb_open_schools_august = DiscreteCallback(open_schools_august,affect_open_schools!)
 
 
 """
-SCENARIO no intervention baseline
+Set up parameters
 """
 
 
 
-u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
+u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel_with_counties.jld2",
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
 #Redistribute susceptibility JUST to rescale infectiousness so we get the correct R₀/r
-P.χ = ones(KenyaCoV.n_a)
+P.χ = χ_zhang
 P.rel_detection_rate = d_1
 P.dt = 0.25;
 P.ext_inf_rate = 0.;
@@ -103,21 +143,26 @@ inf_matrix = repeat(R_vector',17,1)
 
 eigs, = eigen(sus_matrix.*P.M.*inf_matrix)
 max_eigval = Real(eigs[end])
-P.χ = ones(KenyaCoV.n_a)/max_eigval #This rescales everything so β is the same as R₀
+P.χ .*= 1/max_eigval #This rescales everything so β is the same as R₀
+
+u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
+u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
+u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
+
+"""
+Base line scenario
+"""
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 range
-
-u0[4,8,3] = 30 #10 initial pre-symptomatics in Nairobi
-u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
+P.lockdown = false
+P.schools_closed = false
+P.M = M_Kenya
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
-sims_baseline = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet())
-P.χ .*= 1.384
-sims_baseline_scaled = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet())
+sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
 
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline.jld2") sims_baseline
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_scaled.jld2") sims_baseline_scaled
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
 
 
 println("Finished baseline sims for consensus modelling ")
@@ -125,45 +170,56 @@ println("Finished baseline sims for consensus modelling ")
 
 
 """
-SCENARIO 2 --- regional lockdowns
+SCENARIO 2 --- regional lockdown ending. Schools stay shut
 """
 
 
 
-u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel.jld2",
-                                            "data/flight_numbers.csv",
-                                            "data/projected_global_prevelance.csv")
-#Redistribute susceptibility JUST to rescale infectiousness so we get the correct R₀/r
-P.χ = ones(KenyaCoV.n_a)
-P.rel_detection_rate = d_1
-P.dt = 0.25;
-P.ext_inf_rate = 0.;
-P.ϵ = 1.
-#Set the susceptibility vector --- just to specify the correct R₀
-sus_matrix = repeat(P.χ,1,17)
-R_A = P.ϵ*((1/P.σ₂) + (1/P.γ) ) #effective duration of asymptomatic
-R_M = (P.ϵ/P.σ₂) + (P.ϵ_D/P.γ) #effective duration of mild
-R_V = (P.ϵ/P.σ₂) + (P.ϵ_V/P.τ) #effective duration of severe
-R_vector = [(1-P.rel_detection_rate[a])*R_A + P.rel_detection_rate[a]*(1-P.hₐ[a])*R_M + P.rel_detection_rate[a]*P.hₐ[a]*R_V for a = 1:17]
-inf_matrix = repeat(R_vector',17,1)
+P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
+P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
 
-eigs, = eigen(sus_matrix.*P.M.*inf_matrix)
-max_eigval = Real(eigs[end])
-P.χ = ones(KenyaCoV.n_a)/max_eigval
+P.lockdown = false
+P.schools_closed = true
+P.M = M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
+
+sims_end_regional_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,regional_lockdown_starts_and_finishes)
+
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
+
+
+"""
+SCENARIO 3 --- Schools reopen in June
+"""
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
 P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
 
-u0[4,8,3] = 30 #30 initial Asymptomatics in Nairobi
-u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
+P.lockdown = false
+P.schools_closed = true
+P.M = M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
-sims_controls = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,cb_regional_lockdown)
-# P.χ .*= 1.384 #This accounts for the difference in scale between China and Kenya of basic contact rate
-sims_controls_scaled = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,cb_regional_lockdown)
+sims_open_schools_june = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet(cb_regional_lockdown,cb_open_schools_june))
 
-sims_controls_no_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet())
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
 
 
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control.jld2") sims_controls
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control_no_lockdown.jld2") sims_controls_no_lockdown
+"""
+SCENARIO 4 --- Schools reopen in August
+"""
+
+P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
+P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
+
+P.lockdown = false
+P.schools_closed = true
+P.M = M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
+
+sims_open_schools_august = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet(cb_regional_lockdown,cb_open_schools_august))
+
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
