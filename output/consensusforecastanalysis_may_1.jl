@@ -1,14 +1,15 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,DelimitedFiles
+using CSV,ExcelFiles
 using Statistics: median, quantile
 using LinearAlgebra: eigen
 
 
 #Load data
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_scaled.jld2") sims_baseline_scaled
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control.jld2") sims_controls
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control_scaled.jld2") sims_controls_scaled
+# @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_scaled.jld2") sims_baseline_scaled
+# @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control.jld2") sims_controls
+# @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_control_scaled.jld2") sims_controls_scaled
 
 nametag = "controls"
 
@@ -17,13 +18,59 @@ nametag = "controls"
 
 
 include("hospitalisations.jl");
+counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
 
+sims = sims_baseline
+
+cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,generate_checklist(47)[1])
+cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
+incidence_A = diff(cum_incidence_A,dims = 2)
+incidence_M = diff(cum_incidence_M,dims = 2)
+incidence_V = diff(cum_incidence_V,dims = 2)
+incidence_H = diff(cum_incidence_H,dims = 2)
+total_incidence = incidence_A.+incidence_M.+incidence_V
+
+function generate_report_dataframe(sims,names)
+    n_sims = length(sims.u)
+    T = length(sims.u[1])
+    n,n_a,n_s = size(sims.u[1][1])
+    names = vcat("Total",names)
+    County = String[]
+    for (i,name) in enumerate(names)
+        push!(County,name*" (median)")
+        push!(County,name*" (2.5th perc.)")
+        push!(County,name*" (97.5th perc.)")
+    end
+    df = DataFrame()
+    df.County = County
+
+    checklist = generate_checklist(n)
+
+    for (k,cn) = enumerate(checklist[1])
+        cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,30)
+        cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
+        incidence_A = diff(cum_incidence_A,dims = 2)
+        incidence_M = diff(cum_incidence_M,dims = 2)
+        incidence_V = diff(cum_incidence_V,dims = 2)
+        incidence_H = diff(cum_incidence_H,dims = 2)
+        total_incidence = incidence_A.+incidence_M.+incidence_V
+    end
+
+
+    return df
+end
+df = generate_report_dataframe(sims,counties.county)
 
 ## Cumulative incidence
-cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims_controls)
+cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,30)
 cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
-total_incidence_peaks = find_peak_time_by_sim(sims_controls)
-peak_days = [x[2] for x in total_incidence_peaks]
+incidence_A = diff(cum_incidence_A,dims = 2)
+incidence_M = diff(cum_incidence_M,dims = 2)
+incidence_V = diff(cum_incidence_V,dims = 2)
+incidence_H = diff(cum_incidence_H,dims = 2)
+total_incidence = incidence_A.+incidence_M.+incidence_V
+
+
 
 
 #Cumulative values for spreadsheet days 30,45,60,90,180,365(end)
