@@ -1,116 +1,96 @@
 push!(LOAD_PATH, "/Users/Sam/GitHub/KenyaCoV/src")
-using DataFrames,CSV,MAT,Statistics,LinearAlgebra,Optim,Plots,JLD2,RData,Distances
+using DataFrames,CSV,MAT,Statistics,LinearAlgebra,Optim,Plots,JLD2,RData,Distances,DelimitedFiles
 gr()
 
-movement_data =  RData.load("data/movement_matrix_2020-03.rda")
-movements = movement_data["incidence_matrix_dayOnly"]
-heatmap(log10.(movements.+1))
 
-sum(movements,dims = 2)
 """
-Get data from 2009 and 2019 --- rescale and get movement data from mobile phone movements
+Load conversion matrices, movement data and population data
 """
-T_2009 = readtable("data/2009_population_estimates.csv")
-T_2019 = readtable("data/2019_population_estimates.csv")
-T = join(T_2009,T_2019,on = :County)
-#Rescale the size of the rural and urban population to match 2019 totals
-for i = 1:47
-    if !ismissing(T.Rural[i])
-        T.Rural[i] = round(Int64,T.Rural[i]*T[:total_size][i]/T[:Total][i])
-    else
-        T.Rural[i] = 0
-    end
-    if !ismissing(T.Urban[i])
-        T.Urban[i] = round(Int64,T.Urban[i]*T[:total_size][i]/T[:Total][i])
-    else
-        T.Urban[i] = 0
-    end
+c_to_rr = matread("data/conversion_matrix_c_rr.mat")["conversion_matrix_c_to_rr"]
+rr_to_c =  matread("data/conversion_matrix.mat")["conversion_matrix"]
+@load "data/mv_matrix.jld2" mv_matrix;#In from-to format
+county_populations = CSV.read("data/2019_census_age_pyramids_counties.csv")
+N_pop = zeros(Int64,47,17)
+for i = 1:47, a = 1:17
+    N_pop[i,a] = county_populations[i,a+1]
 end
-CSV.write("data/combined_population_estimates.csv",T)
-
-#Get movement matrix data
-# matread("data/movements.mat")
-# mv_data = matopen("data/movements.mat")
-# mv_matrix = read(mv_data)["movements"]
-# close(mv_data)
-# CSV.write("data/combined_population_estimates.csv",T)
-
-@load "data/mv_matrix.jld2" mv_matrix;
+mobile_pop_by_county = Vector(sum(N_pop[:,5:11],dims = 2)[:])
+bar(mobile_pop_by_county,xticks = (1:47,county_populations.county))
 
 """
-Idea:
-1) Fix the per-capita flux Nairobi <-> Mombassa to 2009 estimates.
-2) Construct a gravity model prediction for other moves, varying distance exponent
-3) Fit to wider area data using relative entropy
+Get location data
 """
-urban_pop_size = [u for u in T.Urban]
-x_locations = [x for x in T.x_location]
-y_locations = [y for y in T.y_location]
+
+kenya_09_tbl = CSV.read("data/2009_National_Estimates_of_Rural_and_Urban_Populations_by_County.csv")
+county_centre_points = []
+for i = 1:47
+    global county_centre_points
+    x = join(split(kenya_09_tbl.Location[i],"("))
+    x = join(split(x,")"))
+    y = split(x,",")
+    z = parse(Float64,y[2])*111.32,parse(Float64,y[1])*110.57
+    push!(county_centre_points,z)
+end
+
+"""
+Get distances between counties
+"""
+
 dist_matrix = zeros(47,47) #County level distances
 for i = 1:47,j=1:47
-    dist_matrix[i,j] = sqrt((x_locations[i] - x_locations[j])^2 + (y_locations[i] - y_locations[j])^2)
+    dist_matrix[i,j] = sqrt((county_centre_points[i][1] - county_centre_points[j][1])^2 +
+                        (county_centre_points[i][2] - county_centre_points[j][2])^2)
 end
-ind_mombasa = findfirst(T.County .== "Mombasa")
-ind_nairobi = findfirst(T.County .== "Nairobi")
-normed_movements = copy(mv_matrix) #Data at the wider spatial scale
+"""
+Convert movements into time spent in areas
+"""
+movements_per_person = zeros(20,20)
+for i = 1:20,j=1:20
+    movements_per_person[i,j] = mv_matrix[j,i]/1000#change to from col to row format for ease of multiplication with column vectors
+end
+heatmap(movements_per_person)
+ρ = [sum(movements_per_person,dims = 1)[j]*5/30 for j = 1:20]
+P_dest = zeros(20,20)#probability distribution of destination
 for j = 1:20
-    normed_movements[:,j] = LinearAlgebra.normalize(normed_movements[:,j],1)
+    P_dest[:,j] = normalize(movements_per_person[:,j],1)
 end
-NtoMmoves = normed_movements[12,4] #Nairobi to Mombasa
-MtoNmoves = normed_movements[4,12] #Mombassa to Nairobi
+T = zeros(20,20) # combined location density matrix
+for i = 1:20,j=1:20
+    if i == j
+        T[i,j] = 1-ρ[i]
+    else
+        T[i,j] = ρ[j]*P_dest[i,j]
+    end
+end
+heatmap(T,clims = (0.,0.1))
 
-function prediction_moves(dist_matrix,N,α)
-    P = similar(dist_matrix)
+
+"""
+
+"""
+
+function prediction_where_travelled_to(dist_matrix,N,α)
+    prediction = similar(dist_matrix)
     d1,d2 = size(dist_matrix)
+    for i = 1:d1,j = 1:d2
+        if i != j
+            prediction[i,j] = N[i]/(1 + dist_matrix[i,j]^α)
+        else
+            prediction[i,j] = 0.
+        end
+    end
     for j = 1:d2
-        for i = 1:d1
-            if j != i
-                P[i,j] = N[i]/(dist_matrix[i,j]^α)
-            else
-                P[i,j] = 0.
-            end
-        end
-        P[:,j] = LinearAlgebra.normalize(P[:,j],1)
-        if j == ind_nairobi
-            P[ind_mombasa,j] = NtoMmoves
-            x = sum(P[:,j]) - NtoMmoves
-            for i = 1:d1
-                if i != ind_mombasa
-                    P[i,j] = P[i,j]*(1-NtoMmoves)/x
-                end
-            end
-        end
-        if j == ind_mombasa
-            P[ind_nairobi,j] = MtoNmoves
-            x = sum(P[:,j]) - MtoNmoves
-            for i = 1:d1
-                if i != ind_nairobi
-                    P[i,j] = P[i,j]*(1-MtoNmoves)/x
-                end
-            end
-        end
+        prediction[:,j] = normalize(prediction[:,j],1)
     end
-    return P
+    return prediction
 end
 
 
 
-function aggregate_movements(P,T)
-    n = length(unique(T.wider_area))
-    P̂ = zeros(n,n)
-    urban_population_size_wa = [sum(T.Urban[findall(T.wider_area .== i)]) for i = 1:20]
-    for i = 1:n,j=1:n
-        in_i = findall(T.wider_area .== i)
-        in_j = findall(T.wider_area .== j)
-        for l in in_i,k in in_j
-            P̂[i,j] += (T.Urban[k]/urban_population_size_wa[j])*P[l,k]
-        end
-    end
-    P̂[4,12] = MtoNmoves #Set to correct amount
-    P̂[12,4] = NtoMmoves
-    return P̂
+function aggregate_movements_to_risk_regions(dist_matrix,N,α)
+    prediction_county = prediction_where_travelled_to(dist_matrix,N,α)
+    return c_to_rr*prediction_county*rr_to_c
 end
-
 
 function rel_entropy(q,p)#rel entropy of p wrt q
     sum = 0.
@@ -122,28 +102,29 @@ function rel_entropy(q,p)#rel entropy of p wrt q
     return sum
 end
 
-function gravity_model_rel_entropy(mv_data,T,dist_matrix,N,α)
+function gravity_model_rel_entropy(mv_data,dist_matrix,N,α)
     d1,d2 = size(mv_data) #<--- base distributions
-    P = prediction_moves(dist_matrix,N,α) #<--- target distributions
-    P̂ = aggregate_movements(P,T)
+    P = prediction_where_travelled_to(dist_matrix,N,α) #<--- target distributions
+    P̂ = aggregate_movements_to_risk_regions(dist_matrix,N,α)
     sum_rel_entropy = 0.
     for j = 1:d1
         sum_rel_entropy += rel_entropy(P̂[:,j],mv_data[:,j])
     end
     return sum_rel_entropy
 end
+gravity_model_rel_entropy(normed_movements,dist_matrix,mobile_pop_by_county,2)
 
 """
 Optimise the distance exponent
 """
 function opt_func(θ)
     α = θ[1]
-    error = gravity_model_rel_entropy(normed_movements,T,dist_matrix,T.Urban,α)
+    error = gravity_model_rel_entropy(normed_movements,dist_matrix,mobile_pop_by_county,α)
 end
-fit = optimize(opt_func,[0.6],Newton())
+fit = optimize(opt_func,[2.],Newton())
 α_opt = Optim.minimizer(fit)
 rel_min = Optim.minimum(fit)
-P_opt = prediction_moves(dist_matrix,urban_pop_size,α_opt[1])
+P_opt = prediction_where_travelled_to(dist_matrix,mobile_pop_by_county,α_opt[1])
 
 @save "data/optimal_movement_matrix.jld2" P_opt
 P[28,30] - NtoMmoves
@@ -156,19 +137,18 @@ rel_entropy_range = [opt_func([α]) for α in α_range]
 plt = plot(α_range,rel_entropy_range,
     lab = "Total relative entropy",lw =3,
     xlabel = "distance exponent",
-    title = "Fit of gravity model to aggregated movement data")
+    title = "Fit of gravity model to aggregated movement data",
+    ylabel = "Total rel. entropy")
 scatter!(plt,[α_opt],[rel_min],ms=5, lab = "minimum at alpha = $(round(α_opt[1],digits = 2))")
 
-savefig(plt,"data/rel_entropy.png")
+savefig(plt,"data/rel_entropy_fit_for_movements.png")
 """
 Estimate time spent away by county
 """
-median_length_of_trip = 5.
-ρ_widerarea = [sum(mv_matrix[:,j])*median_length_of_trip/(1000*365) for j = 1:20]
 ρ_county = ones(47)
 for i = 1:47
-    wider_area = T.wider_area[i]
-    ρ_county[i] = ρ_widerarea[wider_area]
+    rr_distribution = c_to_rr[:,i]
+    ρ_county[i] = sum(ρ.*rr_distribution) #Mean value of rho over the likely risk region the county deweller is in
 end
 
 """
@@ -183,8 +163,5 @@ for i = 1:d1,j=1:d2
         T_opt[i,j] = ρ_county[j]*P_opt[i,j]
     end
 end
-names = T.County
-D = Dict("movement_mat" => T_opt,"County_names"=>names)
-matwrite("data/mixing_matrix.mat",D)
-
+heatmap(T_opt,clims = (0.,0.2))
 @save "data/optimal_transition_matrix.jld2" T_opt ρ_county

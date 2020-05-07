@@ -47,31 +47,31 @@ ICU_rate_by_age_cond_hosp = ICU_rate_by_age./hosp_rate_by_age
 ICU_rate_by_age_cond_hosp.*0.625
 
 
-plt_hosp_estimates = bar(hosp_rate_by_age,lab = "",xticks = (1:2:17,age_cats[1:2:17]),
-    title = "Hospitalisation rate by age (CDC estimate)",xlabel = "Age of infected")
-plt_ICU_estimates = bar(ICU_rate_by_age_cond_hosp,lab = "",xticks = (1:2:17,age_cats[1:2:17]),
-    title = "ICU rate by age, given hospitalisation (CDC estimate)",xlabel = "Age of infected")
-savefig(plt_hosp_estimates,"output/hosp_estimates_by_age.png")
-savefig(plt_ICU_estimates,"output/ICU_estimates_by_age.png")
+# plt_hosp_estimates = bar(hosp_rate_by_age,lab = "",xticks = (1:2:17,age_cats[1:2:17]),
+#     title = "Hospitalisation rate by age (CDC estimate)",xlabel = "Age of infected")
+# plt_ICU_estimates = bar(ICU_rate_by_age_cond_hosp,lab = "",xticks = (1:2:17,age_cats[1:2:17]),
+#     title = "ICU rate by age, given hospitalisation (CDC estimate)",xlabel = "Age of infected")
+# savefig(plt_hosp_estimates,"output/hosp_estimates_by_age.png")
+# savefig(plt_ICU_estimates,"output/ICU_estimates_by_age.png")
 
-IFR = 0.9*d_1.*hosp_rate_by_age.*ICU_rate_by_age_cond_hosp*0.625
-bar(IFR)
-verity_comparison = zeros(17)
-for a = 1:8
-    verity_comparison[2*(a-1)+1] = verity_IFR[a]
-    verity_comparison[2*(a-1)+2] = verity_IFR[a]
-end
-verity_comparison[17] = verity_IFR[9]
-brand_verity_comparison = groupedbar(hcat(IFR,verity_comparison),lab = ["Brand et al." "Verity et al."],
-            legend = :topleft,xticks = (1:2:17,age_cats[1:2:17]),
-            title = "Infection Fatality Ratio predictions",
-            ylabel = "Prob. of mortality per infection",
-            xlabel = "Age group")
-
-brand_verity_rel_comparison = bar(verity_comparison./(IFR.+0.00001),lab = "",
-            legend = :topleft,xticks = (1:2:17,age_cats[1:2:17]),
-            title = "Infection Fatality Ratio predictions",
-            ylabel = "OR (Brand vs Verity)",
-            xlabel = "Age group")
-
-savefig(brand_verity_comparison,"data/IFR_comparison_Brand_vs_verity.png")
+# IFR = 0.9*d_1.*hosp_rate_by_age.*ICU_rate_by_age_cond_hosp*0.625
+# bar(IFR)
+# verity_comparison = zeros(17)
+# for a = 1:8
+#     verity_comparison[2*(a-1)+1] = verity_IFR[a]
+#     verity_comparison[2*(a-1)+2] = verity_IFR[a]
+# end
+# verity_comparison[17] = verity_IFR[9]
+# brand_verity_comparison = groupedbar(hcat(IFR,verity_comparison),lab = ["Brand et al." "Verity et al."],
+#             legend = :topleft,xticks = (1:2:17,age_cats[1:2:17]),
+#             title = "Infection Fatality Ratio predictions",
+#             ylabel = "Prob. of mortality per infection",
+#             xlabel = "Age group")
+#
+# brand_verity_rel_comparison = bar(verity_comparison./(IFR.+0.00001),lab = "",
+#             legend = :topleft,xticks = (1:2:17,age_cats[1:2:17]),
+#             title = "Infection Fatality Ratio predictions",
+#             ylabel = "OR (Brand vs Verity)",
+#             xlabel = "Age group")
+#
+# savefig(brand_verity_comparison,"data/IFR_comparison_Brand_vs_verity.png")
