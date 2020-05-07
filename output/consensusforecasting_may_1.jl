@@ -44,15 +44,13 @@ T_regional_lockdown[:,Kwale_index] *= 0.1;T_regional_lockdown[Kwale_index,Kwale_
 
 
 #Incoming travel
-for leaving_area in 1:20,arriving_area in 1:20
+for leaving_area in 1:47,arriving_area in 1:47
     if !(leaving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]) && arriving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]
         amount_reduced = 0.9*T_regional_lockdown[arriving_area,leaving_area]
         T_regional_lockdown[arriving_area,leaving_area] -= amount_reduced
         T_regional_lockdown[leaving_area,leaving_area] += amount_reduced #All avoided trips to locked down areas lead to staying at home
     end
 end
-
-
 
 
 @load "data/detection_rates_for_different_epsilons_model2.jld2" d_0 d_01 d_025 d_05 d_1
