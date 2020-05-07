@@ -2,6 +2,16 @@
 #Only input is number and age of each new hospitalised person on each day
 #Only looking at Hosp -> ICU and ICU -> death
 include("hospitalisation_data.jl");
+
+function generate_checklist(n)
+    checklist = Any[]
+    push!(checklist,1:n)
+    for i = 1:n
+        push!(checklist,i)
+    end
+    return checklist
+end
+
 function total_incidence_and_cum_incidence_for_each_sim(sims)
     n = length(sims.u)
     T = length(sims.u[1])
