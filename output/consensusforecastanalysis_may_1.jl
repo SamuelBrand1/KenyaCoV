@@ -60,7 +60,8 @@ function generate_report_dataframe(sims,names)
     return df
 end
 df = generate_report_dataframe(sims,counties.county)
-
+m = Union{Missing,Float64}[]
+m[1] = 10.
 ## Cumulative incidence
 cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,30)
 cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
