@@ -1,5 +1,12 @@
 #Estimate from CDC COVID-19 Response Team. Severe Outcomes Among Patients with Coronavirus Disease 2019 (COVID-19) - United States, February 12-March 16, 2020. MMWR Morb. Mortal. Wkly. Rep. 69, 343–346 (2020).
 
+using CSV
+
+hosp_capacity = CSV.read(joinpath(homedir(),"Github/KenyaCoVData/Health_system_capacity_data_Kenya.csv"))
+spare_capacity_H_by_county = hosp_capacity[2].*hosp_capacity[5]
+spare_capacity_ICU_by_county = hosp_capacity[3].*hosp_capacity[6]
+
+
 age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"]
 
 verity_IFR = [0.00161,0.00695,0.0309,

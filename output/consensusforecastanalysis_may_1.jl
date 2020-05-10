@@ -1,6 +1,6 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
-using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,DelimitedFiles
-using CSV,ExcelFiles
+using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,DelimitedFiles,RecursiveArrayTools
+using CSV,ExcelFiles,DataFrames
 using Statistics: median, quantile
 using LinearAlgebra: eigen
 
@@ -19,8 +19,66 @@ nametag = "controls"
 
 include("hospitalisations.jl");
 counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
-
+names = counties.county
 sims = sims_baseline
+
+### Peak calculations by county
+checklist = generate_checklist(47)
+
+@time cum_incidence_A = @view VectorOfArray(sims.u[1])[1:47,:,1,:]
+cum_incidence_A = @view VectorOfArray(sims.u[1])[1,:,1,:]
+cum_incidence_M = @view VectorOfArray(sims.u[1])[1,:,2,:]
+cum_incidence_V = @view VectorOfArray(sims.u[1])[1,:,3,:]
+cum_incidence_H = @view VectorOfArray(sims.u[1])[1,:,4,:]
+@time y = diff(sum(cum_incidence_A.+cum_incidence_M.+cum_incidence_V,dims = 1)[:])
+y = zeros(365)
+function first_introduction_time_peak_peak_value(sims,type)
+    n = length(sims.u)
+    T = length(sims.u[1])
+    nc,na,ns = size(sims.u[1][1])
+    first_times_matrix = zeros(n,nc)
+    peak_times_matrix = zeros(n,nc)
+    peak_value_matrix = zeros(n,nc)
+    total_incidence = zeros(T-1)
+
+    for k = 1:n
+        for cn in 1:47
+            cum_incidence = @view VectorOfArray(sims.u[k])[cn,:,type,:]
+            for i = 1:(T-1)
+                total_incidence[i] = cum_incidence[1,i+1] - cum_incidence[1,i]
+                for a = 2:na
+                    @inbounds total_incidence[i] += cum_incidence[a,i+1] - cum_incidence[a,i]
+                end
+            end
+             first_time = findfirst(total_incidence .> 0)
+             (peak_value,peak_time) = findmax(total_incidence)
+             peak_value_matrix[k,cn] = peak_value
+             peak_times_matrix[k,cn] = peak_time
+             if !isnothing(first_time)
+                 first_times_matrix[k,cn] = first_time
+             else
+                 first_times_matrix[k,cn] = -1
+             end
+        end
+    end
+    return first_times_matrix,peak_times_matrix,peak_value_matrix
+end
+
+first_times,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,1)
+first_times,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,2)
+first_times,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,3)
+
+function print_onset_report(first_times_matrix,peak_times_matrix,peak_value_matrix,names)
+    n,nc = size(first_times_matrix)
+    df = DataFrame(county = names)
+    median_time_
+end
+
+
+c[:,30]
+
+
+###
 
 cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,generate_checklist(47)[1])
 cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
@@ -60,7 +118,8 @@ function generate_report_dataframe(sims,names)
     return df
 end
 df = generate_report_dataframe(sims,counties.county)
-
+m = Union{Missing,Float64}[]
+m[1] = 10.
 ## Cumulative incidence
 cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,30)
 cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
