@@ -87,7 +87,7 @@ incidence_M = diff(cum_incidence_M,dims = 2)
 incidence_V = diff(cum_incidence_V,dims = 2)
 incidence_H = diff(cum_incidence_H,dims = 2)
 total_incidence = incidence_A.+incidence_M.+incidence_V
-
+this
 function generate_report_dataframe(sims,names)
     n_sims = length(sims.u)
     T = length(sims.u[1])
