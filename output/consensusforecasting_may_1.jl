@@ -62,7 +62,7 @@ Load age mixing matrices (these are all in to (row) from (col) format)
 """
 
 @load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
-
+@load "data/agemixingmatrix_china.jld2" M_China
 
 #Function for changing contacts so as to have -45% over 14 days
 function ramp_down(t)
@@ -77,8 +77,12 @@ end
 using Dates
 Date(2020,4,7) - Date(2020,3,13)
 Date(2020,6,2) - Date(2020,3,13)
+Date(2020,8,14) - Date(2020,3,13)
+
 Date(2020,8,31) - Date(2020,3,13)
 Date(2020,5,16) - Date(2020,3,13)
+Date(2020,10,30) - Date(2020,3,13)
+
 
 #Put in the regional lockdown on day 25 (April 7th)
 function regional_lockdown_timing(u,t,integrator)
@@ -105,16 +109,40 @@ regional_lockdown_starts_and_finishes = CallbackSet(cb_regional_lockdown,cb_regi
 function open_schools_june(u,t,integrator)
   integrator.p.schools_closed && t > 81.
 end
+
+function close_schools_august(u,t,integrator)
+  !integrator.p.schools_closed && t > 154.
+end
+
+function close_schools_october(u,t,integrator)
+  !integrator.p.schools_closed && t > 231.
+end
+
 function open_schools_august(u,t,integrator)
   integrator.p.schools_closed && t > 171.
 end
 function affect_open_schools!(integrator)
-  integrator.p.M = M_Kenya
+  integrator.p.M = 1.1*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.7*M_Kenya_school
   integrator.p.schools_closed = false
 end
+function affect_close_schools!(integrator)
+  integrator.p.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+  integrator.p.schools_closed = true
+end
+
 cb_open_schools_june = DiscreteCallback(open_schools_june,affect_open_schools!)
 cb_open_schools_august = DiscreteCallback(open_schools_august,affect_open_schools!)
+cb_close_schools_august = DiscreteCallback(close_schools_august,affect_close_schools!)
+cb_close_schools_october = DiscreteCallback(close_schools_october,affect_close_schools!)
 
+measures_two_stage_school_open = CallbackSet(cb_regional_lockdown,
+                                            cb_open_schools_june,
+                                            cb_close_schools_august,
+                                            cb_open_schools_august,
+                                            cb_close_schools_october)
+measures_one_stage_school_open = CallbackSet(cb_regional_lockdown,
+                                            cb_open_schools_august,
+                                            cb_close_schools_october)
 
 """
 Set up parameters
@@ -126,22 +154,27 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
 #Redistribute susceptibility JUST to rescale infectiousness so we get the correct R₀/r
-P.χ = χ_zhang
+P.χ = copy(χ_zhang)
 P.rel_detection_rate = d_1
 P.dt = 0.25;
 P.ext_inf_rate = 0.;
 P.ϵ = 1.
 #Set the susceptibility vector --- just to specify the correct R₀
-sus_matrix = repeat(P.χ,1,17)
+sus_matrix = repeat(χ_zhang,1,17)
 R_A = P.ϵ*((1/P.σ₂) + (1/P.γ) ) #effective duration of asymptomatic
 R_M = (P.ϵ/P.σ₂) + (P.ϵ_D/P.γ) #effective duration of mild
 R_V = (P.ϵ/P.σ₂) + (P.ϵ_V/P.τ) #effective duration of severe
 R_vector = [(1-P.rel_detection_rate[a])*R_A + P.rel_detection_rate[a]*(1-P.hₐ[a])*R_M + P.rel_detection_rate[a]*P.hₐ[a]*R_V for a = 1:17]
 inf_matrix = repeat(R_vector',17,1)
 
-eigs, = eigen(sus_matrix.*P.M.*inf_matrix)
-max_eigval = Real(eigs[end])
-P.χ .*= 1/max_eigval #This rescales everything so β is the same as R₀
+eigs_china, = eigen(sus_matrix.*M_China.*inf_matrix)
+max_eigval_china = Real(eigs_china[end])
+eigs_kenya, = eigen(sus_matrix.*M_Kenya.*inf_matrix)
+max_eigval_Kenya = Real(eigs_kenya[end])
+multiplier_for_kenya = max_eigval_Kenya/max_eigval_china
+P.χ .= χ_zhang ./max_eigval_china #This rescales everything so β is the same as R₀ for China
+
+
 
 u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
 u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
@@ -151,7 +184,7 @@ u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
 Base line scenario
 """
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 range
+P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
 P.lockdown = false
 P.schools_closed = false
 P.M = M_Kenya
@@ -178,7 +211,7 @@ P.c_t = ramp_down #This implements the social distancing over 14 days from time 
 
 P.lockdown = false
 P.schools_closed = true
-P.M = M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
@@ -196,11 +229,11 @@ P.c_t = ramp_down #This implements the social distancing over 14 days from time 
 
 P.lockdown = false
 P.schools_closed = true
-P.M = M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
-sims_open_schools_june = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet(cb_regional_lockdown,cb_open_schools_june))
+sims_open_schools_june = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_two_stage_school_open)
 
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
 
@@ -214,10 +247,10 @@ P.c_t = ramp_down #This implements the social distancing over 14 days from time 
 
 P.lockdown = false
 P.schools_closed = true
-P.M = M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
-sims_open_schools_august = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,CallbackSet(cb_regional_lockdown,cb_open_schools_august))
+sims_open_schools_august = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_one_stage_school_open)
 
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
