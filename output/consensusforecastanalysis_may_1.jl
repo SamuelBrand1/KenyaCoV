@@ -1,13 +1,12 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
+using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,DelimitedFiles
+using CSV,ExcelFiles
 using Statistics: median, quantile
 using LinearAlgebra: eigen
 
 
 #Load data
 @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
 # @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
 # @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
 # @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
@@ -21,6 +20,7 @@ nametag = "controls"
 include("hospitalisations.jl");
 counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
 
+sims = sims_baseline
 
 cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,generate_checklist(47)[1])
 cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
@@ -60,8 +60,7 @@ function generate_report_dataframe(sims,names)
     return df
 end
 df = generate_report_dataframe(sims,counties.county)
-m = Union{Missing,Float64}[]
-m[1] = 10.
+
 ## Cumulative incidence
 cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,30)
 cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
