@@ -1,123 +1,73 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
-using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,DelimitedFiles,RecursiveArrayTools
+using Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,FileIO,DelimitedFiles,RecursiveArrayTools,Plots
 using CSV,ExcelFiles,DataFrames
 using Statistics: median, quantile
 using LinearAlgebra: eigen
 
 
 #Load data
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
-# @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
+# @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
 # @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
 # @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
 
-nametag = "controls"
 
 ## Functions --- to be used
 
 
 
 include("hospitalisations.jl");
-counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
+counties = CSV.read(joinpath(homedir(),"Github/KenyaCoV/data/2019_census_age_pyramids_counties.csv"))
 names = counties.county
-sims = sims_baseline
+sims = sims_end_regional_lockdown
 
 ### Peak calculations by county
-checklist = generate_checklist(47)
 
-@time cum_incidence_A = @view VectorOfArray(sims.u[1])[1:47,:,1,:]
-cum_incidence_A = @view VectorOfArray(sims.u[1])[1,:,1,:]
-cum_incidence_M = @view VectorOfArray(sims.u[1])[1,:,2,:]
-cum_incidence_V = @view VectorOfArray(sims.u[1])[1,:,3,:]
-cum_incidence_H = @view VectorOfArray(sims.u[1])[1,:,4,:]
-@time y = diff(sum(cum_incidence_A.+cum_incidence_M.+cum_incidence_V,dims = 1)[:])
-y = zeros(365)
-function first_introduction_time_peak_peak_value(sims,type)
-    n = length(sims.u)
-    T = length(sims.u[1])
-    nc,na,ns = size(sims.u[1][1])
-    first_times_matrix = zeros(n,nc)
-    peak_times_matrix = zeros(n,nc)
-    peak_value_matrix = zeros(n,nc)
-    total_incidence = zeros(T-1)
 
-    for k = 1:n
-        for cn in 1:47
-            cum_incidence = @view VectorOfArray(sims.u[k])[cn,:,type,:]
-            for i = 1:(T-1)
-                total_incidence[i] = cum_incidence[1,i+1] - cum_incidence[1,i]
-                for a = 2:na
-                    @inbounds total_incidence[i] += cum_incidence[a,i+1] - cum_incidence[a,i]
-                end
-            end
-             first_time = findfirst(total_incidence .> 0)
-             (peak_value,peak_time) = findmax(total_incidence)
-             peak_value_matrix[k,cn] = peak_value
-             peak_times_matrix[k,cn] = peak_time
-             if !isnothing(first_time)
-                 first_times_matrix[k,cn] = first_time
-             else
-                 first_times_matrix[k,cn] = -1
-             end
-        end
-    end
-    return first_times_matrix,peak_times_matrix,peak_value_matrix
-end
 
-first_times,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,1)
-first_times,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,2)
-first_times,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,3)
+@time a,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,1)
+b,peak_M,peak_M_value = first_introduction_time_peak_peak_value(sims,2)
+c,peak_V,peak_V_value = first_introduction_time_peak_peak_value(sims,3)
 
-function print_onset_report(first_times_matrix,peak_times_matrix,peak_value_matrix,names)
-    n,nc = size(first_times_matrix)
+first_times = get_first_time(a,b,c)
+
+
+df = print_onset_report(first_times,peak_A,peak_A_value,peak_M,peak_M_value,peak_V,peak_V_value,names,"KenyaCoVOutputs/peak_report_end_regional_lockdown.csv")
+
+spare_capacity_H_by_county[2:end]
+spare_capacity_ICU_by_county[30]
+
+function print_hosp_report(sims)
     df = DataFrame(county = names)
-    median_time_
+
+    hosp_occup_per_sim,ICU_occup_per_sim,new_ICU_per_sim,death_incidence_per_sim = total_hospital_outcomes_per_sim(sims,30)
+cum_death_per_sim = similar(death_incidence_per_sim)
+cum_hosp_per_sim = similar(death_incidence_per_sim)
+cum_ICU_per_sim = similar(death_incidence_per_sim)
+
+for k = 1:1000
+    cum_death_per_sim[k,:] .= cumsum(death_incidence_per_sim[k,:])
+    cum_death_per_sim[k,:] .= cumsum(death_incidence_per_sim[k,:])
+
 end
 
+df = DataFrame(county = names)
+hosp_maximums = [(hosp_max,hosp_max_time) = findmax(hosp_occup_per_sim[k,:]) for k = 1:1000]
+ICU_maximums = [(ICU_max,ICU_max_time) = findmax(ICU_occup_per_sim[k,:]) for k = 1:1000]
+perc_hosp_exceeds = [h[1]/spare_capacity_H_by_county[31] for h in hosp_maximums]
+perc_ICU_exceeds = [h[1]/spare_capacity_ICU_by_county[31] for h in ICU_maximums]
 
-c[:,30]
+chance_exceed_hosp = mean([p >= 1 for p in perc_hosp_exceeds])
+day_hosp_exceeded = filter(!isnothing,[findfirst(hosp_occup_per_sim[k,:].>spare_capacity_H_by_county[31]) for k = 1:1000])
+median_day_ICU_exceeded = median(filter(!isnothing,[findfirst(ICU_occup_per_sim[k,:].>spare_capacity_ICU_by_county[31]) for k = 1:1000]))
 
-
-sims = sims_baseline
-
-cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,generate_checklist(47)[1])
-cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
-incidence_A = diff(cum_incidence_A,dims = 2)
-incidence_M = diff(cum_incidence_M,dims = 2)
-incidence_V = diff(cum_incidence_V,dims = 2)
-incidence_H = diff(cum_incidence_H,dims = 2)
-total_incidence = incidence_A.+incidence_M.+incidence_V
-
-function generate_report_dataframe(sims,names)
-    n_sims = length(sims.u)
-    T = length(sims.u[1])
-    n,n_a,n_s = size(sims.u[1][1])
-    names = vcat("Total",names)
-    County = String[]
-    for (i,name) in enumerate(names)
-        push!(County,name*" (median)")
-        push!(County,name*" (2.5th perc.)")
-        push!(County,name*" (97.5th perc.)")
-    end
-    df = DataFrame()
-    df.County = County
-
-    checklist = generate_checklist(n)
-
-    for (k,cn) = enumerate(checklist[1])
-        cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,30)
-        cum_incidence_total = cum_incidence_A.+cum_incidence_M.+cum_incidence_V
-        incidence_A = diff(cum_incidence_A,dims = 2)
-        incidence_M = diff(cum_incidence_M,dims = 2)
-        incidence_V = diff(cum_incidence_V,dims = 2)
-        incidence_H = diff(cum_incidence_H,dims = 2)
-        total_incidence = incidence_A.+incidence_M.+incidence_V
-    end
+chance_exceed_ICU = mean([p >= 1 for p in perc_ICU_exceeds])
 
 
-    return df
-end
-df = generate_report_dataframe(sims,counties.county)
+
+
+
+
 
 ## Cumulative incidence
 cum_incidence_A,cum_incidence_M,cum_incidence_V,cum_incidence_H = cum_incidence_for_each_sim_by_type(sims,30)
@@ -196,7 +146,7 @@ ub_severe_incidence_at_peak = quantile([ incidence_H[k,t] for (k,t) in enumerate
 
 
 ## Hospitalisation outcomes
-hosp_occup_per_sim,ICU_occup_per_sim,new_ICU_per_sim,death_incidence_per_sim = total_hospital_outcomes_per_sim(sims_controls)
+hosp_occup_per_sim,ICU_occup_per_sim,new_ICU_per_sim,death_incidence_per_sim = total_hospital_outcomes_per_sim(sims,30)
 cum_death_per_sim = similar(death_incidence_per_sim)
 for k = 1:1000
     cum_death_per_sim[k,:] .= cumsum(death_incidence_per_sim[k,:])
@@ -423,23 +373,26 @@ Kwale_index = findfirst(counties.county .== "Kwale")
 Kilifi_index = findfirst(counties.county .== "Kilifi")
 Mandera_index  = findfirst(counties.county .== "Mandera")
 
-sims = sims_baseline
+sims = sims_end_regional_lockdown
 
 
 
 plt_incidence_nairobi,plt_usage_nairobi = give_plots_for_county(sims,30)
-plot!(plt_incidence_nairobi,title = "Incidence of disease - Nairobi (baseline)")
-plot!(plt_usage_nairobi,title = "Health system usage - Nairobi (baseline)")
+plot!(plt_incidence_nairobi,title = "Nairobi (SD + regional lockdown relaxed May 16th)")
+plot!(plt_usage_nairobi,[0,365],[spare_capacity_H_by_county[30+1],spare_capacity_H_by_county[30+1]],
+        title = "Nairobi (SD + regional lockdown relaxed May 16th)",lw = 2,ls = :dash,lab = "spare hosp. capacity",color = :blue)
+plot!(plt_usage_nairobi,[0,365],[spare_capacity_ICU_by_county[30+1],spare_capacity_ICU_by_county[30+1]],
+        title = "Nairobi (SD + regional lockdown relaxed May 16th)",lw = 2,ls = :dash,lab = "spare ICU capacity",color = :green)
 
-savefig(plt_incidence_nairobi,"nairobi_incidence_baseline.png")
-savefig(plt_usage_nairobi,"nairobi_health_usage_baseline.png")
+savefig(plt_incidence_nairobi,"nairobi_incidence_regional_relaxation.png")
+savefig(plt_usage_nairobi,"nairobi_health_usage_regional_relaxation.png")
 plt_incidence_mombasa,plt_usage_mombasa = give_plots_for_county(sims,Mombassa_index)
-plot!(plt_incidence_mombasa,title = "Incidence of disease - Mombasa (baseline)")
-plot!(plt_usage_mombasa,title = "Health system usage - Mombasa (baseline)")
-savefig(plt_incidence_mombasa,"mombasa_incidence_baseline.png")
-savefig(plt_usage_mombasa,"mombasa_health_usage_baseline.png")
+plot!(plt_incidence_mombasa,title = "Mombasa (SD + regional lockdown relaxed May 16th)")
+plot!(plt_usage_mombasa,title = "Mombasa (SD + regional lockdown relaxed May 16th)")
+savefig(plt_incidence_mombasa,"mombasa_incidence_regional_relaxation.png")
+savefig(plt_usage_mombasa,"mombasa_health_usage_regional_relaxation.png")
 plt_incidence_rest,plt_usage_rest = give_plots_for_county(sims,setdiff(1:47,[28,30]))
-plot!(plt_incidence_rest,title = "Incidence of disease - rest of Kenya (baseline)")
-plot!(plt_usage_rest,title = "Health system usage - rest of Kenya (baseline)")
-savefig(plt_incidence_rest,"rest_of_country_incidence_baseline.png")
-savefig(plt_usage_rest,"rest_of_country_health_usage_baseline.png")
+plot!(plt_incidence_rest,title = "Rest of Kenya (SD + regional lockdown relaxed May 16th)")
+plot!(plt_usage_rest,title = "Rest of Kenya (SD + regional lockdown relaxed May 16th")
+savefig(plt_incidence_rest,"rest_of_country_incidence_regional_relaxation.png")
+savefig(plt_usage_rest,"rest_of_country_health_usage_regional_relaxation.png")

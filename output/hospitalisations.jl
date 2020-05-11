@@ -3,6 +3,97 @@
 #Only looking at Hosp -> ICU and ICU -> death
 include("hospitalisation_data.jl");
 
+function first_introduction_time_peak_peak_value(sims,type)
+    n = length(sims.u)
+    T = length(sims.u[1])
+    nc,na,ns = size(sims.u[1][1])
+    first_times_matrix = zeros(n,nc)
+    peak_times_matrix = zeros(n,nc)
+    peak_value_matrix = zeros(n,nc)
+    total_incidence = zeros(T-1)
+
+    for k = 1:n
+        for cn in 1:47
+            cum_incidence = @view VectorOfArray(sims.u[k])[cn,:,type,:]
+            for i = 1:(T-1)
+                total_incidence[i] = cum_incidence[1,i+1] - cum_incidence[1,i]
+                for a = 2:na
+                    @inbounds total_incidence[i] += cum_incidence[a,i+1] - cum_incidence[a,i]
+                end
+            end
+             first_time = findfirst(total_incidence .> 0)
+             (peak_value,peak_time) = findmax(total_incidence)
+             peak_value_matrix[k,cn] = peak_value
+             peak_times_matrix[k,cn] = peak_time
+             if !isnothing(first_time)
+                 first_times_matrix[k,cn] = first_time
+             else
+                 first_times_matrix[k,cn] = 9999
+             end
+        end
+    end
+    return first_times_matrix,peak_times_matrix,peak_value_matrix
+end
+
+function get_first_time(a,b,c)
+    n,nc = size(a)
+    first_times  = similar(a)
+    for k = 1:n,cn = 1:nc
+        first_times[k,cn] = min(a[k,cn],b[k,cn],c[k,cn])
+    end
+    return first_times
+end
+
+function print_onset_report(first_times,peak_A,peak_A_value,peak_M,peak_M_value,peak_V,peak_V_value,names,filename)
+    n,nc = size(first_times)
+    df = DataFrame(county = names)
+    median_time_to_peak_A = [median(peak_A[:,cn] ) for cn in 1:47]
+    lb_time_to_peak_A = [quantile(peak_A[:,cn],0.025) for cn in 1:47]
+    ub_time_to_peak_A = [quantile(peak_A[:,cn] ,0.975) for cn in 1:47]
+    df.median_time_to_peak_asymptomatics = median_time_to_peak_A
+    df.lower_estimate_time_to_peak_asymptomatics = lb_time_to_peak_A
+    df.upper_estimate_time_to_peak_asymptomatics = ub_time_to_peak_A
+
+    median_time_to_peak_M = [median(peak_M[:,cn] ) for cn in 1:47]
+    lb_time_to_peak_M = [quantile(peak_M[:,cn] ,0.025) for cn in 1:47]
+    ub_time_to_peak_M = [quantile(peak_M[:,cn] ,0.975) for cn in 1:47]
+    df.median_time_to_peak_Mild_cases = median_time_to_peak_M
+    df.lower_estimate_time_to_peak_Mild_cases = lb_time_to_peak_M
+    df.upper_estimate_time_to_peak_Mild_cases = ub_time_to_peak_M
+
+    median_time_to_peak_V = [median(peak_V[:,cn] ) for cn in 1:47]
+    lb_time_to_peak_V = [quantile(peak_V[:,cn] ,0.025) for cn in 1:47]
+    ub_time_to_peak_V = [quantile(peak_V[:,cn] ,0.975) for cn in 1:47]
+    df.median_time_to_peak_Severe_cases = median_time_to_peak_V
+    df.lower_estimate_time_to_peak_Severe_cases  = lb_time_to_peak_V
+    df.upper_estimate_time_to_peak_Severe_cases  = ub_time_to_peak_V
+
+    median_peak_size_A = [median(peak_A_value[:,cn] ) for cn in 1:47]
+    lb_peak_size_A = [quantile(peak_A_value[:,cn] ,0.025) for cn in 1:47]
+    ub_peak_size_A = [quantile(peak_A_value[:,cn] ,0.975) for cn in 1:47]
+    df.median_peak_size_A = median_peak_size_A
+    df.lower_estimate_peak_size_A  = lb_peak_size_A
+    df.upper_estimate_peak_size_A  = ub_peak_size_A
+
+    median_peak_size_M = [median(peak_M_value[:,cn] ) for cn in 1:47]
+    lb_peak_size_M = [quantile(peak_M_value[:,cn] ,0.025) for cn in 1:47]
+    ub_peak_size_M = [quantile(peak_M_value[:,cn] ,0.975) for cn in 1:47]
+    df.median_peak_size_Mild_cases = median_peak_size_M
+    df.lower_estimate_peak_size_Mild_cases  = lb_peak_size_M
+    df.upper_estimate_peak_size_Mild_cases  = ub_peak_size_M
+
+    median_peak_size_V = [median(peak_V_value[:,cn] ) for cn in 1:47]
+    lb_peak_size_V = [quantile(peak_V_value[:,cn] ,0.025) for cn in 1:47]
+    ub_peak_size_V = [quantile(peak_V_value[:,cn] ,0.975) for cn in 1:47]
+    df.median_peak_size_Severe_cases = median_peak_size_V
+    df.lower_estimate_peak_size_Severe_cases  = lb_peak_size_V
+    df.upper_estimate_peak_size_Severe_cases  = ub_peak_size_V
+
+    CSV.write(filename,df)
+    return df
+end
+
+
 function generate_checklist(n)
     checklist = Any[]
     push!(checklist,1:n)

@@ -176,6 +176,7 @@ P.χ .= χ_zhang ./max_eigval_china #This rescales everything so β is the same 
 
 
 
+
 u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
 u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
 u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
@@ -185,6 +186,7 @@ Base line scenario
 """
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
+P.c_t = t -> 1.
 P.lockdown = false
 P.schools_closed = false
 P.M = M_Kenya
