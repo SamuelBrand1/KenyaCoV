@@ -48,7 +48,7 @@ Kenya_Case_Dis_MAT = Matrix(Kenya_Case_Dis[:])
 
 #This is a struct for the case data in numbers rather than proportions
 struct CaseDistribution
-    C::Array{Int64,2} #Total number of cases in each age group by symptomatic category
+    C::Array{Int64,2} #Total number of cases in each age group
     n::Int64 #Total number of cases
     prediction::Function #This is the function that makes a prediction about case distribution
 end
@@ -61,15 +61,16 @@ function (cases::CaseDistribution)(θ) #Susceptibility form of likelihood
     @unpack n, C, prediction = cases   # extract the data and prediction function
     T = eltype(θ)
     p = prediction(θ) #predicted number of cases, asymptomatic and symptomatic
-    obs_tot_cases_age = vec(sum(C,dims=2))  # Observed total cases by age
-    pred_tot_cases_age = vec(sum(p,dims=2))  # predicted total cases by age
-    pred_agedist = vec(pred_tot_cases_age./sum(p)) # predicted case (both symp and asymp) distribution by age
-    pred_symp = p[:,2]./pred_tot_cases_age # predicted symptomatic rate by age
+    obs_tot_cases_age = sum(C,dims=2)  # Observed total cases by age
+    pred_tot_cases_age = sum(p,dims=2)  # predicted total cases by age
+    pred_agedist = pred_tot_cases_age/sum(p) # predicsted case (both symp and asymp) distribution by age
+    pred_symp = p[:,2]/pred_tot_cases_age # predicted symptomatic rate by age
 
     try
         logL = 0.
-        for i = 1:17
-            logL += C[i,1]*log(1-pred_symp[i]) +  C[i,2]*log(pred_symp[i]) + obs_tot_cases_age[i]*log(pred_agedist[i])  # C[,1] has number asymptomatic and C[,2] has number symptomatic. The third element of the log lik is a multinomial distribution of cases by age.
+        a=size(C)[1]
+        for i = 1:a
+            logL += C[i,1]*log(1-pred_symp[i]) +  C[i,2]*log(pred_symp[i]) + obs_tot_cases_age*log(pred_agedist[i])  # C[,1] has number asymptomatic and C[,2] has number symptomatic. The third element of the log lik is a multinomial distribution of cases by age.
         end
         return logL
     catch errtype
@@ -83,14 +84,22 @@ end
 #mild infecteds and that the eventually severe cases don't transmit more than mild cases
 
 function pred_case_distribution_using_iter_K_model2_splitAsymp(χ::Vector,d::Vector,ϵ::Vector,C)
+<<<<<<< HEAD
     d1, = size(C) # number of age groups
+=======
+    d1, = size(C)[1] # number of age groups
+>>>>>>> Editing the log likelihood
     K = zeros(eltype(d),d1,d1)
     for a = 1:d1,b=1:d1
         K[a,b] = χ[a]*C[a,b]*(2*ϵ[b] + 7*d[b] + 7*(1-d[b])*ϵ[b])
     end
     v = (K^10)*ones(d1)
     asymp = d.*v  # predicted asymptomatics cases
+<<<<<<< HEAD
     symp = v - asymp # predicted symptomatics cases
+=======
+    syp = (1-d).*v  # predicted symptomatics cases
+>>>>>>> Editing the log likelihood
     return hcat(asymp,symp)
 end
 
@@ -98,23 +107,25 @@ end
 
 #This function returns the HMC chains with tree statistics for the run
 function HMC_for_detection_rate(χ,ϵ,n_draws)
-    cases_to_fit = CaseDistribution(Array{Int64,2}(Kenya_Case_Dis_MAT),
+    cases_to_fit = CaseDistribution(Int64.(Kenya_Case_Dis_MAT[:]),
                         Int64(sum(Kenya_Case_Dis_MAT)),
-                        d -> pred_case_distribution_using_iter_K_model2_splitAsymp(χ,d,ϵ*ones(17),M_Kenya))
+                        d -> pred_case_distribution_using_iter_K_model2(χ,d,ϵ*ones(17),China_to_from))
 
     trans = as((θ = as(Array, asℝ₊, 17),)) # All parameters are transformed to be positive.
     P = TransformedLogDensity(trans, cases_to_fit) #This creates a transformed log-likelihood
     ∇P = ADgradient(:ForwardDiff, P) #This automatically generates a log-likelihood gradient at the same time as the likelihood is called
-    return results = mcmc_with_warmup(Random.GLOBAL_RNG, ∇P, n_draws) # reporter = NoProgressReport()
+    return results = mcmc_with_warmup(Random.GLOBAL_RNG, ∇P, n_draws,reporter = NoProgressReport())
 end
 
-χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))  # age specific susceptibility
+χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))
 
-#d_chain_model2_epsilon_0 = HMC_for_detection_rate(χ_zhang,0.,10000)
-#d_chain_model2_epsilon_01 = HMC_for_detection_rate(χ_zhang,0.1,10000)
-#d_chain_model2_epsilon_025 = HMC_for_detection_rate(χ_zhang,0.25,10000)
-#d_chain_model2_epsilon_05 = HMC_for_detection_rate(χ_zhang,0.5,10000)
-d_chain_model2_epsilon_1 = HMC_for_detection_rate(χ_zhang,1.,10)
+
+
+d_chain_model2_epsilon_0 = HMC_for_detection_rate(χ_zhang,0.,10000)
+d_chain_model2_epsilon_01 = HMC_for_detection_rate(χ_zhang,0.1,10000)
+d_chain_model2_epsilon_025 = HMC_for_detection_rate(χ_zhang,0.25,10000)
+d_chain_model2_epsilon_05 = HMC_for_detection_rate(χ_zhang,0.5,10000)
+d_chain_model2_epsilon_1 = HMC_for_detection_rate(χ_zhang,1.,10000)
 
 @save "HMC_chains_for_model2.jld2" d_chain_model2_epsilon_0 d_chain_model2_epsilon_01 d_chain_model2_epsilon_025 d_chain_model2_epsilon_05 d_chain_model2_epsilon_1
 
