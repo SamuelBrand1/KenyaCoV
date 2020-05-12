@@ -61,16 +61,15 @@ function (cases::CaseDistribution)(θ) #Susceptibility form of likelihood
     @unpack n, C, prediction = cases   # extract the data and prediction function
     T = eltype(θ)
     p = prediction(θ) #predicted number of cases, asymptomatic and symptomatic
-    obs_tot_cases_age = sum(C,dims=2)  # Observed total cases by age
-    pred_tot_cases_age = sum(p,dims=2)  # predicted total cases by age
-    pred_agedist = pred_tot_cases_age/sum(p) # predicsted case (both symp and asymp) distribution by age
-    pred_symp = p[:,2]/pred_tot_cases_age # predicted symptomatic rate by age
+    obs_tot_cases_age = vec(sum(C,dims=2))  # Observed total cases by age
+    pred_tot_cases_age = vec(sum(p,dims=2))  # predicted total cases by age
+    pred_agedist = pred_tot_cases_age./sum(p) # predicted case (both symp and asymp) distribution by age
+    pred_symp = p[:,2]./pred_tot_cases_age # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17] predicted symptomatic rate by age
 
     try
         logL = 0.
-        a=size(C)[1]
-        for i = 1:a
-            logL += C[i,1]*log(1-pred_symp[i]) +  C[i,2]*log(pred_symp[i]) + obs_tot_cases_age*log(pred_agedist[i])  # C[,1] has number asymptomatic and C[,2] has number symptomatic. The third element of the log lik is a multinomial distribution of cases by age.
+        for i = 1:17
+            logL += C[i,1]*log(1-pred_symp[i]) +  C[i,2]*log(pred_symp[i]) + obs_tot_cases_age[i]*log(pred_agedist[i])  # C[,1] has number asymptomatic and C[,2] has number symptomatic. The third element of the log lik is a multinomial distribution of cases by age.
         end
         return logL
     catch errtype
@@ -84,7 +83,7 @@ end
 #mild infecteds and that the eventually severe cases don't transmit more than mild cases
 
 function pred_case_distribution_using_iter_K_model2_splitAsymp(χ::Vector,d::Vector,ϵ::Vector,C)
-    d1, = size(C)[1] # number of age groups
+    d1, = size(C) # number of age groups
     K = zeros(eltype(d),d1,d1)
     for a = 1:d1,b=1:d1
         K[a,b] = χ[a]*C[a,b]*(2*ϵ[b] + 7*d[b] + 7*(1-d[b])*ϵ[b])
@@ -115,7 +114,7 @@ end
 #d_chain_model2_epsilon_01 = HMC_for_detection_rate(χ_zhang,0.1,10000)
 #d_chain_model2_epsilon_025 = HMC_for_detection_rate(χ_zhang,0.25,10000)
 #d_chain_model2_epsilon_05 = HMC_for_detection_rate(χ_zhang,0.5,10000)
-d_chain_model2_epsilon_1 = HMC_for_detection_rate(χ_zhang,1.,10000)
+d_chain_model2_epsilon_1 = HMC_for_detection_rate(χ_zhang,1.,10)
 
 @save "HMC_chains_for_model2.jld2" d_chain_model2_epsilon_0 d_chain_model2_epsilon_01 d_chain_model2_epsilon_025 d_chain_model2_epsilon_05 d_chain_model2_epsilon_1
 
