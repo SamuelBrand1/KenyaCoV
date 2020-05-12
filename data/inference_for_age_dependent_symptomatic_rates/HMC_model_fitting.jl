@@ -63,8 +63,8 @@ function (cases::CaseDistribution)(θ) #Susceptibility form of likelihood
     p = prediction(θ) #predicted number of cases, asymptomatic and symptomatic
     obs_tot_cases_age = vec(sum(C,dims=2))  # Observed total cases by age
     pred_tot_cases_age = vec(sum(p,dims=2))  # predicted total cases by age
-    pred_agedist = pred_tot_cases_age./sum(p) # predicted case (both symp and asymp) distribution by age
-    pred_symp = p[:,2]./pred_tot_cases_age # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17] predicted symptomatic rate by age
+    pred_agedist = vec(pred_tot_cases_age./sum(p)) # predicted case (both symp and asymp) distribution by age
+    pred_symp = p[:,2]./pred_tot_cases_age # predicted symptomatic rate by age
 
     try
         logL = 0.
