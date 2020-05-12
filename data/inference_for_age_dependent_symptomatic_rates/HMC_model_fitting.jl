@@ -92,7 +92,6 @@ function pred_case_distribution_using_iter_K_model2_splitAsymp(χ::Vector,d::Vec
     asymp = d.*v  # predicted asymptomatics cases
     syp = (1-d).*v  # predicted symptomatics cases
     symp = v - asymp # predicted symptomatics cases
-
     return hcat(asymp,symp)
 end
 
