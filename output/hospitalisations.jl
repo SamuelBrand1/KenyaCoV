@@ -3,6 +3,82 @@
 #Only looking at Hosp -> ICU and ICU -> death
 include("hospitalisation_data.jl");
 
+
+function plot_ranked_bars_health_usage(overall_hosp_exceed,overall_ICU_exceed,chance_exceeds_hosp,chance_exceeds_ICU,scenario)
+
+    I = sortperm(overall_hosp_exceed[:,1])
+    plt_HU = bar(overall_hosp_exceed[I,1]*100,orientations = :horizonal,
+                yticks = (1:47,names[I]),size = (700,550),lab ="",
+                xlabel = "% Hospital available bed demand",title = "Hospital demand at peak"*scenario)
+    scatter!(plt_HU,overall_hosp_exceed[I,1]*100,1:47,
+                xerror = ((overall_hosp_exceed[I,1] .-overall_hosp_exceed[I,2])*100,(overall_hosp_exceed[I,3] .- overall_hosp_exceed[I,1])*100 ),ms = 0.,color = :black,lab ="")
+
+    I = sortperm(overall_ICU_exceed[:,1])
+    plt_ICU = bar(overall_ICU_exceed[I,1],orientations = :horizonal,
+                yticks = (1:47,names[I]),size = (700,550),lab ="",
+                xlabel = "ICU bed excess demand (numbers)",title = "ICU demand at peak"*scenario)
+    scatter!(plt_ICU,overall_ICU_exceed[I,1],1:47,
+                xerror = ((overall_ICU_exceed[I,1] .-overall_ICU_exceed[I,2]),(overall_ICU_exceed[I,3] .- overall_ICU_exceed[I,1]) ),ms = 0.,color = :black,lab ="")
+
+
+
+    return plt_HU,plt_ICU
+end
+
+function get_hosp_forecast(sims)
+    overall_hosp_exceed = zeros(47,3)
+    overall_ICU_exceed = zeros(47,3)
+    chance_exceeds_hosp = zeros(47)
+    chance_exceeds_ICU = zeros(47)
+    for cn = 1:47
+        hosp_occup_per_sim,ICU_occup_per_sim,new_ICU_per_sim,death_incidence_per_sim = total_hospital_outcomes_per_sim(sims,cn)
+        hosp_maximums = [(hosp_max,hosp_max_time) = findmax(hosp_occup_per_sim[k,:]) for k = 1:1000]
+        ICU_maximums = [(ICU_max,ICU_max_time) = findmax(ICU_occup_per_sim[k,:]) for k = 1:1000]
+        perc_hosp_exceeds = [h[1]/spare_capacity_H_by_county[cn] for h in hosp_maximums]
+        perc_ICU_exceeds = [h[1] - spare_capacity_ICU_by_county[cn] for h in ICU_maximums]
+        chance_exceeds_hosp[cn] = mean([p >= 1 for p in perc_hosp_exceeds])
+        chance_exceeds_ICU[cn] = mean([p >= 1 for p in perc_ICU_exceeds])
+        overall_hosp_exceed[cn,1] = median(perc_hosp_exceeds)
+        overall_hosp_exceed[cn,2] = quantile(perc_hosp_exceeds,0.025)
+        overall_hosp_exceed[cn,3] = quantile(perc_hosp_exceeds,0.975)
+        overall_ICU_exceed[cn,1] = median(perc_ICU_exceeds)
+        overall_ICU_exceed[cn,2] = quantile(perc_ICU_exceeds,0.025)
+        overall_ICU_exceed[cn,3] = quantile(perc_ICU_exceeds,0.975)
+    end
+    return overall_hosp_exceed,overall_ICU_exceed,chance_exceeds_hosp,chance_exceeds_ICU
+end
+
+function plot_ranked_bars_cases(sims,scenario)
+    median_final_number = [median([sum(sims.u[k][end][cn,:,3]) for k = 1:1000] ) for cn = 1:47]
+    lb_final_number = [quantile([sum(sims.u[k][end][cn,:,3]) for k = 1:1000],0.025) for cn = 1:47]
+    ub_final_number = [quantile([sum(sims.u[k][end][cn,:,3]) for k = 1:1000],0.975) for cn = 1:47]
+    deaths_matrix = zeros(1000,47)
+    for k = 1:1000,cn = 1:47
+        deaths_matrix[k,cn] = sum(sims.u[k][end][cn,:,4].*ICU_rate_by_age_cond_hosp.*0.625)
+    end
+    median_deaths = [median(deaths_matrix[:,cn] ) for cn = 1:47]
+    lb_deaths = [quantile(deaths_matrix[:,cn],0.025) for cn = 1:47]
+    ub_deaths = [quantile(deaths_matrix[:,cn],0.975) for cn = 1:47]
+
+
+    I = sortperm(median_final_number)
+    plt = bar(median_final_number[I],orientations = :horizonal,
+                yticks = (1:47,names[I]),size = (700,600),lab ="",
+                xlabel = "Total severe cases",title = "Severe cases by county"*scenario)
+    scatter!(plt,median_final_number[I],1:47,
+                xerror = (median_final_number[I] .-lb_final_number[I],ub_final_number[I] .- median_final_number[I] ),ms = 0.,color = :black,lab ="")
+
+    I = sortperm(median_deaths)
+    plt_deaths = bar(median_deaths[I],orientations = :horizonal,
+                yticks = (1:47,names[I]),size = (700,500),lab ="",
+                xlabel = "Total deaths",title = "Deaths by county"*scenario)
+    scatter!(plt_deaths,median_deaths[I],1:47,
+                xerror = (median_deaths[I] .-lb_deaths[I],ub_deaths[I] .- median_deaths[I] ),ms = 0.,color = :black,lab ="")
+
+    return plt,plt_deaths
+end
+
+
 function first_introduction_time_peak_peak_value(sims,type)
     n = length(sims.u)
     T = length(sims.u[1])
