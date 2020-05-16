@@ -2,7 +2,7 @@
 
 using CSV
 
-hosp_capacity = CSV.read(joinpath(homedir(),"Github/KenyaCoVData/Health_system_capacity_data_Kenya.csv"))
+hosp_capacity = CSV.read(joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/Health_system_capacity_data_Kenya.csv"))
 spare_capacity_H_by_county = hosp_capacity[2].*hosp_capacity[5]
 spare_capacity_ICU_by_county = hosp_capacity[3].*hosp_capacity[6]
 
