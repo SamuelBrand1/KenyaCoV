@@ -9,10 +9,10 @@ using BenchmarkTools
 using StatsPlots
 
 #Load data
-#@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
+@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
 #@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
 #@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
-@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
+# @load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
 
 
 ## Functions --- to be used
@@ -24,9 +24,9 @@ names = counties.county
 
 # Change activate simulation, titles and tags depending on data loaded
 
-#sims = sims_baseline
-#file_tag = "baseline"
-#title_tag = " (Baseline: full intervention)"
+sims = sims_baseline
+file_tag = "baseline"
+title_tag = " (Baseline: full intervention)"
 
 #sims = sims_end_regional_lockdown
 #file_tag = "end_regional_lockdown"
@@ -36,9 +36,9 @@ names = counties.county
 #file_tag = "open_schools_june"
 #title_tag = " (SD + opening schools in June)"
 
-sims = sims_open_schools_august
-file_tag = "open_schools_august"
-title_tag = " (SD + opening schools in August)"
+#sims = sims_open_schools_august
+#file_tag = "open_schools_august"
+#title_tag = " (SD + opening schools in August)"
 
 ### Peak calculations by county
 @time a,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,1)
@@ -137,7 +137,7 @@ function data_summary(sims,nai_index,mombasa_index)
 
 end
 
-@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
+#@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
 dt_baseline = data_summary(sims_baseline,Nairobi_index,Mombassa_index)
 sims_baseline = nothing
 GC.gc()

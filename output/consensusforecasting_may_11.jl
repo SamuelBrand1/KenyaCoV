@@ -256,7 +256,7 @@ Base line scenario (new baseline which is to continue with current interventions
 """
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
-P.c_t = t -> 1.
+P.c_t = ramp_down
 P.lockdown = false
 P.schools_closed = true
 P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
