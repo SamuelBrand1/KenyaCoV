@@ -6,12 +6,13 @@ using Statistics: median, quantile
 using LinearAlgebra: eigen
 using Dates
 using BenchmarkTools
+using StatsPlots
 
 #Load data
 #@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
 #@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
-@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
-#@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
+#@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
+@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
 
 
 ## Functions --- to be used
@@ -31,13 +32,13 @@ names = counties.county
 #file_tag = "end_regional_lockdown"
 #title_tag = " (SD + end regional lockdown May 16th)"
 
-sims = sims_open_schools_june
-file_tag = "open_schools_june"
-title_tag = " (SD + opening schools in June)"
+#sims = sims_open_schools_june
+#file_tag = "open_schools_june"
+#title_tag = " (SD + opening schools in June)"
 
-#sims = sims_open_schools_august
-#file_tag = "open_schools_august"
-#title_tag = " (SD + opening schools in August)")
+sims = sims_open_schools_august
+file_tag = "open_schools_august"
+title_tag = " (SD + opening schools in August)"
 
 ### Peak calculations by county
 @time a,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,1)
@@ -112,7 +113,81 @@ savefig(plt_incidence_whole_country,"plotting/whole_country_incidence_"*file_tag
 savefig(plt_usage_whole_country,"plotting/whole_country_health_usage_"*file_tag*".png")
 
 
+# Total cases by each SCENARIO
+function data_summary(sims,nai_index,mombasa_index)
+    median_whole_country= median([sum(sims.u[k][end][1:47,:,3]) for k = 1:1000])
+    lb_whole_country = quantile([sum(sims.u[k][end][1:47,:,3]) for k = 1:1000],0.025)
+    ub_whole_country = quantile([sum(sims.u[k][end][1:47,:,3]) for k = 1:1000],0.975)
 
+    median_nairobi= median([sum(sims.u[k][end][nai_index,:,3]) for k = 1:1000])
+    lb_nairobi = quantile([sum(sims.u[k][end][nai_index,:,3]) for k = 1:1000],0.025)
+    ub_nairobi= quantile([sum(sims.u[k][end][nai_index,:,3]) for k = 1:1000],0.975)
+
+    median_mombasa= median([sum(sims.u[k][end][mombasa_index,:,3]) for k = 1:1000])
+    lb_mombasa = quantile([sum(sims.u[k][end][mombasa_index,:,3]) for k = 1:1000],0.025)
+    ub_mombasa= quantile([sum(sims.u[k][end][mombasa_index,:,3]) for k = 1:1000],0.975)
+
+    median_rest_country= median([sum(sims.u[k][end][setdiff(1:47,[nai_index,mombasa_index]),:,3]) for k = 1:1000])
+    lb_rest_country = quantile([sum(sims.u[k][end][setdiff(1:47,[Mombassa_index,Nairobi_index]),:,3]) for k = 1:1000],0.025)
+    ub_rest_country = quantile([sum(sims.u[k][end][setdiff(1:47,[Mombassa_index,Nairobi_index]),:,3]) for k = 1:1000],0.975)
+
+    dt = [median_whole_country median_nairobi median_mombasa median_rest_country; lb_whole_country lb_nairobi lb_mombasa lb_rest_country; ub_whole_country ub_nairobi ub_mombasa ub_rest_country]
+
+    return dt
+
+end
+
+@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
+dt_baseline = data_summary(sims_baseline,Nairobi_index,Mombassa_index)
+sims_baseline = nothing
+GC.gc()
+
+@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
+dt_end_regional_lockdown = data_summary(sims_end_regional_lockdown,Nairobi_index,Mombassa_index)
+sims_end_regional_lockdown = nothing
+GC.gc()
+
+@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
+dt_open_schools_june = data_summary(sims_open_schools_june,Nairobi_index,Mombassa_index)
+sims_open_schools_june = nothing
+GC.gc()
+
+@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
+dt_open_schools_august = data_summary(sims_open_schools_august,Nairobi_index,Mombassa_index)
+sims_open_schools_august = nothing
+GC.gc()
+
+
+function plot_bar_total_cases_by_scenario(region,title_tag)
+    meds_vec = [dt_baseline[1,region],dt_end_regional_lockdown[1,region],dt_open_schools_june[1,region],dt_open_schools_august[1,region]]
+    lb_vec =   [dt_baseline[2,region],dt_end_regional_lockdown[2,region],dt_open_schools_june[2,region],dt_open_schools_august[2,region]]
+    ub_vec =   [dt_baseline[3,region],dt_end_regional_lockdown[3,region],dt_open_schools_june[3,region],dt_open_schools_august[3,region]]
+
+    plt = bar(meds_vec,
+            xticks = (1:4,["Baseline: Full int." "End lockdown May 16th" "Open schools June" "Open schools August"]),
+            title = "Total severe cases up to end of 2021 ("*title_tag*")",
+            ylabel = "Total severe cases",
+            xlabel = "Scenario",
+            lab="")
+
+    scatter!(plt,(1:4,meds_vec), yerror = (meds_vec.-lb_vec,ub_vec.-meds_vec),ms = 1.,color = :black,lab ="")
+
+    return plt
+
+end
+
+
+plt_severe_cases_whole_country = plot_bar_total_cases_by_scenario(1,"Whole country")
+savefig(plt_severe_cases_whole_country,"plotting/whole_country_severe_cases_by_scenario.png")
+
+plt_severe_cases_nairobi = plot_bar_total_cases_by_scenario(2,"Nairobi")
+savefig(plt_severe_cases_nairobi,"plotting/nairobi_severe_cases_by_scenario.png")
+
+plt_severe_cases_mombasa = plot_bar_total_cases_by_scenario(3,"Mombasa")
+savefig(plt_severe_cases_mombasa,"plotting/mombasa_severe_cases_by_scenario.png")
+
+plt_severe_cases_rest = plot_bar_total_cases_by_scenario(4,"Rest of the country")
+savefig(plt_severe_cases_rest,"plotting/rest_of_country_severe_cases_by_scenario.png")
 
 
 
