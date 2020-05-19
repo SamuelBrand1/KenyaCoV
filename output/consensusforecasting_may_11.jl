@@ -1,7 +1,7 @@
-push!(LOAD_PATH, joinpath(homedir(),"/Documents/Covid-19/jl_models/src"))
+push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,MAT,RecursiveArrayTools,CSV
-using Revise
-include("/users/Ojal/Documents/Covid-19/jl_models/src/KenyaCoV.jl")
+import KenyaCoV
+# include("/users/Ojal/Documents/Covid-19/jl_models/src/KenyaCoV.jl")
 using LinearAlgebra:eigen
 using Statistics: median, quantile
 
@@ -249,7 +249,7 @@ Base line scenario
 
 #sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
 
-#@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
+#@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
 
 """
 Base line scenario (new baseline which is to continue with current interventions)
@@ -265,7 +265,7 @@ prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
 sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
 
 println("Finished baseline sims for consensus modelling ")
 
@@ -288,7 +288,7 @@ prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
 sims_end_regional_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,regional_lockdown_starts_and_finishes)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
 
 
 """
@@ -306,7 +306,7 @@ prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
 sims_open_schools_june = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_schools_open_june_2020)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
 
 
 """
@@ -324,4 +324,4 @@ prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
 sims_open_schools_august = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_schools_open_august_2020)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
+@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
