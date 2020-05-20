@@ -270,9 +270,9 @@ P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
+sims_full_intervention = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_full_intervention_vs2.jld2") sims_baseline
+@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_full_intervention_vs2.jld2") sims_full_intervention
 
 
 #"""
