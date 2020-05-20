@@ -13,9 +13,12 @@ using StatsPlots
 #@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
 #@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
 # @load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
+
+
 # @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_new_baseline_30_perc_reduction.jld2") sims_baseline
 # @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown_30_perc_reduction.jld2") sims_end_regional_lockdown
-@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june_30_perc_reduction.jld2") sims_open_schools_june
+# @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june_30_perc_reduction.jld2") sims_open_schools_june
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august_30_perc_reduction.jld2") sims_open_schools_august
 
 
 
@@ -29,20 +32,20 @@ names = counties.county
 # Change activate simulation, titles and tags depending on data loaded
 
 # sims = sims_baseline
-# file_tag = "baseline_full_intervention"
-# title_tag = " (Baseline: full intervention)"
+# file_tag = "baseline_full_intervention_30_perc_SD"
+# title_tag = " (Baseline: full intervention (30% SD))"
 
 # sims = sims_end_regional_lockdown
 # file_tag = "end_regional_lockdown_30_perc_SD"
 # title_tag = " (30% SD + end regional lockdown May 16th)"
 
-sims = sims_open_schools_june
-file_tag = "open_schools_june_30_perc_SD"
-title_tag = " (30% SD + opening schools in June)"
+# sims = sims_open_schools_june
+# file_tag = "open_schools_june_30_perc_SD"
+# title_tag = " (30% SD + opening schools in June)"
 
-#sims = sims_open_schools_august
-#file_tag = "open_schools_august"
-#title_tag = " (SD + opening schools in August)"
+sims = sims_open_schools_august
+file_tag = "open_schools_august_30_perc_SD"
+title_tag = " (30% SD + opening schools in August)"
 
 ### Peak calculations by county
 @time a,peak_A,peak_A_value = first_introduction_time_peak_peak_value(sims,1)
