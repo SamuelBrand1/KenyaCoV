@@ -236,23 +236,30 @@ u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
 u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
 
 """
+SCENARIO 1
+
 Base line scenario
 """
 
-#P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
-#P.c_t = t -> 1.
-#P.lockdown = false
-#P.schools_closed = false
-#P.M = M_Kenya
+P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
+P.c_t = t -> 1.
+P.lockdown = false
+P.schools_closed = false
+P.M = M_Kenya
 
-#prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*474.),P)
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-#sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
+sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
 
-#@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_30_perc_reduction.jld2") sims_baseline
+# @save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
 
 """
-Base line scenario (new baseline which is to continue with current interventions)
+SCENARIO 2
+
+Full intervention scenario:
+- Social mixing school 0%, home 120%, 100% other / work –
+- Decline by 50% over two weeks
+- Nbi / coast lockdown 90% applies 17th April
 """
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
@@ -263,37 +270,36 @@ P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
+sims_full_intervention = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
 
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_new_baseline_30_perc_reduction.jld2") sims_baseline
-
-println("Finished baseline sims for consensus modelling ")
+@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_full_intervention_vs2.jld2") sims_full_intervention
 
 
+#"""
+#SCENARIO 3
 
-"""
-SCENARIO 2 --- regional lockdown ending. Schools stay shut
-"""
+#Regional lockdown ending. Schools stay shut
+#"""
 
+#P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
+#P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
 
+#P.lockdown = false
+#P.schools_closed = true
+#P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
+#prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-P.lockdown = false
-P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
-
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-
-sims_end_regional_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,regional_lockdown_starts_and_finishes)
+#sims_end_regional_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,regional_lockdown_starts_and_finishes)
 
 @save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown_30_perc_reduction.jld2") sims_end_regional_lockdown
 println("Finished regional lockdown ending. Schools stay shut sims for consensus modelling ")
 
 
 """
-SCENARIO 3 --- Schools reopen in June
+SCENARIO 3
+
+Schools reopen in June
 """
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
@@ -312,7 +318,8 @@ sims_open_schools_june = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParam
 println("Finished Schools reopen in June sims for consensus modelling ")
 
 """
-SCENARIO 4 --- Schools reopen in August
+SCENARIO 4
+Schools reopen in August
 """
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
