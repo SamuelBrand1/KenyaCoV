@@ -17,40 +17,7 @@ Consensus modelling --- May week 1
 Load age structured data, define callback control measures, and effect of regional lockdown
 """
 
-u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel_with_counties.jld2",
-                                            "data/flight_numbers.csv",
-                                            "data/projected_global_prevelance.csv")
-counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
-Nairobi_index = findfirst(counties.county .== "Nairobi")
-Mombassa_index = findfirst(counties.county .== "Mombasa")
-Kwale_index = findfirst(counties.county .== "Kwale")
-Kilifi_index = findfirst(counties.county .== "Kilifi")
-Mandera_index  = findfirst(counties.county .== "Mandera")
 
-
-#Put in the lockdown effects
-T_normal = deepcopy(P.T)
-T_regional_lockdown = deepcopy(P.T)
-
-#Outgoing travel
-#Nairobi
-T_regional_lockdown[:,Nairobi_index] *= 0.1;T_regional_lockdown[Nairobi_index,Nairobi_index] += 1 - sum(T_regional_lockdown[:,Nairobi_index])
-#Mombasa
-T_regional_lockdown[:,Mombassa_index] *= 0.1;T_regional_lockdown[Mombassa_index,Mombassa_index] += 1 - sum(T_regional_lockdown[:,Mombassa_index])
-#Kilifi
-T_regional_lockdown[:,Kilifi_index] *= 0.1;T_regional_lockdown[Kilifi_index,Kilifi_index] += 1 - sum(T_regional_lockdown[:,Kilifi_index])
-#Kwale
-T_regional_lockdown[:,Kwale_index] *= 0.1;T_regional_lockdown[Kwale_index,Kwale_index] += 1 - sum(T_regional_lockdown[:,Kwale_index])
-
-
-#Incoming travel
-for leaving_area in 1:47,arriving_area in 1:47
-    if !(leaving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]) && arriving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]
-        amount_reduced = 0.9*T_regional_lockdown[arriving_area,leaving_area]
-        T_regional_lockdown[arriving_area,leaving_area] -= amount_reduced
-        T_regional_lockdown[leaving_area,leaving_area] += amount_reduced #All avoided trips to locked down areas lead to staying at home
-    end
-end
 
 
 @load "data/detection_rates_for_different_epsilons_model2.jld2" d_0 d_01 d_025 d_05 d_1
@@ -69,80 +36,32 @@ function ramp_down(t)
     if t < 0.
         return 1.
     elseif t>= 0. && t <= 14.
-        return (1-t/14.) + 0.55*t/14.
+        return (1-t/14.) + 0.70*t/14.
     elseif t > 14.
-        return 0.55
+        return 0.70
     end
 end
 using Dates
-Date(2020,4,7) - Date(2020,3,13)
-Date(2020,6,2) - Date(2020,3,13)
-Date(2020,8,14) - Date(2020,3,13)
+regional_lkdown_start = (Date(2020,4,7) - Date(2020,3,13)).value
+schools_open_june = (Date(2020,6,2) - Date(2020,3,13)).value
+schools_close_august = (Date(2020,8,14) - Date(2020,3,13)).value
+schools_open_august = (Date(2020,8,31) - Date(2020,3,13)).value
+end_regional_lockdown = (Date(2020,5,16) - Date(2020,3,13)).value
+schools_close_october = (Date(2020,10,30) - Date(2020,3,13)).value
 
-Date(2020,8,31) - Date(2020,3,13)
-Date(2020,5,16) - Date(2020,3,13)
-Date(2020,10,30) - Date(2020,3,13)
+schools_open_jan2021 = (Date(2021,1,4) - Date(2020,3,13)).value  # schools open 4th Jan 2021
+schools_close_april2021 = (Date(2021,4,9) - Date(2020,3,13)).value  # Schools closed 9th April 2021
+schools_open_may2021 = (Date(2021,5,3) - Date(2020,3,13)).value  # Schools open 3rd may 2021
+schools_close_august2021 = (Date(2021,8,6) - Date(2020,3,13)).value  # Schools closed 6th August 2021
+schools_open_august2021 = (Date(2021,8,30) - Date(2020,3,13)).value  # Schools open 30th August 2021
+schools_close_october2021 = (Date(2021,10,22) - Date(2020,3,13)).value  # Schools closed 22nd October 2021
 
 
-#Put in the regional lockdown on day 25 (April 7th)
-function regional_lockdown_timing(u,t,integrator)
-  !integrator.p.lockdown && t > 25.
-end
-function affect_regional_lockdown!(integrator)
-  integrator.p.T = T_regional_lockdown
-  integrator.p.lockdown = true
-end
-cb_regional_lockdown = DiscreteCallback(regional_lockdown_timing,affect_regional_lockdown!)
+yearend = (Date(2021,12,31) - Date(2020,3,13)).value  # we now run intil Dec 2021
 
-#Put in the regional lockdown on day 64 (May 16th)
-function regional_lockdown_ending(u,t,integrator)
-  integrator.p.lockdown && t > 64.
-end
-function affect_regional_lockdown_end!(integrator)
-  integrator.p.T = T_normal
-  integrator.p.lockdown = false
-end
-cb_regional_lockdown_end = DiscreteCallback(regional_lockdown_ending,affect_regional_lockdown_end!)
-
-regional_lockdown_starts_and_finishes = CallbackSet(cb_regional_lockdown,cb_regional_lockdown_end)
-#Open schools on June 2nd or August 31st
-function open_schools_june(u,t,integrator)
-  integrator.p.schools_closed && t > 81.
-end
-
-function close_schools_august(u,t,integrator)
-  !integrator.p.schools_closed && t > 154.
-end
-
-function close_schools_october(u,t,integrator)
-  !integrator.p.schools_closed && t > 231.
-end
-
-function open_schools_august(u,t,integrator)
-  integrator.p.schools_closed && t > 171.
-end
-function affect_open_schools!(integrator)
-  integrator.p.M = 1.1*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.7*M_Kenya_school
-  integrator.p.schools_closed = false
-end
-function affect_close_schools!(integrator)
-  integrator.p.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
-  integrator.p.schools_closed = true
-end
-
-cb_open_schools_june = DiscreteCallback(open_schools_june,affect_open_schools!)
-cb_open_schools_august = DiscreteCallback(open_schools_august,affect_open_schools!)
-cb_close_schools_august = DiscreteCallback(close_schools_august,affect_close_schools!)
-cb_close_schools_october = DiscreteCallback(close_schools_october,affect_close_schools!)
-
-measures_two_stage_school_open = CallbackSet(cb_regional_lockdown,
-                                            cb_open_schools_june,
-                                            cb_close_schools_august,
-                                            cb_open_schools_august,
-                                            cb_close_schools_october)
-measures_one_stage_school_open = CallbackSet(cb_regional_lockdown,
-                                            cb_open_schools_august,
-                                            cb_close_schools_october)
+monthdates = [Date(2020,3,1) + Month(i) for i = 1:21 ]
+monthnames = [monthname(d)[1:3]*"-$(year(d)-2000)" for d in monthdates]
+tick_times = [(d - Date(2020,3,13)).value for d in monthdates]
 
 """
 Set up parameters
@@ -159,6 +78,8 @@ P.rel_detection_rate = d_1
 P.dt = 0.25;
 P.ext_inf_rate = 0.;
 P.ϵ = 1.
+
+
 #Set the susceptibility vector --- just to specify the correct R₀
 sus_matrix = repeat(χ_zhang,1,17)
 R_A = P.ϵ*((1/P.σ₂) + (1/P.γ) ) #effective duration of asymptomatic
@@ -174,31 +95,33 @@ max_eigval_Kenya = Real(eigs_kenya[end])
 multiplier_for_kenya = max_eigval_Kenya/max_eigval_china
 P.χ .= χ_zhang ./max_eigval_china #This rescales everything so β is the same as R₀ for China
 
+sus_matrix = repeat(P.χ,1,17)
+M_closed = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+
+eigs_kenya_closed, = eigen(sus_matrix.*M_closed.*inf_matrix)
+multiplier_for_kenya_closed = Real(eigs_kenya_closed[end])
+M_open = 1.1*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.7*M_Kenya_school
+eigs_kenya_open, = eigen(sus_matrix.*M_open.*inf_matrix)
+multiplier_for_kenya_open = Real(eigs_kenya_open[end])
+
+baseline_median_R₀ = multiplier_for_kenya*quantile(KenyaCoV.d_R₀,0.5)
+baseline_lower_R₀_diff = baseline_median_R₀ - multiplier_for_kenya*quantile(KenyaCoV.d_R₀,0.025)
+baseline_higher_R₀_diff = multiplier_for_kenya*quantile(KenyaCoV.d_R₀,0.975) - baseline_median_R₀
+
+baseline_median_R₀_closed = multiplier_for_kenya_closed*quantile(KenyaCoV.d_R₀,0.5)
+baseline_lower_R₀_diff_closed = baseline_median_R₀_closed - multiplier_for_kenya_closed*quantile(KenyaCoV.d_R₀,0.025)
+baseline_higher_R₀_diff_closed = multiplier_for_kenya_closed*quantile(KenyaCoV.d_R₀,0.975) - baseline_median_R₀_closed
+
+baseline_median_R₀_open = multiplier_for_kenya_open*quantile(KenyaCoV.d_R₀,0.5)
+baseline_lower_R₀_diff_open = baseline_median_R₀_open - multiplier_for_kenya_open*quantile(KenyaCoV.d_R₀,0.025)
+baseline_higher_R₀_diff_open = multiplier_for_kenya_open*quantile(KenyaCoV.d_R₀,0.975) - baseline_median_R₀_open
 
 
 
-u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
-u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
-u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
 
 """
 Base line scenario
 """
-
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
-P.c_t = t -> 1.
-P.lockdown = false
-P.schools_closed = false
-P.M = M_Kenya
-
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
-
-sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
-
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
-
-
-println("Finished baseline sims for consensus modelling ")
 
 
 
@@ -206,53 +129,67 @@ println("Finished baseline sims for consensus modelling ")
 SCENARIO 2 --- regional lockdown ending. Schools stay shut
 """
 
+times = 0:0.1:yearend
+median_Rt_sc2 = [baseline_median_R₀_closed*ramp_down(t) for t in times]
+lower_sc2 = [baseline_lower_R₀_diff_closed*ramp_down(t) for t in times]
+higher_sc2 = [baseline_higher_R₀_diff_closed*ramp_down(t) for t in times]
 
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
 
-P.lockdown = false
-P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
-
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
-
-sims_end_regional_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,regional_lockdown_starts_and_finishes)
-
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
 
 
 """
 SCENARIO 3 --- Schools reopen in June
 """
+times_closed_until_june = 0:0.1:schools_open_june
+times_closed_until_august = 0:0.1:schools_open_august
+median_Rt_sc3 = [baseline_median_R₀_closed*ramp_down(t) for t in times_closed_until_june]
+lower_sc3 = [baseline_lower_R₀_diff_closed*ramp_down(t) for t in times_closed_until_june]
+higher_sc3 = [baseline_higher_R₀_diff_closed*ramp_down(t) for t in times_closed_until_june]
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
+median_Rt_sc4 = [baseline_median_R₀_closed*ramp_down(t) for t in times_closed_until_august]
+lower_sc4 = [baseline_lower_R₀_diff_closed*ramp_down(t) for t in times_closed_until_august]
+higher_sc4 = [baseline_higher_R₀_diff_closed*ramp_down(t) for t in times_closed_until_august]
 
-P.lockdown = false
-P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+times_sc3 = [schools_open_june,schools_open_june,
+            schools_close_august,schools_close_august,
+            schools_open_august,schools_open_august,
+            schools_close_october,schools_close_october,
+            schools_open_jan2021,schools_open_jan2021,
+            schools_close_april2021,schools_close_april2021,
+            schools_open_may2021,schools_open_may2021,
+            schools_close_august2021,schools_close_august2021,
+            schools_open_august2021,schools_open_august2021,
+            schools_close_october2021,schools_close_october2021]
+median_Rt_sc3_close_and_open = repeat([baseline_median_R₀_closed*ramp_down(100.),baseline_median_R₀_open*ramp_down(100.),baseline_median_R₀_open*ramp_down(100.),baseline_median_R₀_closed*ramp_down(100.)],5,1)
+lower_Rt_sc3_open_and_close = repeat([baseline_lower_R₀_diff_closed*ramp_down(100.),baseline_lower_R₀_diff_open*ramp_down(100.),baseline_lower_R₀_diff_open*ramp_down(100.),baseline_lower_R₀_diff_closed*ramp_down(100.)],5,1)
+higher_Rt_sc3_open_and_close = repeat([baseline_higher_R₀_diff_closed*ramp_down(100.),baseline_higher_R₀_diff_open*ramp_down(100.),baseline_higher_R₀_diff_open*ramp_down(100.),baseline_higher_R₀_diff_closed*ramp_down(100.)],5,1)
 
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
 
-sims_open_schools_june = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_two_stage_school_open)
+plt_Rt = plot([0.,yearend],[baseline_median_R₀,baseline_median_R₀],
+            lab = "No intervention",
+            ribbon = ([baseline_lower_R₀_diff,baseline_lower_R₀_diff],[baseline_higher_R₀_diff,baseline_higher_R₀_diff])
+            ,ylabel = "Rt",
+            xticks = (tick_times[1:2:end],monthnames[1:2:end]),
+            ylims = (0.,5.),lw = 3,
+            title = "Interventions and social distancing (30% contact reduction)")
 
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
+
+plot!(plt_Rt,times,median_Rt_sc2,
+        lab = "Schools closed, end regional lockdown in May",
+        ribbon = (lower_sc2,higher_sc2),lw=3)
+vcat(times_closed_until_june,times_sc3,[yearend])
+vcat(median_Rt_sc3,median_Rt_sc3_close_and_open,[baseline_median_R₀_closed*ramp_down(100.)])
+
+plot!(plt_Rt,vcat(times_closed_until_june,times_sc3,[yearend]),vcat(median_Rt_sc3,median_Rt_sc3_close_and_open,[baseline_median_R₀_closed*ramp_down(100.)]),
+        lab = "Schools open in June",lw = 3,
+        ribbon = (vcat(lower_sc3,lower_Rt_sc3_open_and_close,[baseline_lower_R₀_diff_closed*ramp_down(100.)])
+                    , vcat(higher_sc3,higher_Rt_sc3_open_and_close,[baseline_higher_R₀_diff_closed*ramp_down(100.)])))
 
 
-"""
-SCENARIO 4 --- Schools reopen in August
-"""
+plot!(plt_Rt,vcat(times_closed_until_august,times_sc3[5:end],[yearend]),vcat(median_Rt_sc4,median_Rt_sc3_close_and_open[5:end],[baseline_median_R₀_closed*ramp_down(100.)]),
+    lab = "Schools open in August",lw = 3,
+    ribbon = (vcat(lower_sc4,lower_Rt_sc3_open_and_close[5:end],[baseline_lower_R₀_diff_closed*ramp_down(100.)])
+                , vcat(higher_sc4,higher_Rt_sc3_open_and_close[5:end],[baseline_higher_R₀_diff_closed*ramp_down(100.)])))
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
-
-P.lockdown = false
-P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
-
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*365.),P)
-
-sims_open_schools_august = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_one_stage_school_open)
-
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
+savefig(plt_Rt,"Rt_30_perc_reduction.png")
