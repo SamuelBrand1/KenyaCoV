@@ -240,18 +240,18 @@ SCENARIO 1
 
 Base line scenario
 """
-
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
-P.c_t = t -> 1.
-P.lockdown = false
-P.schools_closed = false
-P.M = M_Kenya
-
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-
-sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
-
-# @save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
+#
+# P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
+# P.c_t = t -> 1.
+# P.lockdown = false
+# P.schools_closed = false
+# P.M = M_Kenya
+#
+# prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
+#
+# sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
+#
+# # @save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
 
 """
 SCENARIO 2

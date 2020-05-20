@@ -1,40 +1,44 @@
-push!(LOAD_PATH, joinpath(homedir(),"/Documents/Covid-19/jl_models/src"))
+# push!(LOAD_PATH, joinpath(homedir(),"/Documents/Covid-19/jl_models/src"))
+push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 
 using Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,FileIO,DelimitedFiles,RecursiveArrayTools,Plots
 using CSV,ExcelFiles,DataFrames
 using Statistics: median, quantile
 using LinearAlgebra: eigen
 using Dates
-using BenchmarkTools
 using StatsPlots
 
 #Load data
-@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
+# @load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
 #@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
 #@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
 # @load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
+# @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_new_baseline_30_perc_reduction.jld2") sims_baseline
+# @load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown_30_perc_reduction.jld2") sims_end_regional_lockdown
+@load joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june_30_perc_reduction.jld2") sims_open_schools_june
+
 
 
 ## Functions --- to be used
 
 include("hospitalisations.jl");
-counties = CSV.read(joinpath(homedir(),"Documents/Covid-19/jl_models/data/2019_census_age_pyramids_counties.csv"))
+counties = CSV.read(joinpath(homedir(),"Github/KenyaCoV/data/2019_census_age_pyramids_counties.csv"))
 names = counties.county
 
 
 # Change activate simulation, titles and tags depending on data loaded
 
-sims = sims_baseline
-file_tag = "baseline"
-title_tag = " (Baseline: full intervention)"
+# sims = sims_baseline
+# file_tag = "baseline_full_intervention"
+# title_tag = " (Baseline: full intervention)"
 
-#sims = sims_end_regional_lockdown
-#file_tag = "end_regional_lockdown"
-#title_tag = " (SD + end regional lockdown May 16th)"
+# sims = sims_end_regional_lockdown
+# file_tag = "end_regional_lockdown_30_perc_SD"
+# title_tag = " (30% SD + end regional lockdown May 16th)"
 
-#sims = sims_open_schools_june
-#file_tag = "open_schools_june"
-#title_tag = " (SD + opening schools in June)"
+sims = sims_open_schools_june
+file_tag = "open_schools_june_30_perc_SD"
+title_tag = " (30% SD + opening schools in June)"
 
 #sims = sims_open_schools_august
 #file_tag = "open_schools_august"
@@ -64,10 +68,10 @@ savefig(plt1,"plotting/Hospital_capacity_"*file_tag*".png")
 savefig(plt2,"plotting/ICU_capacity_"*file_tag*".png")
 
 #This bit plots the dynamics for Nairobi, Mombasa and the rest of the country
-a= [dayofyear(2020,m,1) for m = 4:12] .- dayofyear(2020,3,13)
-b= [dayofyear(2021,m,1) for m = 1:12] .- dayofyear(2021,1,1)
-b = b.+293
-first_of_months = vcat(a,b)
+# a= [dayofyear(2020,m,1) for m = 4:12] .- dayofyear(2020,3,13)
+# b= [dayofyear(2021,m,1) for m = 1:12] .- dayofyear(2021,1,1)
+# b = b.+293
+first_of_months = vcat([dayofyear(2020,m,1) for m = 4:12] .- dayofyear(2020,3,13),([dayofyear(2021,m,1) for m = 1:12] .- dayofyear(2021,1,1)).+293)
 Nairobi_index = findfirst(counties.county .== "Nairobi")
 Mombassa_index = findfirst(counties.county .== "Mombasa")
 Kwale_index = findfirst(counties.county .== "Kwale")
@@ -113,7 +117,7 @@ savefig(plt_incidence_whole_country,"plotting/whole_country_incidence_"*file_tag
 savefig(plt_usage_whole_country,"plotting/whole_country_health_usage_"*file_tag*".png")
 
 
-# Total cases by each SCENARIO
+## Total cases by each SCENARIO
 function data_summary(sims,nai_index,mombasa_index)
     median_whole_country= median([sum(sims.u[k][end][1:47,:,3]) for k = 1:1000])
     lb_whole_country = quantile([sum(sims.u[k][end][1:47,:,3]) for k = 1:1000],0.025)
@@ -137,7 +141,8 @@ function data_summary(sims,nai_index,mombasa_index)
 
 end
 
-#@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
+
+@load joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
 dt_baseline = data_summary(sims_baseline,Nairobi_index,Mombassa_index)
 sims_baseline = nothing
 GC.gc()
