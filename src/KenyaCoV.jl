@@ -45,8 +45,8 @@ linear_as_events = LinearIndices((1:n, 1:n_a,1:n_ta))
 include("types.jl");
 include("dynamics.jl")
 include("transmissionmodel.jl");
+include("hospital_model.jl")
 include("forecast_functions.jl");
-
 
 
 end # module
