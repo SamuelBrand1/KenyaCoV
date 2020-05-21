@@ -19,23 +19,56 @@ mean(d_R₀)
 Simulation functions
 """
 
-"""
-    function output_daily_and_final_incidence(sol,i)
 
-This function stores the cumulative incidence and hospitalisation (summed over areas and age groups),
-    and the final numbers by area and age group.
 """
-function output_daily_and_final_incidence(sol,i)
+function output_simulation_data
+    This function calculates daily incidence (asymptomatic, mild and severe) from the time-stepping of the underlying dynamic model.
+    It also runs the hospital model as a post-processing layer after simulation
+"""
+function output_simulation_data(sol,i)
     times = sol.prob.tspan[1]:1:sol.prob.tspan[end]
-    z = [sum(sol(t)[:,:,9:12],dims = 2)[:,1,:]  for t in times]
-    return (z,sol[end][:,:,9:12]),false
+    incidence_A = diff([sum(sol(t)[:,:,9],dims=2)[:]  for t in times])
+    incidence_M = diff([sum(sol(t)[:,:,10],dims=2)[:]  for t in times])
+    incidence_V = diff([sum(sol(t)[:,:,11],dims=2)[:]  for t in times])
+    incidence_H = diff([sol(t)[:,:,12]  for t in times])
+    T = length(incidence_H)
+    nc,na = size(incidence_H[1])
+    total_hosp_occup = zeros(nc,T)
+    total_ICU_occup = zeros(nc,T)
+    total_new_ICU = zeros(nc,T)
+    total_death_incidence = zeros(nc,T)
+    hosp_by_area_and_age = zeros(nc,na)
+    ICU_by_area_and_age = zeros(nc,na)
+    deaths_by_area_and_age = zeros(nc,na)
+
+    for cn in 1:nc, a in 1:na
+        hosp_by_area_and_age[cn,a] = sum(sol(sol.prob.tspan[end])[cn,a,12])
+    end
+
+    for cn in 1:nc, a in 1:na
+        hosp_occup, ICU_occup, new_ICU,death_incidence = KenyaCoV.generate_hospitalisation_outcomes([inc_h[cn,a] for inc_h in incidence_H],a,cn)
+        total_hosp_occup[cn,:] .+= hosp_occup
+        total_ICU_occup[cn,:] .+= ICU_occup
+        total_new_ICU[cn,:] .+= new_ICU
+        total_death_incidence[cn,:] .+= death_incidence
+        ICU_by_area_and_age[cn,a] = sum(new_ICU)
+        deaths_by_area_and_age[cn,a] = sum(death_incidence)
+    end
+
+    return (incidence_A=VectorOfArray(incidence_A)[:,:],
+            incidence_M=VectorOfArray(incidence_M)[:,:],
+            incidence_V=VectorOfArray(incidence_V)[:,:],
+            hosp_occup_by_area_ts = total_hosp_occup,
+            ICU_occup_by_area_ts = total_ICU_occup,
+            incidence_ICU_by_area_ts = total_new_ICU,
+            death_incidence_by_area_ts = total_death_incidence,
+            total_hosp_by_area_and_age = hosp_by_area_and_age,
+            total_ICU_by_area_and_age = ICU_by_area_and_age,
+            total_deaths_by_area_and_age = deaths_by_area_and_age),false
 end
 
-function output_daily_incidence_and_hosp(sol,i)
-    times = sol.prob.tspan[1]:1:sol.prob.tspan[end]
-    z = [sol(t)[:,:,9:12]  for t in times]
-    return z,false
-end
+
+
 
 function randomise_params(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
     _P = deepcopy(prob.p)
@@ -86,7 +119,7 @@ end
 function run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj,cb)
     ensemble_prob = EnsembleProblem(prob,
                                     prob_func = consensus_randomise_params,
-                                    output_func = output_daily_incidence_and_hosp)
+                                    output_func = output_simulation_data)
     return solve(ensemble_prob,FunctionMap(),dt = P.dt,callback = cb,trajectories = n_traj)
 end
 
@@ -119,15 +152,6 @@ function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,c
     return results
 end
 
-# function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,treatment_rates,prob_func)
-#     results = []
-#     for (τ,ϵ_D) in treatment_rates
-#         sims = run_simulations(P,prob,n_traj,τ,ϵ_D,prob_func)
-#         analysisdata = incidence_from_sims(sims)
-#         push!(results,analysisdata)
-#     end
-#     return results
-# end
 
 
 """
