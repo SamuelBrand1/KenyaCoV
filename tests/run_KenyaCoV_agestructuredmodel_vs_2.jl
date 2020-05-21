@@ -21,6 +21,7 @@ N = sum(u0[:,:,1])
 @load "data/detection_rates_for_different_epsilons_model2.jld2" d_0 d_01 d_025 d_05 d_1
 
 counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
+names = counties.county
 Nairobi_index = findfirst(counties.county .== "Nairobi")
 Mombassa_index = findfirst(counties.county .== "Mombasa")
 Kwale_index = findfirst(counties.county .== "Kwale")
@@ -68,10 +69,11 @@ u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,60.),P)
 @time sol = solve(prob,FunctionMap(),dt = P.dt)
 sims_test = KenyaCoV.run_consensus_simulations(P,prob,10,CallbackSet())
-extract_information_from_simulation(sims_test)
-hosp_by_area_over_sims =  VectorOfArray([sims_test[k].total_hosp_by_area_and_age for k = 1:length(sims_test)])[:,:,:]
-median(sum(hosp_by_area_and_age_over_sims,dims=2),dims=3)[:][30]
-quantile(inc_A_over_sims[30,17,:],0.975)
+output = extract_information_from_simulations(sims_test)
+
+plt_V,plt_D = plot_ranked_bars_cases(output,"test",names)
+display(plt_D)
+output.total_severe_cases
 
 model_str =
 """
