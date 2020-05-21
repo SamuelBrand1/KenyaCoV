@@ -53,6 +53,14 @@ function extract_information_from_simulations(sims)
 
     hosp_by_area_over_sims = VectorOfArray([sum(sims[k].total_hosp_by_area_and_age,dims=2) for k = 1:n])[:,1,:]
     deaths_by_area_over_sims = VectorOfArray([sum(sims[k].total_deaths_by_area_and_age,dims=2) for k = 1:n])[:,1,:]
+    peak_hosp_by_area_by_sim = zeros(nc,n)
+    peak_ICU_by_area_by_sim = zeros(nc,n)
+
+    for cn = 1:nc,k = 1:n
+        peak_hosp_by_area_by_sim[cn,k] = maximum(sims[k].hosp_occup_by_area_ts[cn,:])
+        peak_ICU_by_area_by_sim[cn,k] = maximum(sims[k].ICU_occup_by_area_ts[cn,:])
+    end
+
 
     total_severe_cases = (med = median(sum(hosp_by_area_over_sims,dims=1)),
                             lpred = quantile(sum(hosp_by_area_over_sims,dims=1)[:],0.025),
@@ -67,11 +75,50 @@ function extract_information_from_simulations(sims)
                             lpred = [quantile(deaths_by_area_over_sims[cn,:],0.025) for cn = 1:nc],
                             upred = [quantile(deaths_by_area_over_sims[cn,:],0.975) for cn = 1:nc])
 
+    hosp_peak_excess_demand_by_area = (med = [median(peak_hosp_by_area_by_sim[cn,:]/KenyaCoV.spare_capacity_H_by_county[cn]) for cn = 1:nc],
+                            lpred = [quantile(peak_hosp_by_area_by_sim[cn,:]/KenyaCoV.spare_capacity_H_by_county[cn],0.025) for cn = 1:nc],
+                            upred = [quantile(peak_hosp_by_area_by_sim[cn,:]/KenyaCoV.spare_capacity_H_by_county[cn],0.975) for cn = 1:nc])
+
+    ICU_peak_excess_demand_by_area = (med = [median(peak_ICU_by_area_by_sim[cn,:] .- KenyaCoV.spare_capacity_ICU_by_county[cn]) for cn = 1:nc],
+                            lpred = [quantile(peak_ICU_by_area_by_sim[cn,:] .- KenyaCoV.spare_capacity_ICU_by_county[cn],0.025) for cn = 1:nc],
+                            upred = [quantile(peak_ICU_by_area_by_sim[cn,:] .- KenyaCoV.spare_capacity_ICU_by_county[cn],0.975) for cn = 1:nc])
+
     return (total_severe_cases=total_severe_cases,
             severe_cases_by_area=severe_cases_by_area,
             total_deaths=total_deaths,
-            deaths_by_area=deaths_by_area)
+            deaths_by_area=deaths_by_area,
+            hosp_peak_excess_demand_by_area=hosp_peak_excess_demand_by_area,
+            ICU_peak_excess_demand_by_area=ICU_peak_excess_demand_by_area)
 end
+
+function plot_ranked_bars_health_usage(output,scenario_tag,areanames)
+    median_hospital_exceed = output.hosp_peak_excess_demand_by_area.med
+    median_ICU_exceed = output.ICU_peak_excess_demand_by_area.med
+    nc = length(areanames)
+
+    I = sortperm(median_hospital_exceed)
+    plt_HU = bar(median_hospital_exceed[I]*100,orientations = :horizonal,
+                yticks = (1:47,areanames[I]),size = (700,550),lab ="",
+                xlabel = "% Hospital available bed demand",title = "Hospital demand at peak"*scenario_tag)
+    scatter!(plt_HU,median_hospital_exceed[I]*100,1:nc,
+                xerror = ((median_hospital_exceed[I] .- output.hosp_peak_excess_demand_by_area.lpred[I])*100
+                            ,(output.hosp_peak_excess_demand_by_area.upred[I] .- median_hospital_exceed[I])*100 ),
+                ms = 0.,color = :black,lab ="")
+
+    I = sortperm(median_ICU_exceed)
+    plt_ICU = bar(median_ICU_exceed[I,1],orientations = :horizonal,
+                yticks = (1:nc,areanames[I]),size = (700,550),lab ="",
+                xlabel = "ICU bed excess demand (numbers)",title = "ICU demand at peak"*scenario_tag)
+    scatter!(plt_ICU,median_ICU_exceed[I],1:nc,
+                xerror = ((median_ICU_exceed[I] .- output.ICU_peak_excess_demand_by_area.lpred[I]),
+                            (output.ICU_peak_excess_demand_by_area.upred[I] .- median_ICU_exceed[I]) ),
+                ms = 0.,color = :black,lab ="")
+
+
+
+    return plt_HU,plt_ICU
+end
+
 
 function plot_ranked_bars_cases(output,scenario_tag,areanames)
     median_severe_cases = output.severe_cases_by_area.med
@@ -97,25 +144,4 @@ function plot_ranked_bars_cases(output,scenario_tag,areanames)
              ms = 0.,color = :black,lab ="")
 
     return plt,plt_deaths
-end
-
-function plot_ranked_bars_health_usage(overall_hosp_exceed,overall_ICU_exceed,chance_exceeds_hosp,chance_exceeds_ICU,scenario)
-
-    I = sortperm(overall_hosp_exceed[:,1])
-    plt_HU = bar(overall_hosp_exceed[I,1]*100,orientations = :horizonal,
-                yticks = (1:47,names[I]),size = (700,550),lab ="",
-                xlabel = "% Hospital available bed demand",title = "Hospital demand at peak"*scenario)
-    scatter!(plt_HU,overall_hosp_exceed[I,1]*100,1:47,
-                xerror = ((overall_hosp_exceed[I,1] .-overall_hosp_exceed[I,2])*100,(overall_hosp_exceed[I,3] .- overall_hosp_exceed[I,1])*100 ),ms = 0.,color = :black,lab ="")
-
-    I = sortperm(overall_ICU_exceed[:,1])
-    plt_ICU = bar(overall_ICU_exceed[I,1],orientations = :horizonal,
-                yticks = (1:47,names[I]),size = (700,550),lab ="",
-                xlabel = "ICU bed excess demand (numbers)",title = "ICU demand at peak"*scenario)
-    scatter!(plt_ICU,overall_ICU_exceed[I,1],1:47,
-                xerror = ((overall_ICU_exceed[I,1] .-overall_ICU_exceed[I,2]),(overall_ICU_exceed[I,3] .- overall_ICU_exceed[I,1]) ),ms = 0.,color = :black,lab ="")
-
-
-
-    return plt_HU,plt_ICU
 end

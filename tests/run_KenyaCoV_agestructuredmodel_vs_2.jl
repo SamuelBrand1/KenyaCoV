@@ -69,11 +69,9 @@ u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,60.),P)
 @time sol = solve(prob,FunctionMap(),dt = P.dt)
 sims_test = KenyaCoV.run_consensus_simulations(P,prob,10,CallbackSet())
-output = extract_information_from_simulations(sims_test)
+output = extract_information_from_simulations(sims_test);
 
-plt_V,plt_D = plot_ranked_bars_cases(output,"test",names)
-display(plt_D)
-output.total_severe_cases
+plt_HU,plt_ICU = plot_ranked_bars_health_usage(output," (test)",names)
 
 model_str =
 """
