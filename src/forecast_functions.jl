@@ -46,7 +46,7 @@ function output_simulation_data(sol,i)
     end
 
     for cn in 1:nc, a in 1:na
-        hosp_occup, ICU_occup, new_ICU,death_incidence = KenyaCoV.generate_hospitalisation_outcomes([inc_h[cn,a] for inc_h in incidence_H],a,cn)
+        hosp_occup, ICU_occup, new_ICU,death_incidence = generate_hospitalisation_outcomes([inc_h[cn,a] for inc_h in incidence_H],a,cn)
         total_hosp_occup[cn,:] .+= hosp_occup
         total_ICU_occup[cn,:] .+= ICU_occup
         total_new_ICU[cn,:] .+= new_ICU
@@ -58,6 +58,7 @@ function output_simulation_data(sol,i)
     return (incidence_A=VectorOfArray(incidence_A)[:,:],
             incidence_M=VectorOfArray(incidence_M)[:,:],
             incidence_V=VectorOfArray(incidence_V)[:,:],
+            incidence_H=VectorOfArray(incidence_H)[:,:],
             hosp_occup_by_area_ts = total_hosp_occup,
             ICU_occup_by_area_ts = total_ICU_occup,
             incidence_ICU_by_area_ts = total_new_ICU,

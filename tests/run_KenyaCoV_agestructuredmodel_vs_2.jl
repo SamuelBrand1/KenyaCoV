@@ -1,4 +1,5 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
+
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,CSV,RecursiveArrayTools
 using Revise
 import KenyaCoV
@@ -70,8 +71,9 @@ prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,60.),P)
 @time sol = solve(prob,FunctionMap(),dt = P.dt)
 sims_test = KenyaCoV.run_consensus_simulations(P,prob,10,CallbackSet())
 output = extract_information_from_simulations(sims_test);
-
+output.inc
 plt_HU,plt_ICU = plot_ranked_bars_health_usage(output," (test)",names)
+display(plt_ICU)
 
 model_str =
 """

@@ -37,6 +37,7 @@ function output_simulation_data(sol,i)
     return (incidence_A=VectorOfArray(incidence_A)[:,:],
             incidence_M=VectorOfArray(incidence_M)[:,:],
             incidence_V=VectorOfArray(incidence_V)[:,:],
+            incidence_H=VectorOfArray(incidence_H)[:,:],
             hosp_occup_by_area_ts = total_hosp_occup,
             ICU_occup_by_area_ts = total_ICU_occup,
             incidence_ICU_by_area_ts = total_new_ICU,
@@ -90,6 +91,67 @@ function extract_information_from_simulations(sims)
             hosp_peak_excess_demand_by_area=hosp_peak_excess_demand_by_area,
             ICU_peak_excess_demand_by_area=ICU_peak_excess_demand_by_area)
 end
+
+function give_plots_for_county(output,areas_to_plot,scenario_tag)
+    cum_A,cum_M,cum_V,cum_H = cum_incidence_for_each_sim_by_type(sims,cn)
+    _hosp_occup_per_sim,_ICU_occup_per_sim,_new_ICU_per_sim,_death_incidence_per_sim = total_hospital_outcomes_per_sim(sims,cn)
+    _incidence_H = diff(cum_H,dims=2)
+    median__incidence_H = [median(_incidence_H[:,t]) for t in 1:365]
+    lb__incidence_H = [quantile(_incidence_H[:,t],0.025) for t in 1:365]
+    ub__incidence_H = [quantile(_incidence_H[:,t],0.975) for t in 1:365]
+    median__incidence_death = [median(_death_incidence_per_sim[:,t]) for t in 1:365]
+    lb__incidence_death = [quantile(_death_incidence_per_sim[:,t],0.025) for t in 1:365]
+    ub__incidence_death = [quantile(_death_incidence_per_sim[:,t],0.975) for t in 1:365]
+    median__H_occ = [median(_hosp_occup_per_sim[:,t]) for t in 1:365]
+    lb__H_occ = [quantile(_hosp_occup_per_sim[:,t],0.025) for t in 1:365]
+    ub__H_occ = [quantile(_hosp_occup_per_sim[:,t],0.975) for t in 1:365]
+    median__ICU_occ = [median(_ICU_occup_per_sim[:,t]) for t in 1:365]
+    lb__ICU_occ = [quantile(_ICU_occup_per_sim[:,t],0.025) for t in 1:365]
+    ub__ICU_occ = [quantile(_ICU_occup_per_sim[:,t],0.975) for t in 1:365]
+
+    plt_incidence_ = plot(0:364,median__incidence_H,
+                        lab = "Hospitalisations",
+                        lw = 3,color = :red,
+                        ribbon = (median__incidence_H.-lb__incidence_H,ub__incidence_H .- median__incidence_H),
+                        fillalpha = 0.25,
+                        xticks = (first_of_months,["Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]),
+                        xlims = (0.,275.),
+                        title = "Incidence of disease - cn $(cn)")
+    plot!(plt_incidence_,0:364,median__incidence_death,
+                        lab = "Deaths",
+                        lw = 3,color = :black,
+                        ribbon = (median__incidence_death.-lb__incidence_death,ub__incidence_death .- median__incidence_death),
+                        fillalpha = 0.5,
+                        xticks = (first_of_months,["Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]),
+                        xlims = (0.,275.),
+                        ylabel = "Daily Incidence" )
+
+    plt_health_usage = plot(0:364,median__H_occ,
+                            lab = "hospital beds",
+                            lw = 3,color = :blue,
+                            ribbon = (median__H_occ.-lb__H_occ,ub__H_occ .- median__H_occ),
+                            fillalpha = 0.25,
+                            xticks = (first_of_months,["Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]),
+                            xlims = (0.,275.),
+                            ylabel = "Daily Occupancy",
+                            title = "Health system usage")
+
+    plot!(plt_health_usage,0:364,median__ICU_occ,
+                            lab = "ICU beds",
+                            lw = 3,color = :green,
+                            ribbon = (median__ICU_occ.-lb__ICU_occ,ub__ICU_occ .- median__ICU_occ),
+                            fillalpha = 0.25,
+                            xticks = (first_of_months,["Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]),
+                            xlims = (0.,275.),
+                            ylabel = "Daily Occupancy",
+                            title = "Health system usage")
+            return plt_incidence_,plt_health_usage
+
+
+end
+
+
+
 
 function plot_ranked_bars_health_usage(output,scenario_tag,areanames)
     median_hospital_exceed = output.hosp_peak_excess_demand_by_area.med
