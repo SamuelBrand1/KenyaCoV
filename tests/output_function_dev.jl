@@ -1,51 +1,5 @@
 
-"""
-function output_simulation_data
-    This function calculates daily incidence (asymptomatic, mild and severe) from the time-stepping of the underlying dynamic model.
-    It also runs the hospital model as a post-processing layer after simulation
-"""
-function output_simulation_data(sol,i)
-    times = sol.prob.tspan[1]:1:sol.prob.tspan[end]
-    incidence_A = diff([sum(sol(t)[:,:,9],dims=2)[:]  for t in times])
-    incidence_M = diff([sum(sol(t)[:,:,10],dims=2)[:]  for t in times])
-    incidence_V = diff([sum(sol(t)[:,:,11],dims=2)[:]  for t in times])
-    incidence_H = diff([sol(t)[:,:,12]  for t in times])
-    T = length(incidence_H)
-    nc,na = size(incidence_H[1])
-    total_hosp_occup = zeros(nc,T)
-    total_ICU_occup = zeros(nc,T)
-    total_new_ICU = zeros(nc,T)
-    total_death_incidence = zeros(nc,T)
-    hosp_by_area_and_age = zeros(nc,na)
-    ICU_by_area_and_age = zeros(nc,na)
-    deaths_by_area_and_age = zeros(nc,na)
 
-    for cn in 1:nc, a in 1:na
-        hosp_by_area_and_age[cn,a] = sum(sol(sol.prob.tspan[end])[cn,a,12])
-    end
-
-    for cn in 1:nc, a in 1:na
-        hosp_occup, ICU_occup, new_ICU,death_incidence = KenyaCoV.generate_hospitalisation_outcomes([inc_h[cn,a] for inc_h in incidence_H],a,cn)
-        total_hosp_occup[cn,:] .+= hosp_occup
-        total_ICU_occup[cn,:] .+= ICU_occup
-        total_new_ICU[cn,:] .+= new_ICU
-        total_death_incidence[cn,:] .+= death_incidence
-        ICU_by_area_and_age[cn,a] = sum(new_ICU)
-        deaths_by_area_and_age[cn,a] = sum(death_incidence)
-    end
-
-    return (incidence_A=VectorOfArray(incidence_A)[:,:],
-            incidence_M=VectorOfArray(incidence_M)[:,:],
-            incidence_V=VectorOfArray(incidence_V)[:,:],
-            incidence_H=VectorOfArray(incidence_H)[:,:],
-            hosp_occup_by_area_ts = total_hosp_occup,
-            ICU_occup_by_area_ts = total_ICU_occup,
-            incidence_ICU_by_area_ts = total_new_ICU,
-            death_incidence_by_area_ts = total_death_incidence,
-            total_hosp_by_area_and_age = hosp_by_area_and_age,
-            total_ICU_by_area_and_age = ICU_by_area_and_age,
-            total_deaths_by_area_and_age = deaths_by_area_and_age),false
-end
 
 function extract_information_from_simulations(sims)
     n = length(sims)
@@ -54,6 +8,13 @@ function extract_information_from_simulations(sims)
 
     hosp_by_area_over_sims = VectorOfArray([sum(sims[k].total_hosp_by_area_and_age,dims=2) for k = 1:n])[:,1,:]
     deaths_by_area_over_sims = VectorOfArray([sum(sims[k].total_deaths_by_area_and_age,dims=2) for k = 1:n])[:,1,:]
+    hosp_by_age_over_sims = VectorOfArray([sum(sims[k].total_hosp_by_area_and_age,dims=1) for k = 1:n])[1,:,:]
+    deaths_by_age_over_sims = VectorOfArray([sum(sims[k].total_deaths_by_area_and_age,dims=1) for k = 1:n])[1,:,:]
+    incidence_H_by_area_over_sims = VectorOfArray([sims[k].incidence_H for k = 1:n])[:,:,:]
+    incidence_death_by_area_over_sims = VectorOfArray([sims[k].death_incidence_by_area_ts for k = 1:n])[:,:,:]
+    H_occup_by_area_over_sims = VectorOfArray([sims[k].hosp_occup_by_area_ts for k = 1:n])[:,:,:]
+    ICU_occup_by_area_over_sims = VectorOfArray([sims[k].ICU_occup_by_area_ts for k = 1:n])[:,:,:]
+
     peak_hosp_by_area_by_sim = zeros(nc,n)
     peak_ICU_by_area_by_sim = zeros(nc,n)
 
@@ -66,16 +27,22 @@ function extract_information_from_simulations(sims)
     total_severe_cases = (med = median(sum(hosp_by_area_over_sims,dims=1)),
                             lpred = quantile(sum(hosp_by_area_over_sims,dims=1)[:],0.025),
                             upred = quantile(sum(hosp_by_area_over_sims[:],dims=1),0.975))
+
     severe_cases_by_area = (med = [median(hosp_by_area_over_sims[cn,:]) for cn = 1:nc],
                             lpred = [quantile(hosp_by_area_over_sims[cn,:],0.025) for cn = 1:nc],
                             upred = [quantile(hosp_by_area_over_sims[cn,:],0.975) for cn = 1:nc])
+    severe_cases_by_age = (med = [median(hosp_by_age_over_sims[a,:]) for a = 1:na],
+                            lpred = [quantile(hosp_by_age_over_sims[a,:],0.025) for a = 1:na],
+                            upred = [quantile(hosp_by_age_over_sims[a,:],0.975) for a = 1:na])
     total_deaths = (med = median(sum(deaths_by_area_over_sims,dims=1)),
                             lpred = quantile(sum(deaths_by_area_over_sims,dims=1)[:],0.025),
                             upred = quantile(sum(deaths_by_area_over_sims[:],dims=1),0.975))
     deaths_by_area = (med = [median(deaths_by_area_over_sims[cn,:]) for cn = 1:nc],
                             lpred = [quantile(deaths_by_area_over_sims[cn,:],0.025) for cn = 1:nc],
                             upred = [quantile(deaths_by_area_over_sims[cn,:],0.975) for cn = 1:nc])
-
+    deaths_by_age = (med = [median(deaths_by_age_over_sims[a,:]) for a = 1:na],
+                            lpred = [quantile(deaths_by_age_over_sims[a,:],0.025) for a = 1:na],
+                            upred = [quantile(deaths_by_age_over_sims[a,:],0.975) for a = 1:na])
     hosp_peak_excess_demand_by_area = (med = [median(peak_hosp_by_area_by_sim[cn,:]/KenyaCoV.spare_capacity_H_by_county[cn]) for cn = 1:nc],
                             lpred = [quantile(peak_hosp_by_area_by_sim[cn,:]/KenyaCoV.spare_capacity_H_by_county[cn],0.025) for cn = 1:nc],
                             upred = [quantile(peak_hosp_by_area_by_sim[cn,:]/KenyaCoV.spare_capacity_H_by_county[cn],0.975) for cn = 1:nc])
@@ -86,68 +53,77 @@ function extract_information_from_simulations(sims)
 
     return (total_severe_cases=total_severe_cases,
             severe_cases_by_area=severe_cases_by_area,
+            severe_cases_by_age=severe_cases_by_age,
             total_deaths=total_deaths,
             deaths_by_area=deaths_by_area,
+            deaths_by_age=deaths_by_age,
             hosp_peak_excess_demand_by_area=hosp_peak_excess_demand_by_area,
-            ICU_peak_excess_demand_by_area=ICU_peak_excess_demand_by_area)
+            ICU_peak_excess_demand_by_area=ICU_peak_excess_demand_by_area,
+            incidence_H_by_area_over_sims=incidence_H_by_area_over_sims,
+            incidence_death_by_area_over_sims=incidence_death_by_area_over_sims,
+            H_occup_by_area_over_sims=H_occup_by_area_over_sims,
+            ICU_occup_by_area_over_sims=ICU_occup_by_area_over_sims)
 end
 
-function give_plots_for_county(output,areas_to_plot,scenario_tag)
-    cum_A,cum_M,cum_V,cum_H = cum_incidence_for_each_sim_by_type(sims,cn)
-    _hosp_occup_per_sim,_ICU_occup_per_sim,_new_ICU_per_sim,_death_incidence_per_sim = total_hospital_outcomes_per_sim(sims,cn)
-    _incidence_H = diff(cum_H,dims=2)
-    median__incidence_H = [median(_incidence_H[:,t]) for t in 1:365]
-    lb__incidence_H = [quantile(_incidence_H[:,t],0.025) for t in 1:365]
-    ub__incidence_H = [quantile(_incidence_H[:,t],0.975) for t in 1:365]
-    median__incidence_death = [median(_death_incidence_per_sim[:,t]) for t in 1:365]
-    lb__incidence_death = [quantile(_death_incidence_per_sim[:,t],0.025) for t in 1:365]
-    ub__incidence_death = [quantile(_death_incidence_per_sim[:,t],0.975) for t in 1:365]
-    median__H_occ = [median(_hosp_occup_per_sim[:,t]) for t in 1:365]
-    lb__H_occ = [quantile(_hosp_occup_per_sim[:,t],0.025) for t in 1:365]
-    ub__H_occ = [quantile(_hosp_occup_per_sim[:,t],0.975) for t in 1:365]
-    median__ICU_occ = [median(_ICU_occup_per_sim[:,t]) for t in 1:365]
-    lb__ICU_occ = [quantile(_ICU_occup_per_sim[:,t],0.025) for t in 1:365]
-    ub__ICU_occ = [quantile(_ICU_occup_per_sim[:,t],0.975) for t in 1:365]
+function give_plots_for_county(output,areas_to_plot,scenario_tag,areanames)
+    incidence_H = sum(output.incidence_H_by_area_over_sims[areas_to_plot,:,:],dims=1)[1,:,:]
+    incidence_D = sum(output.incidence_death_by_area_over_sims[areas_to_plot,:,:],dims=1)[1,:,:]
+    H_occup = sum(output.H_occup_by_area_over_sims[areas_to_plot,:,:],dims=1)[1,:,:]
+    ICU_occup = sum(output.ICU_occup_by_area_over_sims[areas_to_plot,:,:],dims=1)[1,:,:]
 
-    plt_incidence_ = plot(0:364,median__incidence_H,
+    T,n = size(incidence_H)
+    monthdates = [Date(2020,3,1) + Month(i) for i = 1:21 ]
+    monthnames = [monthname(d)[1:3]*"-$(year(d)-2000)" for d in monthdates]
+    tick_times = [(d - Date(2020,3,13)).value for d in monthdates]
+
+    median_H = [median(incidence_H[t,:]) for t = 1:T]
+    lb_H = [quantile(incidence_H[t,:],0.025) for t = 1:T]
+    ub_H = [quantile(incidence_H[t,:],0.975) for t = 1:T]
+    median_D = [median(incidence_D[t,:]) for t = 1:T]
+    lb_D = [quantile(incidence_D[t,:],0.025) for t = 1:T]
+    ub_D = [quantile(incidence_D[t,:],0.975) for t = 1:T]
+    median_H_occup = [median(H_occup[t,:]) for t = 1:T]
+    lb_H_occup = [quantile(H_occup[t,:],0.025) for t = 1:T]
+    ub_H_occup = [quantile(H_occup[t,:],0.975) for t = 1:T]
+    median_ICU_occup = [median(ICU_occup[t,:]) for t = 1:T]
+    lb_ICU_occup = [quantile(ICU_occup[t,:],0.025) for t = 1:T]
+    ub_ICU_occup = [quantile(ICU_occup[t,:],0.975) for t = 1:T]
+
+    area_name = ["Rest of Kenya"]
+    if length(areas_to_plot) == 1
+        area_name = areanames[areas_to_plot]
+    end
+
+    plt_incidence = plot(0:(T-1),median_H,
                         lab = "Hospitalisations",
                         lw = 3,color = :red,
-                        ribbon = (median__incidence_H.-lb__incidence_H,ub__incidence_H .- median__incidence_H),
+                        ribbon = (median_H.-lb_H,ub_H .- median_H),
                         fillalpha = 0.25,
-                        xticks = (first_of_months,["Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]),
-                        xlims = (0.,275.),
-                        title = "Incidence of disease - cn $(cn)")
-    plot!(plt_incidence_,0:364,median__incidence_death,
+                        xticks = (tick_times,monthnames),
+                        title = "Incidence of disease - "*area_name[1]*scenario_tag)
+    plot!(plt_incidence,0:(T-1),median_D,
                         lab = "Deaths",
                         lw = 3,color = :black,
-                        ribbon = (median__incidence_death.-lb__incidence_death,ub__incidence_death .- median__incidence_death),
-                        fillalpha = 0.5,
-                        xticks = (first_of_months,["Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]),
-                        xlims = (0.,275.),
-                        ylabel = "Daily Incidence" )
+                        ribbon = (median_D.-lb_D,ub_D .- median_D),
+                        fillalpha = 0.5 )
 
-    plt_health_usage = plot(0:364,median__H_occ,
+    plt_health_usage = plot(0:(T-1),median_H_occup,
                             lab = "hospital beds",
                             lw = 3,color = :blue,
-                            ribbon = (median__H_occ.-lb__H_occ,ub__H_occ .- median__H_occ),
+                            ribbon = (median_H_occup.-lb_H_occup,ub_H_occup .- median_H_occup),
                             fillalpha = 0.25,
-                            xticks = (first_of_months,["Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]),
-                            xlims = (0.,275.),
+                            xticks = (tick_times,monthnames),
                             ylabel = "Daily Occupancy",
-                            title = "Health system usage")
+                            title = "Health system usage - "*area_name[1]*scenario_tag)
 
-    plot!(plt_health_usage,0:364,median__ICU_occ,
+    plot!(plt_health_usage,0:(T-1),median_ICU_occup,
                             lab = "ICU beds",
                             lw = 3,color = :green,
-                            ribbon = (median__ICU_occ.-lb__ICU_occ,ub__ICU_occ .- median__ICU_occ),
-                            fillalpha = 0.25,
-                            xticks = (first_of_months,["Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]),
-                            xlims = (0.,275.),
-                            ylabel = "Daily Occupancy",
-                            title = "Health system usage")
-            return plt_incidence_,plt_health_usage
+                            ribbon = (median_ICU_occup.-lb_ICU_occup,ub_ICU_occup .- median_ICU_occup),
+                            fillalpha = 0.25)
+    
 
-
+    return plt_incidence,plt_health_usage
 end
 
 
