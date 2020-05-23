@@ -18,6 +18,7 @@ verity_IFR = [0.00161,0.00695,0.0309,
             7.8]./100
 
 
+
 hosp_rate_CDC = [mean([1.6,2.5]),#0-19 year olds
                  mean([14.3,20.8]),#20-44 yos
                  mean([21.2,28.3]),#45-54
@@ -48,6 +49,12 @@ ICU_rate_by_age = [ICU_rate_CDC[1],ICU_rate_CDC[1],ICU_rate_CDC[1],ICU_rate_CDC[
                     ICU_rate_CDC[4],ICU_rate_CDC[4],
                     ICU_rate_CDC[5],ICU_rate_CDC[5],
                     ICU_rate_CDC[6],ICU_rate_CDC[7]]
+
+
+                                # 0·00260% (0·000312–0·0382) 0·0148% (0·00288–0·0759) 0·0600% (0·0317–0·132) 0·146% (0·103–0·255) 0·295% (0·221–0·422) 1·25% (1·03–1·55)
+                                # 3·99% (3·41–4·55)
+                                # 8·61% (7·48–9·99) 13·4% (11·2–15·9)
+                                #
 
 
 ICU_rate_by_age_cond_hosp = ICU_rate_by_age./hosp_rate_by_age

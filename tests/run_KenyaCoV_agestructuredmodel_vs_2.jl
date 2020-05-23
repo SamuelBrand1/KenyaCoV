@@ -58,8 +58,9 @@ P.χ .= χ_zhang ./max_eigval_china #This rescales everything so β is the same 
 
 P.dt = 0.25
 
+spare_capacity_H_by_county = KenyaCoV.spare_capacity_H_by_county
 
-
+spare_capacity_ICU_by_county = KenyaCoV.spare_capacity_ICU_by_county
 """
 Run model
 
@@ -69,16 +70,13 @@ u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,60.),P)
 @time sol = solve(prob,FunctionMap(),dt = P.dt)
-sims_test = KenyaCoV.run_consensus_simulations(P,prob,10,CallbackSet())
-output = extract_information_from_simulations(sims_test);
-output.ICU_occup_by_area_over_sims
+sims_test = KenyaCoV.run_simulations(P,prob,10)
+output = KenyaCoV.extract_information_from_simulations(sims_test);
 
-bar(output.deaths_by_age.med,yerror = (output.deaths_by_age.med .- output.deaths_by_age.lpred,output.deaths_by_age.upred .- output.deaths_by_age.med) )
 
 output.ICU_occup_by_area_over_sims
-plt_inc,plt_health = give_plots_for_county(output,[30]," test",names)
+plt_inc,plt_health = KenyaCoV.give_plots_for_county(output,[30]," test",names)
 display(plt_health)
-names[[30]][1]
 model_str =
 """
 This is a test String
