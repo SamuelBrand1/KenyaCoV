@@ -26,7 +26,7 @@ names = counties.county
 
 sims = sims_baseline
 file_tag = "baseline"
-title_tag = " (Baseline: full intervention)"
+title_tag = " (Baseline)"
 
 #sims = sims_end_regional_lockdown
 #file_tag = "end_regional_lockdown"
@@ -180,14 +180,14 @@ end
 plt_severe_cases_whole_country = plot_bar_total_cases_by_scenario(1,"Whole country")
 savefig(plt_severe_cases_whole_country,"plotting/whole_country_severe_cases_by_scenario.png")
 
-plt_severe_cases_nairobi = plot_bar_total_cases_by_scenario(2,"Nairobi")
-savefig(plt_severe_cases_nairobi,"plotting/nairobi_severe_cases_by_scenario.png")
+#plt_severe_cases_nairobi = plot_bar_total_cases_by_scenario(2,"Nairobi")
+#savefig(plt_severe_cases_nairobi,"plotting/nairobi_severe_cases_by_scenario.png")
 
-plt_severe_cases_mombasa = plot_bar_total_cases_by_scenario(3,"Mombasa")
-savefig(plt_severe_cases_mombasa,"plotting/mombasa_severe_cases_by_scenario.png")
+#plt_severe_cases_mombasa = plot_bar_total_cases_by_scenario(3,"Mombasa")
+#savefig(plt_severe_cases_mombasa,"plotting/mombasa_severe_cases_by_scenario.png")
 
-plt_severe_cases_rest = plot_bar_total_cases_by_scenario(4,"Rest of the country")
-savefig(plt_severe_cases_rest,"plotting/rest_of_country_severe_cases_by_scenario.png")
+#plt_severe_cases_rest = plot_bar_total_cases_by_scenario(4,"Rest of the country")
+#savefig(plt_severe_cases_rest,"plotting/rest_of_country_severe_cases_by_scenario.png")
 
 
 

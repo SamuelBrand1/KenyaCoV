@@ -251,11 +251,7 @@ prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
 sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
 
-<<<<<<< HEAD
 @save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
-=======
-#@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
->>>>>>> e8d7802fd8d2e6d502c50c6b5d681aff3a400d41
 
 """
 SCENARIO 2
@@ -274,15 +270,7 @@ P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-<<<<<<< HEAD
 sims_full_intervention = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
-=======
-sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
-
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_new_baseline_vs2.jld2") sims_baseline
-
-println("Finished baseline sims for consensus modelling ")
->>>>>>> e8d7802fd8d2e6d502c50c6b5d681aff3a400d41
 
 @save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_full_intervention_vs2.jld2") sims_full_intervention
 
@@ -304,11 +292,7 @@ println("Finished baseline sims for consensus modelling ")
 
 #sims_end_regional_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,regional_lockdown_starts_and_finishes)
 
-<<<<<<< HEAD
 #@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
-=======
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
->>>>>>> e8d7802fd8d2e6d502c50c6b5d681aff3a400d41
 
 
 """
