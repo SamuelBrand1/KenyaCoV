@@ -1,7 +1,7 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,MAT,RecursiveArrayTools,CSV
-import KenyaCoV
-# include("/users/Ojal/Documents/Covid-19/jl_models/src/KenyaCoV.jl")
+#import KenyaCoV
+include("/users/Ojal/Documents/Covid-19/jl_models/src/KenyaCoV.jl")
 using LinearAlgebra:eigen
 using Statistics: median, quantile
 
@@ -81,7 +81,7 @@ Date(2020,8,14) - Date(2020,3,13) # Schools closed 14th Augus 2020
 
 Date(2020,8,31) - Date(2020,3,13) # Schools  open 31st august 2020
 Date(2020,5,16) - Date(2020,3,13) # Regional lockdown end 16th May
-Date(2020,10,30) - Date(2020,3,13) # Schools closed 30th October 2020
+Date(2020,10,23) - Date(2020,3,13) # Schools closed 23rd October 2020
 
 Date(2021,1,4) - Date(2020,3,13)  # schools open 4th Jan 2021
 Date(2021,4,9) - Date(2020,3,13)  # Schools closed 9th April 2021
@@ -117,6 +117,16 @@ cb_regional_lockdown_end = DiscreteCallback(regional_lockdown_ending,affect_regi
 regional_lockdown_starts = CallbackSet(cb_regional_lockdown)
 regional_lockdown_starts_and_finishes = CallbackSet(cb_regional_lockdown,cb_regional_lockdown_end)
 
+# First 14 days: Settings for the first 14 days
+function first_14_days(u,t,integrator)
+    integrator.p.T && t > 0.
+end
+
+# After 14 days to first school opening
+function after_first_14_days(u,t,integrator)
+    integrator.p.T && t > 14.
+end
+
 #Closure and opening of schools
 function open_schools_june(u,t,integrator)
   integrator.p.schools_closed && t > 81.
@@ -131,7 +141,7 @@ function open_schools_august(u,t,integrator)
 end
 
 function close_schools_october(u,t,integrator)
-  !integrator.p.schools_closed && t > 231.
+  !integrator.p.schools_closed && t > 224.
 end
 
 
@@ -159,48 +169,107 @@ function close_schools_oct2021(u,t,integrator)
   !integrator.p.schools_closed && t > 588.
 end
 
-function affect_open_schools!(integrator)
-  integrator.p.M = 1.1*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.7*M_Kenya_school
+function affect_first_14_days!()
+   integrator.p.M = 0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+end
+
+function affect_open_schools_50pct!(integrator)
+  integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.5*M_Kenya_school
   integrator.p.schools_closed = false
 end
-function affect_close_schools!(integrator)
-  integrator.p.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+
+function affect_open_schools_90pct!(integrator)
+  integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.9*M_Kenya_school
+  integrator.p.schools_closed = false
+end
+
+function affect_close_schools!(integrator)  # contact distribution applies to all periods when schooled are closed
+  integrator.p.M = M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 100% of what they were pre-interventions; room for +-20% allowed by COMORT
   integrator.p.schools_closed = true
 end
 
-cb_open_schools_june = DiscreteCallback(open_schools_june,affect_open_schools!)
-cb_open_schools_august = DiscreteCallback(open_schools_august,affect_open_schools!)
-cb_open_schools_jan2021 = DiscreteCallback(open_schools_jan2021,affect_open_schools!)
-cb_open_schools_may2021 = DiscreteCallback(open_schools_may2021,affect_open_schools!)
-cb_open_schools_aug2021 = DiscreteCallback(open_schools_aug2021,affect_open_schools!)
+# initial perid
+cb_first_14_days = DiscreteCallback(first_14_days,affect_first_14_days!)
 
+# open school call backs for the 50% scenarios
+cb_open_schools_june_50pct    = DiscreteCallback(open_schools_june,affect_open_schools_50pct!)
+cb_open_schools_august_50pct  = DiscreteCallback(open_schools_august,affect_open_schools_50pct!)
+cb_open_schools_jan2021_50pct = DiscreteCallback(open_schools_jan2021,affect_open_schools_50pct!)
+cb_open_schools_may2021_50pct = DiscreteCallback(open_schools_may2021,affect_open_schools_50pct!)
+cb_open_schools_aug2021_50pct = DiscreteCallback(open_schools_aug2021,affect_open_schools_50pct!)
+
+
+# open school call backs for the 90% scenarios
+cb_open_schools_june_90pct    = DiscreteCallback(open_schools_june,affect_open_schools_90pct!)
+cb_open_schools_august_90pct  = DiscreteCallback(open_schools_august,affect_open_schools_90pct!)
+cb_open_schools_jan2021_90pct = DiscreteCallback(open_schools_jan2021,affect_open_schools_90pct!)
+cb_open_schools_may2021_90pct = DiscreteCallback(open_schools_may2021,affect_open_schools_90pct!)
+cb_open_schools_aug2021_90pct = DiscreteCallback(open_schools_aug2021,affect_open_schools_90pct!)
+
+# close school call backs
+cb_after_first_14_days = DiscreteCallback(after_first_14_days, affect_close_schools!)
 cb_close_schools_august = DiscreteCallback(close_schools_august,affect_close_schools!)
 cb_close_schools_october = DiscreteCallback(close_schools_october,affect_close_schools!)
 cb_close_schools_apr2021 = DiscreteCallback(close_schools_apr2021,affect_close_schools!)
 cb_close_schools_aug2021 = DiscreteCallback(close_schools_aug2021,affect_close_schools!)
 cb_close_schools_oct2021 = DiscreteCallback(close_schools_oct2021,affect_close_schools!)
 
-measures_schools_open_june_2020 = CallbackSet(cb_regional_lockdown,
-                                            cb_open_schools_june,
+measures_schools_open_june_2020_50pct = CallbackSet(
+                                            cb_first_14_days,
+                                            cb_after_first_14_days,
+                                            cb_regional_lockdown,  # regional lock down implemented and maintained throughout. Edit this call back to end lock downs
+                                            cb_open_schools_june_50pct,
                                             cb_close_schools_august,
-                                            cb_open_schools_august,
+                                            cb_open_schools_august_50pct,
                                             cb_close_schools_october,
-                                            cb_open_schools_jan2021,
+                                            cb_open_schools_jan2021_50pct,
                                             cb_close_schools_apr2021,
-                                            cb_open_schools_may2021,
+                                            cb_open_schools_may2021_50pct,
                                             cb_close_schools_aug2021,
-                                            cb_open_schools_aug2021,
-                                            cb_close_schools_oct2021)
-measures_schools_open_august_2020 = CallbackSet(cb_regional_lockdown,
-                                            cb_open_schools_august,
-                                            cb_close_schools_october,
-                                            cb_open_schools_jan2021,
-                                            cb_close_schools_apr2021,
-                                            cb_open_schools_may2021,
-                                            cb_close_schools_aug2021,
-                                            cb_open_schools_aug2021,
+                                            cb_open_schools_aug2021_50pct,
                                             cb_close_schools_oct2021)
 
+
+measures_schools_open_june_2020_90pct = CallbackSet(
+                                            cb_first_14_days,
+                                            cb_after_first_14_days,
+                                            cb_regional_lockdown,
+                                            cb_open_schools_june_90pct,
+                                            cb_close_schools_august,
+                                            cb_open_schools_august_90pct,
+                                            cb_close_schools_october,
+                                            cb_open_schools_jan2021_90pct,
+                                            cb_close_schools_apr2021,
+                                            cb_open_schools_may2021_90pct,
+                                            cb_close_schools_aug2021,
+                                            cb_open_schools_aug2021_90pct,
+                                            cb_close_schools_oct2021)
+
+measures_schools_open_august_2020_50pct = CallbackSet(
+                                            cb_first_14_days,
+                                            cb_after_first_14_days,
+                                            cb_regional_lockdown,
+                                            cb_open_schools_august_50pct,
+                                            cb_close_schools_october,
+                                            cb_open_schools_jan2021_50pct,
+                                            cb_close_schools_apr2021,
+                                            cb_open_schools_may2021_50pct,
+                                            cb_close_schools_aug2021,
+                                            cb_open_schools_aug2021_50pct,
+                                            cb_close_schools_oct2021)
+
+measures_schools_open_august_2020_90pct = CallbackSet(
+                                            cb_first_14_days,
+                                            cb_after_first_14_days,
+                                            cb_regional_lockdown,
+                                            cb_open_schools_august_90pct,
+                                            cb_close_schools_october,
+                                            cb_open_schools_jan2021_90pct,
+                                            cb_close_schools_apr2021,
+                                            cb_open_schools_may2021_90pct,
+                                            cb_close_schools_aug2021,
+                                            cb_open_schools_aug2021_90pct,
+                                            cb_close_schools_oct2021)
 """
 Set up parameters
 """
