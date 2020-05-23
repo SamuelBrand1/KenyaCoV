@@ -81,7 +81,7 @@ Date(2020,8,14) - Date(2020,3,13) # Schools closed 14th Augus 2020
 
 Date(2020,8,31) - Date(2020,3,13) # Schools  open 31st august 2020
 Date(2020,5,16) - Date(2020,3,13) # Regional lockdown end 16th May
-Date(2020,10,30) - Date(2020,3,13) # Schools closed 30th October 2020
+Date(2020,10,23) - Date(2020,3,13) # Schools closed 23rd October 2020
 
 Date(2021,1,4) - Date(2020,3,13)  # schools open 4th Jan 2021
 Date(2021,4,9) - Date(2020,3,13)  # Schools closed 9th April 2021
