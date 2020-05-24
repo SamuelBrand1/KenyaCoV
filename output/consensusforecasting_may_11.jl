@@ -170,11 +170,11 @@ function close_schools_oct2021(u,t,integrator)
 end
 
 function affect_first_14_days!(integrator)
-   integrator.p.M = 0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+   integrator.p.M = 0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school # 0.8 suggested in doc bu +-20% allowed, except schools
 end
 
 function affect_open_schools_50pct!(integrator)
-  integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.5*M_Kenya_school
+  integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.5*M_Kenya_school  # the 1.1 in M_Kenya_ho account for 20% increased numbers at home as well as social distancing
   integrator.p.schools_closed = false
 end
 
@@ -184,9 +184,17 @@ function affect_open_schools_90pct!(integrator)
 end
 
 function affect_close_schools!(integrator)  # contact distribution applies to all periods when schooled are closed
-  integrator.p.M = M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 100% of what they were pre-interventions; room for +-20% allowed by COMORT
+  integrator.p.M = 1.1*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 110% of what they were pre-interventions; room for +-20% allowed by COMORT
   integrator.p.schools_closed = true
 end
+
+
+#function affect_open_schools_condidates_50pct!(integrator)
+ # M_Kenya_school_new = M_kenya_school
+ # integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.5*M_Kenya_school
+ # integrator.p.schools_closed = false
+#end
+
 
 # initial perid
 cb_first_14_days = DiscreteCallback(first_14_days,affect_first_14_days!)
@@ -266,6 +274,11 @@ measures_schools_open_august_2020_90pct = CallbackSet(cb_first_14_days,
                                             cb_close_schools_aug2021,
                                             cb_open_schools_aug2021_90pct,
                                             cb_close_schools_oct2021)
+
+measures_schools_open_june_for_candidates_50pct = CallbackSet()
+
+measures_schools_open_june_for_candidates_90pct = CallbackSet()
+
 """
 Set up parameters
 """
@@ -325,16 +338,17 @@ Scenario Ia: Opening schools June 2nd and school contacts at 50%
 """
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
-P.c_t = ramp_down
+P.c_t = t -> 1.
 P.lockdown = false
 P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+#P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_open_schools_june_50pct = KenyaCoV.run_consensus_simulations(P,prob,1000,measures_schools_open_june_2020_50pct)
+sims_open_schools_june_50pct = KenyaCoV.run_consensus_simulations(P,prob,200,measures_schools_open_june_2020_50pct)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_full_intervention_vs2.jld2") sims_open_schools_june_50pct
+@save joinpath(pwd(),"KenyaCoVOutputs/sims_open_schools_june_50pct.jld2") sims_open_schools_june_50pct
 
 
 #"""
