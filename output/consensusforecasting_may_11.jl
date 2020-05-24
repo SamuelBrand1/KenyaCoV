@@ -169,7 +169,7 @@ function close_schools_oct2021(u,t,integrator)
   !integrator.p.schools_closed && t > 588.
 end
 
-function affect_first_14_days!()
+function affect_first_14_days!(integrator)
    integrator.p.M = 0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
 end
 
