@@ -463,7 +463,7 @@ function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj;interventions 
 end
 
 function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,model_str,simulation_tag,scenario_tag,areanames;interventions = CallbackSet(),make_new_directory::Bool = false)
-    sims = run_simulations(P,prob,n_traj,τ,ϵ_D;interventions=interventions)
+    sims = run_simulations(P,prob,n_traj;interventions=interventions)
     output = extract_information_from_simulations(sims);
     scenariodata = generate_report(output,model_str,simulation_tag,scenario_tag,areanames;make_new_directory=make_new_directory)
     return scenariodata

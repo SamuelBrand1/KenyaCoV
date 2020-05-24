@@ -123,6 +123,23 @@ function extract_information_from_simulations(sims)
                 lpred = incidence_death_by_area_lpred,
                 upred = incidence_death_by_area_upred)
 
+    country_prevalence_H_ts = (med = [median(country_prevalence_H[t,:]) for t = 1:T],
+                        lpred = [quantile(country_prevalence_H[t,:],0.025) for t = 1:T],
+                        upred = [quantile(country_prevalence_H[t,:],0.025) for t = 1:T])
+
+    prevalence_H_ts = (med = prevalence_H_by_area_med,
+                lpred = prevalence_H_by_area_lpred,
+                upred = prevalence_H_by_area_upred)
+
+
+    country_prevalence_ICU_ts = (med = [median(country_prevalence_ICU[t,:]) for t = 1:T],
+                        lpred = [quantile(country_prevalence_ICU[t,:],0.025) for t = 1:T],
+                        upred = [quantile(country_prevalence_ICU[t,:],0.025) for t = 1:T])
+
+    prevalence_ICU_ts = (med = prevalence_ICU_by_area_med,
+                lpred = prevalence_ICU_by_area_lpred,
+                upred = prevalence_ICU_by_area_upred)
+
     total_severe_cases = (med = median(sum(hosp_by_area_over_sims,dims=1)),
                             lpred = quantile(sum(hosp_by_area_over_sims,dims=1)[:],0.025),
                             upred = quantile(sum(hosp_by_area_over_sims[:],dims=1),0.975))
@@ -169,7 +186,11 @@ function extract_information_from_simulations(sims)
             country_incidence_V_ts=country_incidence_V_ts,
             incidence_V_ts=incidence_V_ts,
             country_incidence_death_ts=country_incidence_death_ts,
-            incidence_death_ts=incidence_death_ts)
+            incidence_death_ts=incidence_death_ts,
+            country_prevalence_H_ts=country_prevalence_H_ts,
+            prevalence_H_ts=prevalence_H_ts,
+            country_prevalence_ICU_ts=country_prevalence_ICU_ts,
+            prevalence_ICU_ts=prevalence_ICU_ts)
 end
 
 
@@ -193,6 +214,10 @@ function generate_report(output,model_str,simulation_tag,scenario_tag,areanames;
             incidence_V_ts=output.incidence_V_ts,
             country_incidence_death_ts=output.country_incidence_death_ts,
             incidence_death_ts=output.incidence_death_ts,
+            country_prevalence_H_ts=output.country_prevalence_H_ts,
+            prevalence_H_ts=output.prevalence_H_ts,
+            country_prevalence_ICU_ts=output.country_prevalence_ICU_ts,
+            prevalence_ICU_ts=output.prevalence_ICU_ts,
             model_str=model_str)
     @save("reports/report"*simulation_tag*"/scenario_data"*simulation_tag*".jld2",scenariodata)
 
@@ -214,7 +239,10 @@ function generate_report(output,model_str,simulation_tag,scenario_tag,areanames;
     savefig(plt_severe,"reports/report"*simulation_tag*"/total_severe_cases_by_county"*simulation_tag*".png")
     savefig(plt_deaths,"reports/report"*simulation_tag*"/total_deaths_by_county"*simulation_tag*".png")
 
+    #Total country output
     writedlm("reports/report"*simulation_tag*"/total_A_incidence_ts"*simulation_tag*".csv",output.country_incidence_A_ts.med,",")
+    writedlm("reports/report"*simulation_tag*"/total_cum_A_incidence_ts"*simulation_tag*".csv",cumsum(output.country_incidence_A_ts.med),",")
+
     writedlm("reports/report"*simulation_tag*"/total_M_incidence_ts"*simulation_tag*".csv",output.country_incidence_M_ts.med,",")
     writedlm("reports/report"*simulation_tag*"/total_V_incidence_ts"*simulation_tag*".csv",output.country_incidence_V_ts.med,",")
     writedlm("reports/report"*simulation_tag*"/total_all_incidence_ts"*simulation_tag*".csv",output.country_incidence_A_ts.med .+ output.country_incidence_M_ts.med .+ output.country_incidence_V_ts.med,",")
