@@ -119,12 +119,12 @@ regional_lockdown_starts_and_finishes = CallbackSet(cb_regional_lockdown,cb_regi
 
 # First 14 days: Settings for the first 14 days
 function first_14_days(u,t,integrator)
-    integrator.p.T && t > 0.
+    integrator.p.schools_closed && t > 0.
 end
 
 # After 14 days to first school opening
 function after_first_14_days(u,t,integrator)
-    integrator.p.T && t > 14.
+     integrator.p.schools_closed && t > 14.
 end
 
 #Closure and opening of schools
@@ -169,12 +169,12 @@ function close_schools_oct2021(u,t,integrator)
   !integrator.p.schools_closed && t > 588.
 end
 
-function affect_first_14_days!()
-   integrator.p.M = 0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+function affect_first_14_days!(integrator)
+   integrator.p.M = 0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school # 0.8 suggested in doc bu +-20% allowed, except schools
 end
 
 function affect_open_schools_50pct!(integrator)
-  integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.5*M_Kenya_school
+  integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.5*M_Kenya_school  # the 1.1 in M_Kenya_ho account for 20% increased numbers at home as well as social distancing
   integrator.p.schools_closed = false
 end
 
@@ -184,9 +184,17 @@ function affect_open_schools_90pct!(integrator)
 end
 
 function affect_close_schools!(integrator)  # contact distribution applies to all periods when schooled are closed
-  integrator.p.M = M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 100% of what they were pre-interventions; room for +-20% allowed by COMORT
+  integrator.p.M = 1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 110% of what they were pre-interventions; room for +-20% allowed by COMORT
   integrator.p.schools_closed = true
 end
+
+
+#function affect_open_schools_condidates_50pct!(integrator)
+ # M_Kenya_school_new = M_kenya_school
+ # integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.5*M_Kenya_school
+ # integrator.p.schools_closed = false
+#end
+
 
 # initial perid
 cb_first_14_days = DiscreteCallback(first_14_days,affect_first_14_days!)
@@ -214,8 +222,7 @@ cb_close_schools_apr2021 = DiscreteCallback(close_schools_apr2021,affect_close_s
 cb_close_schools_aug2021 = DiscreteCallback(close_schools_aug2021,affect_close_schools!)
 cb_close_schools_oct2021 = DiscreteCallback(close_schools_oct2021,affect_close_schools!)
 
-measures_schools_open_june_2020_50pct = CallbackSet(
-                                            cb_first_14_days,
+measures_schools_open_june_2020_50pct = CallbackSet(cb_first_14_days,
                                             cb_after_first_14_days,
                                             cb_regional_lockdown,  # regional lock down implemented and maintained throughout. Edit this call back to end lock downs
                                             cb_open_schools_june_50pct,
@@ -230,8 +237,7 @@ measures_schools_open_june_2020_50pct = CallbackSet(
                                             cb_close_schools_oct2021)
 
 
-measures_schools_open_june_2020_90pct = CallbackSet(
-                                            cb_first_14_days,
+measures_schools_open_june_2020_90pct = CallbackSet(cb_first_14_days,
                                             cb_after_first_14_days,
                                             cb_regional_lockdown,
                                             cb_open_schools_june_90pct,
@@ -245,8 +251,7 @@ measures_schools_open_june_2020_90pct = CallbackSet(
                                             cb_open_schools_aug2021_90pct,
                                             cb_close_schools_oct2021)
 
-measures_schools_open_august_2020_50pct = CallbackSet(
-                                            cb_first_14_days,
+measures_schools_open_august_2020_50pct = CallbackSet(cb_first_14_days,
                                             cb_after_first_14_days,
                                             cb_regional_lockdown,
                                             cb_open_schools_august_50pct,
@@ -258,8 +263,7 @@ measures_schools_open_august_2020_50pct = CallbackSet(
                                             cb_open_schools_aug2021_50pct,
                                             cb_close_schools_oct2021)
 
-measures_schools_open_august_2020_90pct = CallbackSet(
-                                            cb_first_14_days,
+measures_schools_open_august_2020_90pct = CallbackSet(cb_first_14_days,
                                             cb_after_first_14_days,
                                             cb_regional_lockdown,
                                             cb_open_schools_august_90pct,
@@ -270,6 +274,11 @@ measures_schools_open_august_2020_90pct = CallbackSet(
                                             cb_close_schools_aug2021,
                                             cb_open_schools_aug2021_90pct,
                                             cb_close_schools_oct2021)
+
+measures_schools_open_june_for_candidates_50pct = CallbackSet()
+
+measures_schools_open_june_for_candidates_90pct = CallbackSet()
+
 """
 Set up parameters
 """
@@ -293,19 +302,19 @@ R_V = (P.ϵ/P.σ₂) + (P.ϵ_V/P.τ) #effective duration of severe
 R_vector = [(1-P.rel_detection_rate[a])*R_A + P.rel_detection_rate[a]*(1-P.hₐ[a])*R_M + P.rel_detection_rate[a]*P.hₐ[a]*R_V for a = 1:17]
 inf_matrix = repeat(R_vector',17,1)
 
-eigs_china, = eigen(sus_matrix.*M_China.*inf_matrix)
-max_eigval_china = Real(eigs_china[end])
-eigs_kenya, = eigen(sus_matrix.*M_Kenya.*inf_matrix)
-max_eigval_Kenya = Real(eigs_kenya[end])
-multiplier_for_kenya = max_eigval_Kenya/max_eigval_china
-P.χ .= χ_zhang ./max_eigval_china #This rescales everything so β is the same as R₀ for China
+eigs_kenya_schools_closed, = eigen(sus_matrix.*(1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work).*inf_matrix)
+max_eigval_Kenya = Real(eigs_kenya_schools_closed[end])
+P.χ .= χ_zhang ./max_eigval_Kenya #This rescales everything so β is the same as fitted R₀ for Kenya
 
 u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
 u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
 u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
 
+@load "data/posterior_distribution_R0.jld2" posterior_R₀
+
+
 """
-SCENARIO 1
+SCENARIO 0
 
 Base line scenario
 """
@@ -325,23 +334,24 @@ Base line scenario
 """
 SCENARIO 2
 
-Full intervention scenario:
-- Social mixing school 0%, home 120%, 100% other / work –
-- Decline by 50% over two weeks
-- Nbi / coast lockdown 90% applies 17th April
+Scenario Ia: Opening schools June 2nd and school contacts at 50%
+
 """
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
-P.c_t = ramp_down
+P.β = rand(posterior_R₀) #Choose R₀ posterior
+P.c_t = t -> 1.
 P.lockdown = false
 P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+#P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_full_intervention = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
+data = KenyaCoV.run_scenario(P,prob,10,model_str,"_test"," (test)",counties.county;interventions = CallbackSet(),make_new_directory::Bool = false)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_full_intervention_vs2.jld2") sims_full_intervention
+#sims_open_schools_june_50pct = KenyaCoV.run_consensus_simulations(P,prob,200,measures_schools_open_june_2020_50pct)
+
+#@save joinpath(pwd(),"KenyaCoVOutputs/sims_open_schools_june_50pct.jld2") sims_open_schools_june_50pct
 
 
 #"""
