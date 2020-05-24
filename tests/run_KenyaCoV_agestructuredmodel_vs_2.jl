@@ -1,6 +1,6 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 
-using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,CSV,RecursiveArrayTools
+using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,CSV,RecursiveArrayTools,DelimitedFiles
 using Revise
 import KenyaCoV
 using LinearAlgebra:eigen,normalize
@@ -99,21 +99,14 @@ P.β = rand(posterior_R₀)
 P.M = 1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,60.),P)
-@time sol = solve(prob,FunctionMap(),dt = P.dt)
-
-sims_test = KenyaCoV.run_simulations(P,prob,10)
-output = extract_information_from_simulations(sims_test);
-generate_report(output,model_str,"_test"," (test)",counties.county)
-
-plot(output.country_incidence_A_ts.med)
-output.total_deaths.upred
-output.ICU_occup_by_area_over_sims
-plt_inc,plt_health = KenyaCoV.give_plots_for_county(output,[30]," test",names)
-display(plt_health)
+# @time sol = solve(prob,FunctionMap(),dt = P.dt)
+#
+# sims_test = KenyaCoV.run_simulations(P,prob,10)
+# output = extract_information_from_simulations(sims_test);
 model_str =
 """
 This is a test String
 for model description.
 """
-@load "scenario_datatest.jld2" data_to_save
-plot(data_to_save.country_incidence_V_ts.med)
+
+data = KenyaCoV.run_scenario(P,prob,10,model_str,"_test"," (test)",counties.county;interventions = CallbackSet(),make_new_directory::Bool = false)
