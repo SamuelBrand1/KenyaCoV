@@ -119,12 +119,12 @@ regional_lockdown_starts_and_finishes = CallbackSet(cb_regional_lockdown,cb_regi
 
 # First 14 days: Settings for the first 14 days
 function first_14_days(u,t,integrator)
-    integrator.p.T && t > 0.
+    integrator.p.schools_closed && t > 0.
 end
 
 # After 14 days to first school opening
 function after_first_14_days(u,t,integrator)
-    integrator.p.T && t > 14.
+     integrator.p.schools_closed && t > 14.
 end
 
 #Closure and opening of schools
@@ -214,8 +214,7 @@ cb_close_schools_apr2021 = DiscreteCallback(close_schools_apr2021,affect_close_s
 cb_close_schools_aug2021 = DiscreteCallback(close_schools_aug2021,affect_close_schools!)
 cb_close_schools_oct2021 = DiscreteCallback(close_schools_oct2021,affect_close_schools!)
 
-measures_schools_open_june_2020_50pct = CallbackSet(
-                                            cb_first_14_days,
+measures_schools_open_june_2020_50pct = CallbackSet(cb_first_14_days,
                                             cb_after_first_14_days,
                                             cb_regional_lockdown,  # regional lock down implemented and maintained throughout. Edit this call back to end lock downs
                                             cb_open_schools_june_50pct,
@@ -230,8 +229,7 @@ measures_schools_open_june_2020_50pct = CallbackSet(
                                             cb_close_schools_oct2021)
 
 
-measures_schools_open_june_2020_90pct = CallbackSet(
-                                            cb_first_14_days,
+measures_schools_open_june_2020_90pct = CallbackSet(cb_first_14_days,
                                             cb_after_first_14_days,
                                             cb_regional_lockdown,
                                             cb_open_schools_june_90pct,
@@ -245,8 +243,7 @@ measures_schools_open_june_2020_90pct = CallbackSet(
                                             cb_open_schools_aug2021_90pct,
                                             cb_close_schools_oct2021)
 
-measures_schools_open_august_2020_50pct = CallbackSet(
-                                            cb_first_14_days,
+measures_schools_open_august_2020_50pct = CallbackSet(cb_first_14_days,
                                             cb_after_first_14_days,
                                             cb_regional_lockdown,
                                             cb_open_schools_august_50pct,
@@ -258,8 +255,7 @@ measures_schools_open_august_2020_50pct = CallbackSet(
                                             cb_open_schools_aug2021_50pct,
                                             cb_close_schools_oct2021)
 
-measures_schools_open_august_2020_90pct = CallbackSet(
-                                            cb_first_14_days,
+measures_schools_open_august_2020_90pct = CallbackSet(cb_first_14_days,
                                             cb_after_first_14_days,
                                             cb_regional_lockdown,
                                             cb_open_schools_august_90pct,
@@ -305,30 +301,27 @@ u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
 u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
 
 """
-SCENARIO 1
+SCENARIO 0
 
 Base line scenario
 """
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
-P.c_t = t -> 1.
-P.lockdown = false
-P.schools_closed = false
-P.M = M_Kenya
+#P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
+#P.c_t = t -> 1.
+#P.lockdown = false
+#P.M = M_Kenya
 
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
+#prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
+#sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
+#@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
 
 """
 SCENARIO 2
 
-Full intervention scenario:
-- Social mixing school 0%, home 120%, 100% other / work –
-- Decline by 50% over two weeks
-- Nbi / coast lockdown 90% applies 17th April
+Scenario Ia: Opening schools June 2nd and school contacts at 50%
+
 """
 
 P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
@@ -339,9 +332,9 @@ P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_full_intervention = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
+sims_open_schools_june_50pct = KenyaCoV.run_consensus_simulations(P,prob,1000,measures_schools_open_june_2020_50pct)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_full_intervention_vs2.jld2") sims_full_intervention
+@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_full_intervention_vs2.jld2") sims_open_schools_june_50pct
 
 
 #"""
