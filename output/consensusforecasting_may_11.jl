@@ -184,7 +184,7 @@ function affect_open_schools_90pct!(integrator)
 end
 
 function affect_close_schools!(integrator)  # contact distribution applies to all periods when schooled are closed
-  integrator.p.M = 1.1*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 110% of what they were pre-interventions; room for +-20% allowed by COMORT
+  integrator.p.M = 1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 110% of what they were pre-interventions; room for +-20% allowed by COMORT
   integrator.p.schools_closed = true
 end
 
@@ -302,16 +302,16 @@ R_V = (P.ϵ/P.σ₂) + (P.ϵ_V/P.τ) #effective duration of severe
 R_vector = [(1-P.rel_detection_rate[a])*R_A + P.rel_detection_rate[a]*(1-P.hₐ[a])*R_M + P.rel_detection_rate[a]*P.hₐ[a]*R_V for a = 1:17]
 inf_matrix = repeat(R_vector',17,1)
 
-eigs_china, = eigen(sus_matrix.*M_China.*inf_matrix)
-max_eigval_china = Real(eigs_china[end])
-eigs_kenya, = eigen(sus_matrix.*M_Kenya.*inf_matrix)
-max_eigval_Kenya = Real(eigs_kenya[end])
-multiplier_for_kenya = max_eigval_Kenya/max_eigval_china
-P.χ .= χ_zhang ./max_eigval_china #This rescales everything so β is the same as R₀ for China
+eigs_kenya_schools_closed, = eigen(sus_matrix.*(1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work).*inf_matrix)
+max_eigval_Kenya = Real(eigs_kenya_schools_closed[end])
+P.χ .= χ_zhang ./max_eigval_Kenya #This rescales everything so β is the same as fitted R₀ for Kenya
 
 u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
 u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
 u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
+
+@load "data/posterior_distribution_R0.jld2" posterior_R₀
+
 
 """
 SCENARIO 0
@@ -337,7 +337,7 @@ Scenario Ia: Opening schools June 2nd and school contacts at 50%
 
 """
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
+P.β = rand(posterior_R₀) #Choose R₀ posterior
 P.c_t = t -> 1.
 P.lockdown = false
 P.schools_closed = true
@@ -346,9 +346,11 @@ P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # ma
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_open_schools_june_50pct = KenyaCoV.run_consensus_simulations(P,prob,200,measures_schools_open_june_2020_50pct)
+data = KenyaCoV.run_scenario(P,prob,10,model_str,"_test"," (test)",counties.county;interventions = CallbackSet(),make_new_directory::Bool = false)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_open_schools_june_50pct.jld2") sims_open_schools_june_50pct
+#sims_open_schools_june_50pct = KenyaCoV.run_consensus_simulations(P,prob,200,measures_schools_open_june_2020_50pct)
+
+#@save joinpath(pwd(),"KenyaCoVOutputs/sims_open_schools_june_50pct.jld2") sims_open_schools_june_50pct
 
 
 #"""
