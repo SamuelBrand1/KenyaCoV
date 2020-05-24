@@ -13,13 +13,43 @@ Load age structured data
 u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel_with_counties.jld2",
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
-N = sum(u0[:,:,1])
+
+counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
+Nairobi_index = findfirst(counties.county .== "Nairobi")
+Mombassa_index = findfirst(counties.county .== "Mombasa")
+Kwale_index = findfirst(counties.county .== "Kwale")
+Kilifi_index = findfirst(counties.county .== "Kilifi")
+Mandera_index  = findfirst(counties.county .== "Mandera")
+
+#Put in the lockdown effects
+T_normal = deepcopy(P.T)
+T_regional_lockdown = deepcopy(P.T)
+
+#Outgoing travel
+#Nairobi
+T_regional_lockdown[:,Nairobi_index] .*= 0.1;T_regional_lockdown[Nairobi_index,Nairobi_index] += 1 - sum(T_regional_lockdown[:,Nairobi_index])
+#Mombasa
+T_regional_lockdown[:,Mombassa_index] .*= 0.1;T_regional_lockdown[Mombassa_index,Mombassa_index] += 1 - sum(T_regional_lockdown[:,Mombassa_index])
+#Kilifi
+T_regional_lockdown[:,Kilifi_index] .*= 0.1;T_regional_lockdown[Kilifi_index,Kilifi_index] += 1 - sum(T_regional_lockdown[:,Kilifi_index])
+#Kwale
+T_regional_lockdown[:,Kwale_index] .*= 0.1;T_regional_lockdown[Kwale_index,Kwale_index] += 1 - sum(T_regional_lockdown[:,Kwale_index])
 
 
-@load "data/agemixingmatrix_china.jld2" M_China
-@load "data/agemixingmatrix_Kenya_norestrictions.jld2" M_Kenya
-@load "data/agemixingmatrix_Kenya_homeonly.jld2" M_Kenya_ho
+#Incoming travel
+for leaving_area in 1:47,arriving_area in 1:47
+    if !(leaving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]) && arriving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]
+        amount_reduced = 0.9*T_regional_lockdown[arriving_area,leaving_area]
+        T_regional_lockdown[arriving_area,leaving_area] -= amount_reduced
+        T_regional_lockdown[leaving_area,leaving_area] += amount_reduced #All avoided trips to locked down areas lead to staying at home
+    end
+end
+
+
 @load "data/detection_rates_for_different_epsilons_model2.jld2" d_0 d_01 d_025 d_05 d_1
+χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))
+
+@load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
 
 counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
 names = counties.county
@@ -44,36 +74,39 @@ R_V = (P.ϵ/P.σ₂) + (P.ϵ_V/P.τ) #effective duration of severe
 R_vector = [(1-P.rel_detection_rate[a])*R_A + P.rel_detection_rate[a]*(1-P.hₐ[a])*R_M + P.rel_detection_rate[a]*P.hₐ[a]*R_V for a = 1:17]
 inf_matrix = repeat(R_vector',17,1)
 
-eigs_china, = eigen(sus_matrix.*M_China.*inf_matrix)
-max_eigval_china = Real(eigs_china[end])
-eigs_kenya, = eigen(sus_matrix.*M_Kenya.*inf_matrix)
-max_eigval_Kenya = Real(eigs_kenya[end])
-multiplier_for_kenya = max_eigval_Kenya/max_eigval_china
-P.χ .= χ_zhang ./max_eigval_china #This rescales everything so β is the same as R₀ for China
-
-# u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
-# u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
 
 
+eigs_kenya_schools_closed, = eigen(sus_matrix.*(1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work).*inf_matrix)
+max_eigval_Kenya = Real(eigs_kenya_schools_closed[end])
+P.χ .= χ_zhang ./max_eigval_Kenya #This rescales everything so β is the same as R₀ for China
+
+u0[Nairobi_index,8,3] = 500 #10 initial pre-symptomatics in Nairobi
+u0[Mombassa_index,8,3] = 300 #10 initial pre-symptomatics in Mombasa
+u0[Mandera_index,8,3] = 200 #5 initial pre-symptomatics in Mandera
 
 P.dt = 0.25
 
-spare_capacity_H_by_county = KenyaCoV.spare_capacity_H_by_county
+@load "data/posterior_distribution_R0.jld2" posterior_R₀
 
-spare_capacity_ICU_by_county = KenyaCoV.spare_capacity_ICU_by_county
+
+
 """
 Run model
 
 """
-P.β = 3.
-u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
+P.β = rand(posterior_R₀)
+
+P.M = 1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,60.),P)
 @time sol = solve(prob,FunctionMap(),dt = P.dt)
+
 sims_test = KenyaCoV.run_simulations(P,prob,10)
-output = KenyaCoV.extract_information_from_simulations(sims_test);
+output = extract_information_from_simulations(sims_test);
+generate_report(output,model_str,"_test"," (test)",counties.county)
 
-
+plot(output.country_incidence_A_ts.med)
+output.total_deaths.upred
 output.ICU_occup_by_area_over_sims
 plt_inc,plt_health = KenyaCoV.give_plots_for_county(output,[30]," test",names)
 display(plt_health)
@@ -82,3 +115,5 @@ model_str =
 This is a test String
 for model description.
 """
+@load "scenario_datatest.jld2" data_to_save
+plot(data_to_save.country_incidence_V_ts.med)

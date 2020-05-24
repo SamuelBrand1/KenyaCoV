@@ -12,7 +12,8 @@ using DifferentialEquations,
     CSV,
     RecursiveArrayTools,
     Dates,
-    Plots
+    Plots,
+    DelimitedFiles
 
 export n,n_t,n_s,n_a,
         model_ingredients_from_data,
@@ -44,6 +45,8 @@ index_as_events = CartesianIndices((1:n, 1:n_a,1:n_ta))
 linear_as = LinearIndices((1:n, 1:n_a,1:n_s))
 linear_as_events = LinearIndices((1:n, 1:n_a,1:n_ta))
 
+@load "data/posterior_distribution_R0.jld2" posterior_R₀
+
 
 include("types.jl");
 include("dynamics.jl")
@@ -51,6 +54,7 @@ include("transmissionmodel.jl");
 include("hospitalisation_data.jl")
 include("hospital_model.jl")
 include("forecast_functions.jl");
+
 
 
 end # module
