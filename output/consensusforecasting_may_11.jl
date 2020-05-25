@@ -2,8 +2,8 @@ push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,MAT,RecursiveArrayTools,CSV
 import KenyaCoV
 # include("/users/Ojal/Documents/Covid-19/jl_models/src/KenyaCoV.jl")
-using LinearAlgebra:eigen
-using Statistics: median, quantile
+using LinearAlgebra: eigen
+using Statistics: median,quantile
 
 """
 Consensus modelling --- May week 1
@@ -69,17 +69,31 @@ function ramp_down(t)
     if t < 0.
         return 1.
     elseif t>= 0. && t <= 14.
-        return (1-t/14.) + 0.7*t/14.
+        return (1-t/14.) + 0.5*t/14.
     elseif t > 14.
-        return 0.7
+        return 0.5
     end
 end
-using Dates
-Date(2020,4,7) - Date(2020,3,13) # lockdown 7th April 2020
-Date(2020,6,2) - Date(2020,3,13) # School open 2nd June 2020
-Date(2020,8,14) - Date(2020,3,13) # Schools closed 14th Augus 2020
 
-Date(2020,8,31) - Date(2020,3,13) # Schools  open 31st august 2020
+
+
+# function ramp_down(t,reduction₁,reduction₂,time_relaxation)
+#     if t < 0.
+#         return 1.
+#     elseif t>= 0. && t <= 14.
+#         return (1-t/14.) + (1-reduction₁)*t/14.
+#     elseif t > 14. && t <= time_relaxation
+#         return (1-reduction₁)
+#     elseif t > time_relaxation && t <= time_relaxation + 14.
+#         return (1-reduction₁)
+#     end
+# end
+
+using Dates
+Date(2020,4,7) - Date(2020,3,13) # Lockdown 7th April 2020
+Date(2020,6,2) - Date(2020,3,13) # School open 2nd June 2020
+Date(2020,8,14) - Date(2020,3,13) # Schools closed 14th August 2020
+Date(2020,8,31) - Date(2020,3,13) # Schools open 31st august 2020
 Date(2020,5,16) - Date(2020,3,13) # Regional lockdown end 16th May
 Date(2020,10,30) - Date(2020,3,13) # Schools closed 30th October 2020
 
@@ -89,7 +103,6 @@ Date(2021,5,3) - Date(2020,3,13)  # Schools open 3rd may 2021
 Date(2021,8,6) - Date(2020,3,13)  # Schools closed 6th August 2021
 Date(2021,8,30) - Date(2020,3,13)  # Schools open 30th August 2021
 Date(2021,10,22) - Date(2020,3,13)  # Schools closed 22nd October 2021
-
 
 Date(2021,12,31) - Date(2020,3,13)  # we now run intil Dec 2021
 
@@ -160,9 +173,11 @@ function close_schools_oct2021(u,t,integrator)
 end
 
 function affect_open_schools!(integrator)
+  integrator.p.c_t = t -> 0.7
   integrator.p.M = 1.1*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.7*M_Kenya_school
   integrator.p.schools_closed = false
 end
+
 function affect_close_schools!(integrator)
   integrator.p.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
   integrator.p.schools_closed = true

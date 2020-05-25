@@ -203,10 +203,13 @@ plt_o = bar(M_Kenya_other[:,17],xticks = (1:17,age_cats),size = (800,300),title 
 plt_h = bar(M_Kenya_ho[:,17],xticks = (1:17,age_cats),size = (800,300),title = "home contacts",ylims = (0,0.6))
 plt_s = bar(M_Kenya_school[:,17],xticks = (1:17,age_cats),size = (800,300),title = "school contacts",ylims = (0,0.6))
 
-plt_before = heatmap(M_Kenya,xticks = (1:17,age_cats),yticks = (1:17,age_cats),size = (800,600),title = "Estimated contacts before social distancing",clims = (0,3),
+plt_before = heatmap(M_Kenya,xticks = (1:17,age_cats),yticks = (1:17,age_cats),size = (800,600),title = "Estimated contacts (normal baseline)",clims = (0,3),
                     xlabel = "Contact from individual in age group",ylabel = "Contact received by someone in age group")
-plt_after = heatmap(1.5*M_Kenya_ho .+ 0.25*M_Kenya_other .+ 0.75*M_Kenya_work,xticks = (1:17,age_cats),yticks = (1:17,age_cats),size = (800,600),title = "Estimated contacts after social distancing",clims = (0,3),
+plt_after = heatmap(0.5*(1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work),xticks = (1:17,age_cats),yticks = (1:17,age_cats),size = (800,600),title = "Estimated contacts after social distancing (schools closed) ",clims = (0,3),
             xlabel = "Contact from individual in age group",ylabel = "Contact received by someone in age group")
+plt_relaxation = heatmap(0.7*(1.1*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_school .+ M_Kenya_work),xticks = (1:17,age_cats),yticks = (1:17,age_cats),size = (800,600),title = "Estimated contacts after relaxation (30% SD + schools open) ",clims = (0,3),
+            xlabel = "Contact from individual in age group",ylabel = "Contact received by someone in age group")
+
 
 plt_before_and_after = groupedbar(hcat(M_Kenya[:,17], 1.5*M_Kenya_ho[:,17] .+ 0.25*M_Kenya_other[:,17] .+ 0.75*M_Kenya_work[:,17]),
                                     xticks = (1:17,age_cats),
@@ -215,8 +218,10 @@ plt_before_and_after = groupedbar(hcat(M_Kenya[:,17], 1.5*M_Kenya_ho[:,17] .+ 0.
                                     lab = ["Before social distancing" "After social distancing"],
                                     xlabel = "Age group 75+ year old is contacting",
                                     ylabel = "Daily number of contacts")
-savefig(plt_before,"plotting/social_contacts_before_SD.pdf")
-savefig(plt_after,"plotting/social_contacts_after_SD.pdf")
+savefig(plt_before,"plotting/social_contacts_normal_baseline.png")
+savefig(plt_after,"plotting/social_contacts_after_SD_and_schools_closed.png")
+savefig(plt_relaxation,"plotting/social_contacts_after_relaxation_to_30perc_reduction.png")
+
 savefig(plt_before_and_after,"plotting/contacts_made_by_oldpeople_before_and_after_SD.pdf")
 layout = @layout [a b]
 plot(plt_before,plt_after,layout=layout)
