@@ -38,3 +38,20 @@ scenariodata_primary_june_90perc = deepcopy(scenariodata);
 scenariodata_secondary_june_90perc = deepcopy(scenariodata);
 @load("reports/report_tertiary_june_90perc/scenario_data_tertiary_june_90perc.jld2");
 scenariodata_tertiary_june_90perc = deepcopy(scenariodata);
+
+
+##
+
+
+
+function generate_death_report(output,simulation_tag)
+
+
+    writedlm("reports/country_deaths_ts"*simulation_tag*".csv",output.country_incidence_death_ts.med,",")
+    writedlm("reports/country_cum_deaths_ts"*simulation_tag*".csv",cumsum(output.country_incidence_death_ts.med),",")
+
+    writedlm("reports/death_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.incidence_death_ts.med),",")
+    writedlm("reports/cum_death_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,cumsum(output.incidence_death_ts.med,dims=2)),",")
+
+    return scenariodata
+end
