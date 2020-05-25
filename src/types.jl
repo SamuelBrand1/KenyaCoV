@@ -60,6 +60,7 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     isolating_detecteds::Bool = false #This determines if people are still being isolated
     lockdown::Bool = false  #This determines if social distancing and travel restrictions are still in force
     schools_closed::Bool = true
+    before_week_two::Bool = true
     #Calculation variables
     dt::Float64 = 1. #Useful for the non-negative method
     Î::Matrix{Float64} = zeros(n,n_a) #For inplace calculations

@@ -1,17 +1,10 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,StatsPlots,FileIO,MAT,RecursiveArrayTools,CSV
-#import KenyaCoV
-include("/users/Ojal/Documents/Covid-19/jl_models/src/KenyaCoV.jl")
+import KenyaCoV
+# include("/users/Ojal/Documents/Covid-19/jl_models/src/KenyaCoV.jl")
 using LinearAlgebra:eigen
 using Statistics: median, quantile
 
-"""
-Consensus modelling --- May week 1
-
-1) estimate epidemic spread by county
-2) estimate the effect of reopening schools on either 2 June 2020 or delaying opening to 31 August 2020
-3) the effect of lifting travel restrictions between counties in [16th] May 2020. 
-"""
 
 """
 Load age structured data, define callback control measures, and effect of regional lockdown
@@ -63,6 +56,9 @@ Load age mixing matrices (these are all in to (row) from (col) format)
 
 @load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
 @load "data/agemixingmatrix_china.jld2" M_China
+
+candidate_M_school = similar(M_Kenya_school)
+for i = 1:17,j = 1:17
 
 #Function for changing contacts so as to have -45% over 14 days
 function ramp_down(t)
@@ -124,7 +120,7 @@ end
 
 # After 14 days to first school opening
 function after_first_14_days(u,t,integrator)
-    integrator.p.T && t > 14.
+    integrator.p.before_week_two && t > 14.
 end
 
 #Closure and opening of schools
@@ -169,8 +165,9 @@ function close_schools_oct2021(u,t,integrator)
   !integrator.p.schools_closed && t > 588.
 end
 
-function affect_first_14_days!()
-   integrator.p.M = 0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+function affect_first_14_days!(integrator)
+   integrator.p.M = M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work
+   integrator.p.before_week_two = false
 end
 
 function affect_open_schools_50pct!(integrator)
@@ -178,7 +175,17 @@ function affect_open_schools_50pct!(integrator)
   integrator.p.schools_closed = false
 end
 
+function affect_open_schools_50pct_candidates_only!(integrator)
+  integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.5*M_Kenya_school
+  integrator.p.schools_closed = false
+end
+
 function affect_open_schools_90pct!(integrator)
+  integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.9*M_Kenya_school
+  integrator.p.schools_closed = false
+end
+
+function affect_open_schools_90pct_candidates_only!(integrator)
   integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.9*M_Kenya_school
   integrator.p.schools_closed = false
 end
@@ -415,7 +422,7 @@ Scenario IVa:  For the candidates in school their school contacts are assumed to
 
 Scenario IVb:  For the candidates in school their school contacts are assumed to be at 50%.
 
-Scenario V: Candidates return to school August 31st and 4th January 2020 with all other classes closed. Candidates in school for two terms (Term 3 2020 and Term 1 2021).
+Scenario V: Candidates return to school August 31st and 4th January 2021 with all other classes closed. Candidates in school for two terms (Term 3 2020 and Term 1 2021).
 
 Scenario Va:  For the candidates in school their school contacts are assumed to be at 90%.
 
