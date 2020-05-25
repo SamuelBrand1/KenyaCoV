@@ -139,104 +139,222 @@ P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
 
-scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_90,"_candidates_90perc"," (candidates only 90%)",
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_90,"_candidates_june_90perc"," (candidates only 90%)",
                                     counties.county;
                                     interventions = measures_schools_open_june_2020_90pct_candidatesonly,
                                     make_new_directory=true);
-#Reset simulation
+#reset contact matrix and other variables
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+P.β = 1.22
+P.c_t = t -> 1.
+P.lockdown = false
+P.schools_closed = false
+P.before_week_two = true
 
-
-
-
-scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_50,"_candidates_90perc"," (candidates only 90%)",
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_50,"_candidates_june_50perc"," (candidates only 50%)",
                                     counties.county;
-                                    interventions = measures_schools_open_june_2020_90pct_candidatesonly,
+                                    interventions = measures_schools_open_june_2020_50pct_candidatesonly,
                                     make_new_directory=true);
 
+println("Completed scenario IV")
 
 """
-SCENARIO 2
+Scenario V: Candidates return to school August 31st and 4th January 2021 with all other classes closed. Candidates in school for two terms (Term 3 2020 and Term 1 2021).
 
-Full intervention scenario:
-- Social mixing school 0%, home 120%, 100% other / work –
-- Decline by 50% over two weeks
-- Nbi / coast lockdown 90% applies 17th April
+Scenario Va:  For the candidates in school their school contacts are assumed to be at 90%.
+
+Scenario Vb:  For the candidates in school their school contacts are assumed to be at 50%.
 """
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
-P.c_t = ramp_down
+#
+model_str_90 =
+"""
+Scenario Va:  For the candidates in school their school contacts are assumed to be at 90%.
+"""
+model_str_50 =
+"""
+Scenario Vb:  For the candidates in school their school contacts are assumed to be at 50%.
+"""
+
+P.β = 1.22
+P.c_t = t -> 1.
 P.lockdown = false
-P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+P.schools_closed = false
+P.before_week_two = true
+
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_full_intervention = KenyaCoV.run_consensus_simulations(P,prob,1000,regional_lockdown_starts)
 
-@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_full_intervention_vs2.jld2") sims_full_intervention
-
-
-#"""
-#SCENARIO 3
-
-#Regional lockdown ending. Schools stay shut
-#"""
-
-#P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-#P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
-
-#P.lockdown = false
-#P.schools_closed = true
-#P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
-
-#prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-
-#sims_end_regional_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,regional_lockdown_starts_and_finishes)
-
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_end_lockdown_30_perc_reduction.jld2") sims_end_regional_lockdown
-println("Finished regional lockdown ending. Schools stay shut sims for consensus modelling ")
-
-
-"""
-SCENARIO 3
-
-Schools reopen in June
-"""
-
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
-
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_90,"_candidates_august_90perc"," (candidates only 90%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_august_2020_90pct_candidatesonly,
+                                    make_new_directory=true);
+#reset contact matrix and other variables
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+P.β = 1.22
+P.c_t = t -> 1.
 P.lockdown = false
-P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+P.schools_closed = false
+P.before_week_two = true
+
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_50,"_candidates_august_50perc"," (candidates only 50%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_august_2020_50pct_candidatesonly,
+                                    make_new_directory=true);
+
+println("Completed scenario V")
+
+
+
+"""
+What is the effect of reopening schools for primary school learners only (ages 0-14)?
+
+Scenario VIa: Opening schools June 2nd and school contacts at 90%
+
+Scenario VIb: Opening schools June 2nd and school contacts at 50%
+
+"""
+
+
+#
+model_str_90 =
+"""
+Scenario VIa: Opening schools June 2nd and school contacts at 90%
+"""
+model_str_50 =
+"""
+Scenario VIb: Opening schools June 2nd and school contacts at 50%
+"""
+
+P.β = 1.22
+P.c_t = t -> 1.
+P.lockdown = false
+P.schools_closed = false
+P.before_week_two = true
+
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_open_schools_june = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_schools_open_june_2020)
 
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june_30_perc_reduction.jld2") sims_open_schools_june
-
-println("Finished Schools reopen in June sims for consensus modelling ")
-
-"""
-SCENARIO 4
-Schools reopen in August
-"""
-
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
-
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_90,"_primary_june_90perc"," (Primary only 90%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_june_2020_90pct_primaryonly,
+                                    make_new_directory=true);
+#reset contact matrix and other variables
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+P.β = 1.22
+P.c_t = t -> 1.
 P.lockdown = false
-P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+P.schools_closed = false
+P.before_week_two = true
+
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_50,"_primary_june_50perc"," (Primary only 50%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_june_2020_50pct_primaryonly,
+                                    make_new_directory=true);
+
+println("Completed scenario VI")
+
+"""
+What is the effect of reopening schools for secondary school learners only (ages 15-18)?
+
+Scenario VIIa: Opening schools June 2nd and school contacts at 90%
+
+Scenario VIIb: Opening schools June 2nd and school contacts at 50%
+
+"""
+
+model_str_90 =
+"""
+Scenario VIIa: Opening schools June 2nd and school contacts at 90%
+"""
+model_str_50 =
+"""
+Scenario VIIb: Opening schools June 2nd and school contacts at 50%
+"""
+
+P.β = 1.22
+P.c_t = t -> 1.
+P.lockdown = false
+P.schools_closed = false
+P.before_week_two = true
+
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 
-sims_open_schools_august = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_schools_open_august_2020)
 
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august_30_perc_reduction.jld2") sims_open_schools_august
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_90,"_secondary_june_90perc"," (Secondary only 90%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_june_2020_90pct_secondaryonly,
+                                    make_new_directory=true);
+#reset contact matrix and other variables
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+P.β = 1.22
+P.c_t = t -> 1.
+P.lockdown = false
+P.schools_closed = false
+P.before_week_two = true
 
-println("Finished Schools reopen in August sims for consensus modelling ")
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_50,"_secondary_june_50perc"," (Secondary only 50%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_june_2020_50pct_secondaryonly,
+                                    make_new_directory=true);
+
+println("Completed scenario VII")
+
+
+"""
+What is the effect of reopening schools for tertiary school learners only (ages 19-22)?
+
+Scenario VIIIa: Opening schools June 2nd and school contacts at 90%
+
+Scenario VIIIb: Opening schools June 2nd and school contacts at 50%
+
+"""
+
+model_str_90 =
+"""
+Scenario VIIIa: Opening schools June 2nd and school contacts at 90%
+"""
+model_str_50 =
+"""
+Scenario VIIIb: Opening schools June 2nd and school contacts at 50%
+"""
+
+P.β = 1.22
+P.c_t = t -> 1.
+P.lockdown = false
+P.schools_closed = false
+P.before_week_two = true
+
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
+
+
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_90,"_tertiary_june_90perc"," (Tertiary only 90%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_june_2020_90pct_tertiaryonly,
+                                    make_new_directory=true);
+#reset contact matrix and other variables
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+P.β = 1.22
+P.c_t = t -> 1.
+P.lockdown = false
+P.schools_closed = false
+P.before_week_two = true
+
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_50,"_tertiary_june_50perc"," (Tertiary only 50%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_june_2020_50pct_tertiaryonly,
+                                    make_new_directory=true);
+
+println("Completed scenario VII")
+
 
 """
 What is the effect of reopening schools for Standard 8 and Form 4 candidates only?

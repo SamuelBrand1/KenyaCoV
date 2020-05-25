@@ -147,9 +147,9 @@ function affect_open_schools_90pct_tertiaryonly!(integrator)
 end
 
 function affect_close_schools!(integrator)  # contact distribution applies to all periods when schooled are closed
-    integrator.p.before_week_two = false
   integrator.p.M = 1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 110% of what they were pre-interventions; room for +-20% allowed by COMORT
   integrator.p.schools_closed = true
+  integrator.p.before_week_two = false
 end
 
 # open school call backs for the 50% scenarios
