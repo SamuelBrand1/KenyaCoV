@@ -86,6 +86,8 @@ u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structured
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
 #Redistribute susceptibility JUST to rescale infectiousness so we get the correct R₀/r
+χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))
+
 P.χ = copy(χ_zhang)
 P.rel_detection_rate = d_1
 P.dt = 0.25;
@@ -99,34 +101,58 @@ R_V = (P.ϵ/P.σ₂) + (P.ϵ_V/P.τ) #effective duration of severe
 R_vector = [(1-P.rel_detection_rate[a])*R_A + P.rel_detection_rate[a]*(1-P.hₐ[a])*R_M + P.rel_detection_rate[a]*P.hₐ[a]*R_V for a = 1:17]
 inf_matrix = repeat(R_vector',17,1)
 
-eigs_china, = eigen(sus_matrix.*M_China.*inf_matrix)
-max_eigval_china = Real(eigs_china[end])
-eigs_kenya, = eigen(sus_matrix.*M_Kenya.*inf_matrix)
-max_eigval_Kenya = Real(eigs_kenya[end])
-multiplier_for_kenya = max_eigval_Kenya/max_eigval_china
-P.χ .= χ_zhang ./max_eigval_china #This rescales everything so β is the same as R₀ for China
 
-u0[Nairobi_index,8,3] = 30 #10 initial pre-symptomatics in Nairobi
-u0[Mombassa_index,8,3] = 10 #10 initial pre-symptomatics in Mombasa
-u0[Mandera_index,8,3] = 5 #5 initial pre-symptomatics in Mandera
+eigs_kenya_schools_closed, = eigen(sus_matrix.*(1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work).*inf_matrix)
+max_eigval_Kenya = Real(eigs_kenya_schools_closed[end])
+P.χ .= χ_zhang ./max_eigval_Kenya #This rescales everything so β is the same as R₀ for China
 
+u0[Nairobi_index,8,3] = 500 #10 initial pre-symptomatics in Nairobi
+u0[Mombassa_index,8,3] = 300 #10 initial pre-symptomatics in Mombasa
+u0[Mandera_index,8,3] = 200 #5 initial pre-symptomatics in Mandera
+
+P.dt = 0.25
 """
-SCENARIO 1
+Scenario IV: Candidates return to school June 2nd (Term 2) and August 31st (Term 3) and all other classes closed for rest of year. Candidates in school for only two terms (Term 2 and 3).
 
-Base line scenario
+Scenario IVa:  For the candidates in school their school contacts are assumed to be at 90%.
+
+Scenario IVb:  For the candidates in school their school contacts are assumed to be at 50%.
 """
 #
-# P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from 2-3 95% PI range
-# P.c_t = t -> 1.
-# P.lockdown = false
-# P.schools_closed = false
-# P.M = M_Kenya
-#
-# prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-#
-# sims_baseline = KenyaCoV.run_consensus_simulations(P,prob,1000,CallbackSet())
-#
-# # @save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_baseline_vs2.jld2") sims_baseline
+model_str_90 =
+"""
+Scenario IVa:  For the candidates in school their school contacts are assumed to be at 90%.
+"""
+model_str_50 =
+"""
+Scenario IVb:  For the candidates in school their school contacts are assumed to be at 50%.
+"""
+
+P.β = 1.22
+P.c_t = t -> 1.
+P.lockdown = false
+P.schools_closed = false
+P.before_week_two = true
+
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school
+
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
+
+
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_90,"_candidates_90perc"," (candidates only 90%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_june_2020_90pct_candidatesonly,
+                                    make_new_directory=true);
+#Reset simulation
+
+
+
+
+scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_50,"_candidates_90perc"," (candidates only 90%)",
+                                    counties.county;
+                                    interventions = measures_schools_open_june_2020_90pct_candidatesonly,
+                                    make_new_directory=true);
+
 
 """
 SCENARIO 2

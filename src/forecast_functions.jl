@@ -351,6 +351,9 @@ This method redraws R₀ from the d_R₀ distribution at beginning of each simul
 """
 function randomise_R₀(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
     _P = deepcopy(prob.p)
+    _P.lockdown = false
+    _P.schools_closed = false
+    _P.before_week_two = true
     _P.β = rand(posterior_R₀)
     return remake(prob,p=_P)
 end
