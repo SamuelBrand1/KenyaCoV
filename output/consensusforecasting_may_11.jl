@@ -119,7 +119,7 @@ regional_lockdown_starts_and_finishes = CallbackSet(cb_regional_lockdown,cb_regi
 
 # After 14 days to first school opening
 function after_first_14_days(u,t,integrator)
-     !integrator.p.schools_closed && t > 14.
+     integrator.p.before_week_two && t > 14.
 end
 
 #Closure and opening of schools
@@ -175,10 +175,10 @@ function affect_open_schools_90pct!(integrator)
 end
 
 function affect_close_schools!(integrator)  # contact distribution applies to all periods when schooled are closed
+  integrator.p.before_week_two = false
   integrator.p.M = 1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 110% of what they were pre-interventions; room for +-20% allowed by COMORT
   integrator.p.schools_closed = true
 end
-
 
 #function affect_open_schools_condidates_50pct!(integrator)
  # M_Kenya_school_new = M_kenya_school
@@ -261,6 +261,8 @@ measures_schools_open_august_2020_90pct = CallbackSet(
                                             cb_close_schools_aug2021,
                                             cb_open_schools_aug2021_90pct,
                                             cb_close_schools_oct2021)
+measures_full_intervention = CallbackSet(cb_after_first_14_days,
+                                        cb_regional_lockdown)
 
 measures_schools_open_june_for_candidates_50pct = CallbackSet()
 
@@ -304,93 +306,82 @@ SCENARIO: Unmitigated
 
 """
 model_str = "This is the model of unmitigated scenario"
-P.β = rand(posterior_R₀) #Choose R₀ posterior
 P.c_t = t -> 1.
-P.lockdown = false
 P.M = M_Kenya
 
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*60.),P)
-
-data = KenyaCoV.run_scenario(P,prob,10,model_str,"_unmitigated"," (Unmitigated)",counties.county;interventions = CallbackSet(),make_new_directory::Bool = false)
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_unmitigated"," (Unmitigated)",counties.county;interventions = CallbackSet(),make_new_directory = false)
 
 
 """
-SCENARIO 2
+SCENARIO: Full intervention
+
+Closing schools after two weeks, lockdown and SD
+
+"""
+
+model_str = "This is the full intervention scenario"
+P.c_t = t -> 1.
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
+
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_full_intervention"," (Full Intervention)",counties.county;interventions = measures_full_intervention ,make_new_directory= false)
+
+"""
+SCENARIO: Open schools June
 
 Scenario Ia: Opening schools June 2nd and school contacts at 50%
 
 """
 
-P.β = rand(posterior_R₀) #Choose R₀ posterior
+model_str = "Open schools June with 50% reduction in contacts within schools"
 P.c_t = t -> 1.
-P.lockdown = false
-P.schools_closed = true
-#P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
 P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-
-data = KenyaCoV.run_scenario(P,prob,10,model_str,"_test"," (test)",counties.county;interventions = CallbackSet(),make_new_directory::Bool = false)
-
-#sims_open_schools_june_50pct = KenyaCoV.run_consensus_simulations(P,prob,200,measures_schools_open_june_2020_50pct)
-
-#@save joinpath(pwd(),"KenyaCoVOutputs/sims_open_schools_june_50pct.jld2") sims_open_schools_june_50pct
-
-
-#"""
-#SCENARIO 3
-
-#Regional lockdown ending. Schools stay shut
-#"""
-
-#P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-#P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
-
-#P.lockdown = false
-#P.schools_closed = true
-#P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
-
-#prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-
-#sims_end_regional_lockdown = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,regional_lockdown_starts_and_finishes)
-
-#@save joinpath(pwd(),"KenyaCoVOutputs/sims_consensus_end_lockdown.jld2") sims_end_regional_lockdown
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_scenario_1a"," (June opening, contacts at 50%)",counties.county;interventions = measures_schools_open_june_2020_50pct,make_new_directory= false)
 
 
 """
-SCENARIO 3
+SCENARIO: Open schools June
 
-Schools reopen in June
+Scenario Ib: Opening schools June 2nd and school contacts at 90%
+
 """
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
-
-P.lockdown = false
-P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+model_str = "Open schools June with 90% reduction in contacts within schools"
+P.c_t = t -> 1.
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-
-sims_open_schools_june = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_schools_open_june_2020)
-
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_june.jld2") sims_open_schools_june
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_scenario_1b"," (June opening, contacts at 90%)",counties.county;interventions = measures_schools_open_june_2020_90pct,make_new_directory= false)
 
 
 """
-SCENARIO 4
-Schools reopen in August
+SCENARIO: Open schools August
+
+Scenario Ic: Opening schools August 2nd and school contacts at 50%
+
 """
 
-P.β = rand(KenyaCoV.d_R₀) #Choose R₀ randomly from mean 2.5 (2-3) range
-P.c_t = ramp_down #This implements the social distancing over 14 days from time 0.
-
-P.lockdown = false
-P.schools_closed = true
-P.M = 1.2*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work
+model_str = "Open schools August with 50% reduction in contacts within schools"
+P.c_t = t -> 1.
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_scenario_1c"," (August opening, contacts at 50%)",counties.county;interventions = measures_schools_open_august_2020_50pct,make_new_directory= false)
 
-sims_open_schools_august = KenyaCoV.run_consensus_simulations(P::KenyaCoV.CoVParameters_AS,prob,1000,measures_schools_open_august_2020)
 
-@save joinpath(homedir(),"Github/KenyaCoVOutputs/sims_consensus_open_schools_august.jld2") sims_open_schools_august
+"""
+SCENARIO: Open schools August
+
+Scenario Id: Opening schools August 2nd and school contacts at 90%
+
+"""
+
+model_str = "Open schools August with 90% reduction in contacts within schools"
+P.c_t = t -> 1.
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
+
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_scenario_1d"," (August opening, contacts at 90%)",counties.county;interventions = measures_schools_open_august_2020_90pct,make_new_directory= false)

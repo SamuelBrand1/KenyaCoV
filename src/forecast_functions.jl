@@ -198,6 +198,23 @@ function extract_information_from_simulations(sims)
                 lpred = incidence_death_by_area_lpred,
                 upred = incidence_death_by_area_upred)
 
+    country_prevalence_H_ts = (med = [median(country_prevalence_H[t,:]) for t = 1:T],
+                        lpred = [quantile(country_prevalence_H[t,:],0.025) for t = 1:T],
+                        upred = [quantile(country_prevalence_H[t,:],0.025) for t = 1:T])
+
+    prevalence_H_ts = (med = prevalence_H_by_area_med,
+                lpred = prevalence_H_by_area_lpred,
+                upred = prevalence_H_by_area_upred)
+
+
+    country_prevalence_ICU_ts = (med = [median(country_prevalence_ICU[t,:]) for t = 1:T],
+                        lpred = [quantile(country_prevalence_ICU[t,:],0.025) for t = 1:T],
+                        upred = [quantile(country_prevalence_ICU[t,:],0.025) for t = 1:T])
+
+    prevalence_ICU_ts = (med = prevalence_ICU_by_area_med,
+                lpred = prevalence_ICU_by_area_lpred,
+                upred = prevalence_ICU_by_area_upred)
+
     total_severe_cases = (med = median(sum(hosp_by_area_over_sims,dims=1)),
                             lpred = quantile(sum(hosp_by_area_over_sims,dims=1)[:],0.025),
                             upred = quantile(sum(hosp_by_area_over_sims[:],dims=1),0.975))
@@ -244,7 +261,11 @@ function extract_information_from_simulations(sims)
             country_incidence_V_ts=country_incidence_V_ts,
             incidence_V_ts=incidence_V_ts,
             country_incidence_death_ts=country_incidence_death_ts,
-            incidence_death_ts=incidence_death_ts)
+            incidence_death_ts=incidence_death_ts,
+            country_prevalence_H_ts=country_prevalence_H_ts,
+            prevalence_H_ts=prevalence_H_ts,
+            country_prevalence_ICU_ts=country_prevalence_ICU_ts,
+            prevalence_ICU_ts=prevalence_ICU_ts)
 end
 
 
@@ -268,39 +289,57 @@ function generate_report(output,model_str,simulation_tag,scenario_tag,areanames;
             incidence_V_ts=output.incidence_V_ts,
             country_incidence_death_ts=output.country_incidence_death_ts,
             incidence_death_ts=output.incidence_death_ts,
+            country_prevalence_H_ts=output.country_prevalence_H_ts,
+            prevalence_H_ts=output.prevalence_H_ts,
+            country_prevalence_ICU_ts=output.country_prevalence_ICU_ts,
+            prevalence_ICU_ts=output.prevalence_ICU_ts,
             model_str=model_str)
     @save("reports/report"*simulation_tag*"/scenario_data"*simulation_tag*".jld2",scenariodata)
 
-    plt_incidence_mombasa,plt_health_usage_mombasa = give_plots_for_county(output,[28],scenario_tag,areanames)
+    plt_incidence_mombasa,plt_health_usage_mombasa = KenyaCoV.give_plots_for_county(output,[28],scenario_tag,areanames)
     savefig(plt_incidence_mombasa,"reports/report"*simulation_tag*"/incidence_mombasa"*simulation_tag*".png")
     savefig(plt_health_usage_mombasa,"reports/report"*simulation_tag*"/healthsystem_mombasa"*simulation_tag*".png")
-    plt_incidence_nairobi,plt_health_usage_nairobi = give_plots_for_county(output,[30],scenario_tag,areanames)
+    plt_incidence_nairobi,plt_health_usage_nairobi = KenyaCoV.give_plots_for_county(output,[30],scenario_tag,areanames)
     savefig(plt_incidence_nairobi,"reports/report"*simulation_tag*"/incidence_nairobi"*simulation_tag*".png")
     savefig(plt_health_usage_nairobi,"reports/report"*simulation_tag*"/healthsystem_nairobi"*simulation_tag*".png")
-    plt_incidence_restofcountry,plt_health_usage_restofcountry = give_plots_for_county(output,setdiff(1:47,[28,30]),scenario_tag,areanames)
+    plt_incidence_restofcountry,plt_health_usage_restofcountry = KenyaCoV.give_plots_for_county(output,setdiff(1:47,[28,30]),scenario_tag,areanames)
     savefig(plt_incidence_restofcountry,"reports/report"*simulation_tag*"/plt_incidence_restofcountry"*simulation_tag*".png")
     savefig(plt_health_usage_restofcountry,"reports/report"*simulation_tag*"/healthsystem_restofcountry"*simulation_tag*".png")
 
-    plt_ranked_HU,plt_ranked_ICU = plot_ranked_bars_health_usage(output,scenario_tag,areanames)
+    plt_ranked_HU,plt_ranked_ICU = KenyaCoV.plot_ranked_bars_health_usage(output,scenario_tag,areanames)
     savefig(plt_ranked_HU,"reports/report"*simulation_tag*"/peak_hospital_usage_by_county"*simulation_tag*".png")
     savefig(plt_ranked_ICU,"reports/report"*simulation_tag*"/peak_ICU_usage_by_county"*simulation_tag*".png")
 
-    plt_severe,plt_deaths = plot_ranked_bars_cases(output,scenario_tag,areanames)
+    plt_severe,plt_deaths = KenyaCoV.plot_ranked_bars_cases(output,scenario_tag,areanames)
     savefig(plt_severe,"reports/report"*simulation_tag*"/total_severe_cases_by_county"*simulation_tag*".png")
     savefig(plt_deaths,"reports/report"*simulation_tag*"/total_deaths_by_county"*simulation_tag*".png")
 
-    writedlm("reports/report"*simulation_tag*"/total_A_incidence_ts"*simulation_tag*".csv",output.country_incidence_A_ts.med,",")
-    writedlm("reports/report"*simulation_tag*"/total_M_incidence_ts"*simulation_tag*".csv",output.country_incidence_M_ts.med,",")
-    writedlm("reports/report"*simulation_tag*"/total_V_incidence_ts"*simulation_tag*".csv",output.country_incidence_V_ts.med,",")
-    writedlm("reports/report"*simulation_tag*"/total_all_incidence_ts"*simulation_tag*".csv",output.country_incidence_A_ts.med .+ output.country_incidence_M_ts.med .+ output.country_incidence_V_ts.med,",")
+    #Total country output
+    writedlm("reports/report"*simulation_tag*"/country_A_incidence_ts"*simulation_tag*".csv",output.country_incidence_A_ts.med,",")
+    writedlm("reports/report"*simulation_tag*"/country_cum_A_incidence_ts"*simulation_tag*".csv",cumsum(output.country_incidence_A_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/country_M_incidence_ts"*simulation_tag*".csv",output.country_incidence_M_ts.med,",")
+    writedlm("reports/report"*simulation_tag*"/country_cum_M_incidence_ts"*simulation_tag*".csv",cumsum(output.country_incidence_M_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/country_V_incidence_ts"*simulation_tag*".csv",output.country_incidence_V_ts.med,",")
+    writedlm("reports/report"*simulation_tag*"/country_cum_V_incidence_ts"*simulation_tag*".csv",cumsum(output.country_incidence_V_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/country_all_incidence_ts"*simulation_tag*".csv",output.country_incidence_A_ts.med .+ output.country_incidence_M_ts.med .+ output.country_incidence_V_ts.med,",")
+    writedlm("reports/report"*simulation_tag*"/country_cum_all_incidence_ts"*simulation_tag*".csv",cumsum(output.country_incidence_A_ts.med .+ output.country_incidence_M_ts.med .+ output.country_incidence_V_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/country_hosp_prev"*simulation_tag*".csv",output.country_prevalence_H_ts,",")
+    writedlm("reports/report"*simulation_tag*"/country_ICU_prev"*simulation_tag*".csv",output.country_prevalence_ICU_ts,",")
+
 
     writedlm("reports/report"*simulation_tag*"/A_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.incidence_A_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/cum_A_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,cumsum(output.incidence_A_ts.med,dims=2)),",")
     writedlm("reports/report"*simulation_tag*"/M_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.incidence_M_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/cum_M_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,cumsum(output.incidence_M_ts.med,dims=2)),",")
     writedlm("reports/report"*simulation_tag*"/V_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.incidence_V_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/cum_V_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,cumsum(output.incidence_V_ts.med,dims=2)),",")
     writedlm("reports/report"*simulation_tag*"/all_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.incidence_A_ts.med .+ output.incidence_M_ts.med .+ output.incidence_V_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/cum_all_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,cumsum(output.incidence_A_ts.med .+ output.incidence_M_ts.med .+ output.incidence_V_ts.med,dims=2)),",")
+    writedlm("reports/report"*simulation_tag*"/hosp_prev_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.prevalence_H_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/ICU_prev_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.prevalence_ICU_ts.med),",")
 
 
-    return nothing
+    return scenariodata
 end
 
 
@@ -310,10 +349,12 @@ This method redraws R₀ from the d_R₀ distribution at beginning of each simul
 """
 function randomise_R₀(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
     _P = deepcopy(prob.p)
+    _P.lockdown = false
+    _P.schools_closed = false
+    _P.before_week_two = true
     _P.β = rand(posterior_R₀)
     return remake(prob,p=_P)
 end
-
 # function randomise_R₀(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
 #     _P = deepcopy(prob.p)
 #     _P.β = rand(d_R₀)
@@ -461,7 +502,7 @@ function run_simulations(P::KenyaCoV.CoVParameters_AS,prob,n_traj;interventions 
 end
 
 function run_scenario(P::KenyaCoV.CoVParameters_AS,prob,n_traj,model_str,simulation_tag,scenario_tag,areanames;interventions = CallbackSet(),make_new_directory::Bool = false)
-    sims = run_simulations(P,prob,n_traj,τ,ϵ_D;interventions=interventions)
+    sims = run_simulations(P,prob,n_traj;interventions=interventions)
     output = extract_information_from_simulations(sims);
     scenariodata = generate_report(output,model_str,simulation_tag,scenario_tag,areanames;make_new_directory=make_new_directory)
     return scenariodata
