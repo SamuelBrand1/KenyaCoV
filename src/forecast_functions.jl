@@ -218,7 +218,7 @@ function extract_information_from_simulations(sims)
 
     total_severe_cases = (med = median(sum(hosp_by_area_over_sims,dims=1)),
                             lpred = quantile(sum(hosp_by_area_over_sims,dims=1)[:],0.025),
-                            upred = quantile(sum(hosp_by_area_over_sims[:],dims=1),0.975))
+                            upred = quantile(sum(hosp_by_area_over_sims,dims=1)[:],0.975))
 
     severe_cases_by_area = (med = [median(hosp_by_area_over_sims[cn,:]) for cn = 1:nc],
                             lpred = [quantile(hosp_by_area_over_sims[cn,:],0.025) for cn = 1:nc],
@@ -228,7 +228,7 @@ function extract_information_from_simulations(sims)
                             upred = [quantile(hosp_by_age_over_sims[a,:],0.975) for a = 1:na])
     total_deaths = (med = median(sum(deaths_by_area_over_sims,dims=1)),
                             lpred = quantile(sum(deaths_by_area_over_sims,dims=1)[:],0.025),
-                            upred = quantile(sum(deaths_by_area_over_sims[:],dims=1),0.975))
+                            upred = quantile(sum(deaths_by_area_over_sims,dims=1)[:],0.975))
     deaths_by_area = (med = [median(deaths_by_area_over_sims[cn,:]) for cn = 1:nc],
                             lpred = [quantile(deaths_by_area_over_sims[cn,:],0.025) for cn = 1:nc],
                             upred = [quantile(deaths_by_area_over_sims[cn,:],0.975) for cn = 1:nc])
