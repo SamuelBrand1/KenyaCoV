@@ -353,7 +353,7 @@ scenariodata = KenyaCoV.run_scenario(P,prob,200,model_str_50,"_tertiary_june_50p
                                     interventions = measures_schools_open_june_2020_50pct_tertiaryonly,
                                     make_new_directory=true);
 
-println("Completed scenario VII")
+println("Completed scenario VIII")
 
 
 """
