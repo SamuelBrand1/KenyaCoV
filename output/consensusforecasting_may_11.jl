@@ -180,12 +180,6 @@ function affect_close_schools!(integrator)  # contact distribution applies to al
   integrator.p.schools_closed = true
 end
 
-#function affect_open_schools_condidates_50pct!(integrator)
- # M_Kenya_school_new = M_kenya_school
- # integrator.p.M = M_Kenya_ho .+ 0.65*M_Kenya_other .+ 0.65*M_Kenya_work .+ 0.5*M_Kenya_school
- # integrator.p.schools_closed = false
-#end
-
 
 # open school call backs for the 50% scenarios
 cb_open_schools_june_50pct    = DiscreteCallback(open_schools_june,affect_open_schools_50pct!)
@@ -264,10 +258,6 @@ measures_schools_open_august_2020_90pct = CallbackSet(
 measures_full_intervention = CallbackSet(cb_after_first_14_days,
                                         cb_regional_lockdown)
 
-measures_schools_open_june_for_candidates_50pct = CallbackSet()
-
-measures_schools_open_june_for_candidates_90pct = CallbackSet()
-
 """
 Set up parameters
 """
@@ -339,7 +329,7 @@ P.c_t = t -> 1.
 P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-data = KenyaCoV.run_scenario(P,prob,200,model_str,"_scenario_1a"," (June opening, contacts at 50%)",counties.county;interventions = measures_schools_open_june_2020_50pct,make_new_directory= false)
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_schools_june_50perc"," (June opening, contacts at 50%)",counties.county;interventions = measures_schools_open_june_2020_50pct,make_new_directory= false)
 
 
 """
@@ -354,7 +344,7 @@ P.c_t = t -> 1.
 P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-data = KenyaCoV.run_scenario(P,prob,200,model_str,"_scenario_1b"," (June opening, contacts at 90%)",counties.county;interventions = measures_schools_open_june_2020_90pct,make_new_directory= false)
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_schools_june_90perc"," (June opening, contacts at 90%)",counties.county;interventions = measures_schools_open_june_2020_90pct,make_new_directory= false)
 
 
 """
@@ -369,7 +359,7 @@ P.c_t = t -> 1.
 P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-data = KenyaCoV.run_scenario(P,prob,200,model_str,"_scenario_1c"," (August opening, contacts at 50%)",counties.county;interventions = measures_schools_open_august_2020_50pct,make_new_directory= false)
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_schools_august_50perc"," (August opening, contacts at 50%)",counties.county;interventions = measures_schools_open_august_2020_50pct,make_new_directory= false)
 
 
 """
@@ -384,4 +374,4 @@ P.c_t = t -> 1.
 P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
-data = KenyaCoV.run_scenario(P,prob,200,model_str,"_scenario_1d"," (August opening, contacts at 90%)",counties.county;interventions = measures_schools_open_august_2020_90pct,make_new_directory= false)
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_schools_august_90perc"," (August opening, contacts at 90%)",counties.county;interventions = measures_schools_open_august_2020_90pct,make_new_directory= false)
