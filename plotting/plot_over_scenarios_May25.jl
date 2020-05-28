@@ -203,3 +203,6 @@ scatter!(plt_hosp_90,median_hosp_by_scenario_90perc[I],1:length(I),
                         upred_hosp_by_scenario_90perc[I] .- median_hosp_by_scenario_90perc[I]),
             ms = 0.,color = :black,lab ="",lw=3)
 savefig(plt_hosp_90,"plotting/hosp_scenarios_90perc.png")
+
+
+###
