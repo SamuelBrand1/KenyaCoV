@@ -1,5 +1,4 @@
 
-
 @with_kw mutable struct CoVParameters
     β::Float64 = 2.5/3.6
     γ::Float64 = 1/3.6
@@ -15,7 +14,7 @@
     into_nai::Vector{Int}#Number of people flying into Nairobi each day
     global_prev::Vector{Float64}
     dt::Float64 = 1. #Useful for the non-negative method
-    Î::Vector{Float64} = zeros(n) #For inplace calculations
+    Î::Vector{Float64} = zeros(n) #For inplace calculations
     N̂::Vector{Float64} = zeros(n)#For inplace calculations
     λ_urb::Vector{Float64} = zeros(n)#For inplace calculations
     λ_rur::Vector{Float64} = zeros(n)#For inplace calculations
@@ -26,7 +25,6 @@ end
 
 """
     mutable struct CoVParameters_AS
-
 Struct for containing relevant epidemilogical parameters for the age-structured version of KenyaCoV
 """
 @with_kw mutable struct CoVParameters_AS
@@ -60,9 +58,10 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     isolating_detecteds::Bool = false #This determines if people are still being isolated
     lockdown::Bool = false  #This determines if social distancing and travel restrictions are still in force
     schools_closed::Bool = true
+    before_week_two::Bool = true
     #Calculation variables
     dt::Float64 = 1. #Useful for the non-negative method
-    Î::Matrix{Float64} = zeros(n,n_a) #For inplace calculations
+    Î::Matrix{Float64} = zeros(n,n_a) #For inplace calculations
     N̂::Matrix{Float64} = zeros(n,n_a)#For inplace calculations
     λ::Matrix{Float64} = zeros(n,n_a)#For inplace calculations
     λ_loc::Matrix{Float64} = zeros(n,n_a)#For inplace calculations
