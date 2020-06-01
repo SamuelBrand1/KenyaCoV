@@ -1,5 +1,6 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
-using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames
+
+using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,CSV,RecursiveArrayTools,DelimitedFiles
 using Revise
 import KenyaCoV
 using LinearAlgebra:eigen,normalize
@@ -12,113 +13,107 @@ Load age structured data
 u0,P,P_dest = KenyaCoV.model_ingredients_from_data("data/data_for_age_structuredmodel_with_counties.jld2",
                                             "data/flight_numbers.csv",
                                             "data/projected_global_prevelance.csv")
-N = sum(u0[:,:,1])
+
+counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
+Nairobi_index = findfirst(counties.county .== "Nairobi")
+Mombassa_index = findfirst(counties.county .== "Mombasa")
+Kwale_index = findfirst(counties.county .== "Kwale")
+Kilifi_index = findfirst(counties.county .== "Kilifi")
+Mandera_index  = findfirst(counties.county .== "Mandera")
+
+#Put in the lockdown effects
+T_normal = deepcopy(P.T)
+T_regional_lockdown = deepcopy(P.T)
+
+#Outgoing travel
+#Nairobi
+T_regional_lockdown[:,Nairobi_index] .*= 0.1;T_regional_lockdown[Nairobi_index,Nairobi_index] += 1 - sum(T_regional_lockdown[:,Nairobi_index])
+#Mombasa
+T_regional_lockdown[:,Mombassa_index] .*= 0.1;T_regional_lockdown[Mombassa_index,Mombassa_index] += 1 - sum(T_regional_lockdown[:,Mombassa_index])
+#Kilifi
+T_regional_lockdown[:,Kilifi_index] .*= 0.1;T_regional_lockdown[Kilifi_index,Kilifi_index] += 1 - sum(T_regional_lockdown[:,Kilifi_index])
+#Kwale
+T_regional_lockdown[:,Kwale_index] .*= 0.1;T_regional_lockdown[Kwale_index,Kwale_index] += 1 - sum(T_regional_lockdown[:,Kwale_index])
 
 
-@load "data/agemixingmatrix_china.jld2" M_China
-@load "data/agemixingmatrix_Kenya_norestrictions.jld2" M_Kenya
-@load "data/agemixingmatrix_Kenya_homeonly.jld2" M_Kenya_ho
+#Incoming travel
+for leaving_area in 1:47,arriving_area in 1:47
+    if !(leaving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]) && arriving_area in [Nairobi_index,Mombassa_index,Kwale_index,Kilifi_index]
+        amount_reduced = 0.9*T_regional_lockdown[arriving_area,leaving_area]
+        T_regional_lockdown[arriving_area,leaving_area] -= amount_reduced
+        T_regional_lockdown[leaving_area,leaving_area] += amount_reduced #All avoided trips to locked down areas lead to staying at home
+    end
+end
 
 
-"""
-Can adjust β to match a desired R₀ value by evaluating the leading eigenvalue
-The idea is to match to the chinese epidemic R₀ -- it will be different in Kenya
-"""
+@load "data/detection_rates_for_different_epsilons_model2.jld2" d_0 d_01 d_025 d_05 d_1
+χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))
 
-P.ϵ = 0.1
-P.χ = ones(KenyaCoV.n_a)
-R₀_scale = KenyaCoV.calculate_R₀_scale(P)
-P.χ = ones(KenyaCoV.n_a)/R₀_scale
-P.β = 2*P.γ
+@load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
 
-KenyaCoV.calculate_R₀(P)
-KenyaCoV.calculate_R₀_homeonly(P)
+counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
+names = counties.county
+Nairobi_index = findfirst(counties.county .== "Nairobi")
+Mombassa_index = findfirst(counties.county .== "Mombasa")
+Kwale_index = findfirst(counties.county .== "Kwale")
+Kilifi_index = findfirst(counties.county .== "Kilifi")
+Mandera_index  = findfirst(counties.county .== "Mandera")
+
+χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))
+
+P.χ = copy(χ_zhang)
+P.rel_detection_rate = d_1
+P.dt = 0.25;
+P.ext_inf_rate = 0.;
+P.ϵ = 1.
+#Set the susceptibility vector --- just to specify the correct R₀
+sus_matrix = repeat(χ_zhang,1,17)
+R_A = P.ϵ*((1/P.σ₂) + (1/P.γ) ) #effective duration of asymptomatic
+R_M = (P.ϵ/P.σ₂) + (P.ϵ_D/P.γ) #effective duration of mild
+R_V = (P.ϵ/P.σ₂) + (P.ϵ_V/P.τ) #effective duration of severe
+R_vector = [(1-P.rel_detection_rate[a])*R_A + P.rel_detection_rate[a]*(1-P.hₐ[a])*R_M + P.rel_detection_rate[a]*P.hₐ[a]*R_V for a = 1:17]
+inf_matrix = repeat(R_vector',17,1)
+
+
+
+eigs_kenya_schools_closed, = eigen(sus_matrix.*(1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work).*inf_matrix)
+max_eigval_Kenya = Real(eigs_kenya_schools_closed[end])
+P.χ .= χ_zhang ./max_eigval_Kenya #This rescales everything so β is the same as R₀ for China
+
+u0[Nairobi_index,8,3] = 500 #10 initial pre-symptomatics in Nairobi
+u0[Mombassa_index,8,3] = 300 #10 initial pre-symptomatics in Mombasa
+u0[Mandera_index,8,3] = 200 #5 initial pre-symptomatics in Mandera
 
 P.dt = 0.25
 
-"""
-Can vary the spatial contact assumptions as well
-"""
-# P.ρ = zeros(20)
-# KenyaCoV.transportstructure_params!(P,P.ρ,P_dest)
+@load "data/posterior_distribution_R0.jld2" posterior_R₀
+
 
 
 """
 Run model
 
 """
+P.β = rand(posterior_R₀)
 
-u0[KenyaCoV.ind_nairobi_as,5,4] = 5#10 diseased
-P.ϵ_D = 1
-function ramp_down(t)
-    if t < 60.
-        return (1-t/60) + 0.5*t/60
-    else
-        return 0.5
-    end
-end
-P.c_t = ramp_down
-P.c_t = t -> 1.
-prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,365.),P)
-@time sol = solve(prob,FunctionMap(),dt = P.dt)
+P.M = 1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work
 
-cum_inc = [sum(sol(t)[:,:,8]) for t = 0.:1.:365]
-plot(diff(cum_inc))
-plot!(diff(cum_inc).+1,yscale = :log10)
-
-
-sum(sol[end][:,:,8])/sum(u0)
-sum(sol[end][:,:,8])
-
-prob_ode = KenyaCoV.create_KenyaCoV_ode_prob(u0,(0.,365.),P)
-@time sol_ode = solve(prob_ode,Tsit5())
-
-times = 0:1:365
-I_area = zeros(Int64,20,length(sol.t))
-for i = 1:20,(ind,t) in enumerate(sol.t)
-    I_area[i,ind] = sum(sol(t)[i,:,3:4])
-end
-# I = [sum(sol(t)[:,:,3:4]) for t in sol.t]
-plt = plot(sol.t,I_area[1,:], lab = 1,xlims = (0.,30),ylims = (0.,100));
-for i = 2:20
-    plot!(plt,sol.t,I_area[i,:],lab = i);
-end
-display(plt)
-
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,60.),P)
+# @time sol = solve(prob,FunctionMap(),dt = P.dt)
+#
+# sims_test = KenyaCoV.run_simulations(P,prob,10)
+# output = extract_information_from_simulations(sims_test);
+model_str =
 """
-Example of adding an event
-"""
-function isolation_limit(u,t,integrator) # Event when event_f(u,t) == 0
-  integrator.p.isolating_detecteds && sum(u[:,:,8]) < 10000
-end
-function affect_isolation_limit!(integrator)
-  integrator.p.τ = 0
-  integrator.p.isolating_detecteds = false
-end
-cb = DiscreteCallback(isolation_limit,affect_isolation_limit!)
-
-P.isolating_detecteds = true
-P.τ = 1/3
-@time sol_cb = solve(prob,FunctionMap(),dt = P.dt,callback = cb)
-sum(sol_cb[end][:,:,7:8])
-
-"""
-Example of adding a constant rate jump to the method
+This is a test String
+for model description.
 """
 
-#1. Define the jump rate and affect on integrator
-jumprate(u,p,t) = 1.
-function jumpaffect!(integrator)
-    integrator.u[4,5,3] += 1
-end
-#2. Declare the ConstantRateJump
-example_jump = ConstantRateJump(jumprate,jumpaffect!)
-#3. Make a jump problem that BOTH inherits the DiscreteProblem (prob) AND is given an "aggregator" method
-#In this case the aggregator method "Direct()" is the Gillespie alg
+sims = KenyaCoV.run_simulations(P,prob,10;interventions=CallbackSet())
+output = extract_information_from_simulations(sims);
+scenariodata = generate_report(output,model_str,"_test"," (test)",counties.county;make_new_directory=false);
+scenariodata.prevalence_ICU_ts.med
+scenariodata = KenyaCoV.run_scenario(P,prob,10,model_str,"_test"," (test)",counties.county;interventions = CallbackSet(),make_new_directory=true)
 
-Jmp_prob = JumpProblem(prob,Direct(),example_jump)
 
-#Solve the whole problem using FunctionMap() this time steps forward discretely BUT if a ConstantRateJump
-# event occurs in the interval it includes that as well
-sol = solve(Jmp_prob,FunctionMap(),dt = P.dt)
-sol.t
+data = KenyaCoV.run_scenario(P,prob,10,model_str,"_test"," (test)",counties.county;interventions = CallbackSet(),make_new_directory = false)
