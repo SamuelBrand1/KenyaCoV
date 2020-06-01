@@ -218,7 +218,7 @@ function extract_information_from_simulations(sims)
 
     total_severe_cases = (med = median(sum(hosp_by_area_over_sims,dims=1)),
                             lpred = quantile(sum(hosp_by_area_over_sims,dims=1)[:],0.025),
-                            upred = quantile(sum(hosp_by_area_over_sims[:],dims=1),0.975))
+                            upred = quantile(sum(hosp_by_area_over_sims,dims=1)[:],0.975))
 
     severe_cases_by_area = (med = [median(hosp_by_area_over_sims[cn,:]) for cn = 1:nc],
                             lpred = [quantile(hosp_by_area_over_sims[cn,:],0.025) for cn = 1:nc],
@@ -228,7 +228,7 @@ function extract_information_from_simulations(sims)
                             upred = [quantile(hosp_by_age_over_sims[a,:],0.975) for a = 1:na])
     total_deaths = (med = median(sum(deaths_by_area_over_sims,dims=1)),
                             lpred = quantile(sum(deaths_by_area_over_sims,dims=1)[:],0.025),
-                            upred = quantile(sum(deaths_by_area_over_sims[:],dims=1),0.975))
+                            upred = quantile(sum(deaths_by_area_over_sims,dims=1)[:],0.975))
     deaths_by_area = (med = [median(deaths_by_area_over_sims[cn,:]) for cn = 1:nc],
                             lpred = [quantile(deaths_by_area_over_sims[cn,:],0.025) for cn = 1:nc],
                             upred = [quantile(deaths_by_area_over_sims[cn,:],0.975) for cn = 1:nc])
@@ -324,6 +324,9 @@ function generate_report(output,model_str,simulation_tag,scenario_tag,areanames;
     writedlm("reports/report"*simulation_tag*"/country_cum_V_incidence_ts"*simulation_tag*".csv",cumsum(output.country_incidence_V_ts.med),",")
     writedlm("reports/report"*simulation_tag*"/country_all_incidence_ts"*simulation_tag*".csv",output.country_incidence_A_ts.med .+ output.country_incidence_M_ts.med .+ output.country_incidence_V_ts.med,",")
     writedlm("reports/report"*simulation_tag*"/country_cum_all_incidence_ts"*simulation_tag*".csv",cumsum(output.country_incidence_A_ts.med .+ output.country_incidence_M_ts.med .+ output.country_incidence_V_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/country_deaths_ts"*simulation_tag*".csv",output.country_incidence_death_ts.med,",")
+    writedlm("reports/report"*simulation_tag*"/country_cum_deaths_ts"*simulation_tag*".csv",cumsum(output.country_incidence_death_ts.med),",")
+
     writedlm("reports/report"*simulation_tag*"/country_hosp_prev"*simulation_tag*".csv",output.country_prevalence_H_ts,",")
     writedlm("reports/report"*simulation_tag*"/country_ICU_prev"*simulation_tag*".csv",output.country_prevalence_ICU_ts,",")
 
@@ -336,9 +339,12 @@ function generate_report(output,model_str,simulation_tag,scenario_tag,areanames;
     writedlm("reports/report"*simulation_tag*"/cum_V_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,cumsum(output.incidence_V_ts.med,dims=2)),",")
     writedlm("reports/report"*simulation_tag*"/all_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.incidence_A_ts.med .+ output.incidence_M_ts.med .+ output.incidence_V_ts.med),",")
     writedlm("reports/report"*simulation_tag*"/cum_all_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,cumsum(output.incidence_A_ts.med .+ output.incidence_M_ts.med .+ output.incidence_V_ts.med,dims=2)),",")
+
+    writedlm("reports/report"*simulation_tag*"/death_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.incidence_death_ts.med),",")
+    writedlm("reports/report"*simulation_tag*"/cum_death_incidence_ts_by_county"*simulation_tag*".csv",hcat(areanames,cumsum(output.incidence_death_ts.med,dims=2)),",")
+
     writedlm("reports/report"*simulation_tag*"/hosp_prev_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.prevalence_H_ts.med),",")
     writedlm("reports/report"*simulation_tag*"/ICU_prev_ts_by_county"*simulation_tag*".csv",hcat(areanames,output.prevalence_ICU_ts.med),",")
-
 
     return scenariodata
 end
