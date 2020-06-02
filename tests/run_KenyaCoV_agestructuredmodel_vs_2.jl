@@ -110,7 +110,7 @@ for model description.
 """
 
 sims = KenyaCoV.run_simulations(P,prob,10;interventions=CallbackSet())
-output = extract_information_from_simulations(sims);
+output = KenyaCoV.extract_information_from_simulations(sims);
 scenariodata = generate_report(output,model_str,"_test"," (test)",counties.county;make_new_directory=false);
 scenariodata.prevalence_ICU_ts.med
 scenariodata = KenyaCoV.run_scenario(P,prob,10,model_str,"_test"," (test)",counties.county;interventions = CallbackSet(),make_new_directory=true)
