@@ -55,9 +55,9 @@ death_rate_by_age_cond_ICU = death_rate_by_age./hosp_rate_by_age
 death_rate_by_age_cond_ICU[isnan.(death_rate_by_age_cond_ICU)] .= 0.
 # death_rate_by_age_cond_ICU
 
-"""
-Load the MCMC outputs for the age-specific relative symptomatic rate
-"""
+
+## Load the MCMC outputs for the age-specific relative symptomatic rate
+
 @load "data/MCMC_results_fit_d.jld2" results_d_tau_0 results_d_tau_01 results_d_tau_025 results_d_tau_05 results_d_tau_1
 trans = as((θ = as(Array, asℝ₊, 17),))#Transforms the relative values into definitely positive numbers 16th value is fixed as 1
 gr()
@@ -99,18 +99,18 @@ scatter!(size=(700,400))
 xlabel!("Age group (years)")
 savefig("plotting/symptomatic_rates.pdf")
 
-"""
-Load age-specific susceptibilities (for use in that scenario) and age-specific relative detection rates
-for different relative infectiousness values τ = 0,0.1,0.25,0.5,1
-"""
+
+## Load age-specific susceptibilities (for use in that scenario) and age-specific relative detection rates
+# for different relative infectiousness values τ = 0,0.1,0.25,0.5,1
+
 @load "data/susceptibility_rates.jld2" σ
 @load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
 rel_detection_rates = hcat(d_0,d_01,d_025,d_05,d_1)
 
 
-"""
-Load population sizes for each risk region
-"""
+
+## Load population sizes for each risk region
+
 
 popsize_risk_region = readtable("data/2019_census_age_pyramids_riskregions.csv")
 N_region_age = zeros(Int64,20,17)
@@ -120,9 +120,9 @@ end
 heatmap(N_region_age)
 
 
-"""
-Load age mixing matrix for Kenya and convert into JLD2 array, do the same for China for baseline comparisons
-"""
+
+## Load age mixing matrix for Kenya and convert into JLD2 array, do the same for China for baseline comparisons
+
 prop_75_79_amongst_75_plus_china = 0.7927
 prop_75_79_amongst_75_plus_Kenya = sum(N_region_age[:,16])/(sum(N_region_age[:,16:17]))
 
@@ -193,9 +193,10 @@ end
 M_Kenya_work = extend_and_convert_Prem_matrix(agemixingmatrix,prop_75_79_amongst_75_plus_Kenya)
 
 @save "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
-"""
-Some heatmap plots
-"""
+
+
+# Some heatmap plots of age mixing matrices
+
 @load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
 heatmap(M_Kenya,clims = (0.,1))
 plt_w = bar(M_Kenya_work[:,17],xticks = (1:17,age_cats),size = (800,300),title = "work contacts",ylims = (0,0.6))
@@ -223,9 +224,9 @@ plot(plt_before,plt_after,layout=layout)
 plot!(size = (1200,800))
 
 
-"""
-Load movement matrix - then derive the P,ρ and T values
-"""
+
+## Load movement matrix - then derive the P,ρ and T values
+
 @load "data/mv_matrix.jld2" mv_matrix
 movements_per_person = zeros(20,20)
 for i = 1:20,j=1:20

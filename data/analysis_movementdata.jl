@@ -3,9 +3,9 @@ using DataFrames,CSV,MAT,Statistics,LinearAlgebra,Optim,Plots,JLD2,RData,Distanc
 gr()
 
 
-"""
-Load conversion matrices, movement data and population data
-"""
+
+## Load conversion matrices, movement data and population data
+
 c_to_rr = matread("data/conversion_matrix_c_rr.mat")["conversion_matrix_c_to_rr"]
 rr_to_c =  matread("data/conversion_matrix.mat")["conversion_matrix"]
 @load "data/mv_matrix.jld2" mv_matrix;#In from-to format
@@ -17,6 +17,37 @@ end
 mobile_pop_by_county = Vector(sum(N_pop[:,5:11],dims = 2)[:])
 bar(mobile_pop_by_county,xticks = (1:47,county_populations.county))
 
+# Look at Mombasa age profile
+
+f = findfirst(county_populations.county .== "Mombasa")
+N_mombasa = N_pop[f,:]
+bar(N_mombasa,orientation=:horizonal,yticks = (1:17,age_cats),lab = "")
+verity_IFR = [0.00161,0.00695,0.0309,
+            0.0844,
+            0.161,
+            0.595,
+            1.93,
+            4.28,
+            7.8]./100
+
+verity_comparison = zeros(17)
+for a = 1:8
+    verity_comparison[2*(a-1)+1] = verity_IFR[a]
+    verity_comparison[2*(a-1)+2] = verity_IFR[a]
+end
+verity_comparison[17] = verity_IFR[9]
+plot(verity_comparison)
+uniform_cases_mombasa = 54e3*N_mombasa/sum(N_mombasa)
+pred_deaths = verity_comparison.*uniform_cases_mombasa
+plt_pred_deaths = bar(pred_deaths,orientation=:horizonal,
+                        yticks = (1:17,age_cats),
+                        xticks = 1:15,
+                        lab = "",
+                        title = "Predicted deaths in Mombasa after 54k cases. Total = $(round(sum(pred_deaths),digits = 1))",
+                        xlabel = "Deaths per age group",
+                        size = (1000,600))
+sum(pred_deaths)
+savefig(plt_pred_deaths,"predicted_deaths_mombasa.png")
 """
 Get location data
 """
