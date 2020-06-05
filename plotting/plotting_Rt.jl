@@ -119,11 +119,15 @@ fitted_upred_R₀ = quantile(posterior_R₀,0.975)
 
 heatmap(M_Kenya_school)
 
-plt_R₀ = bar(4:13,(multipliers.*fitted_median_R₀)[4:end],orientations = :horizonal,
+plt_R₀ = bar(4:13,(multipliers.*fitted_median_R₀)[4:end],orientations = :horizonal)
+
+
+plt_R₀ = bar(4:13,(multipliers.*fitted_median_R₀)[4:end],
+        orientations = :horizonal,
         lab = "Includes SD",color = :green,
         yticks = (1:13,interventionnames),
         xlims = (0,3),
-        title = "Rt under different interventions",
+        title= "Rt under different interventions",
         xlabel = "Reproductive ratio")
 
 bar!(plt_R₀,[2,3],[(multipliers.*fitted_median_R₀)[2:3]],orientations = :horizonal,
