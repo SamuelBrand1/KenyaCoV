@@ -69,11 +69,11 @@ model_ingredients_from_data reads in a JLD2 file which includes all the relevant
 """
 function model_ingredients_from_data(agestructuredata_filename,flight_filename,prev_filename)
     @load agestructuredata_filename N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho hosp_rate_by_age ICU_rate_by_age_cond_hosp
-    n_wa,n_a = size(N_region_age)
+    n,n_a = size(N_region_age)
 
     #Population state array
-    suspop_kenya = zeros(Int64,n_wa,n_a,n_s) #Array by area, age group and disease state
-    for i = 1:n_wa,j=1:n_a
+    suspop_kenya = zeros(Int64,n,n_a,n_s) #Array by area, age group and disease state
+    for i = 1:n,j=1:n_a
         suspop_kenya[i,j,1] = N_region_age[i,j]
     end
 
@@ -86,7 +86,7 @@ function model_ingredients_from_data(agestructuredata_filename,flight_filename,p
     into_mom, into_nai = get_flightdata(flight_filename)
 
     #Define the change matrix
-    dc = sparse(zeros(Int64,n_wa*n_a*n_s,n_wa*n_a*n_ta))
+    dc = sparse(zeros(Int64,n*n_a*n_s,n*n_a*n_ta))
     change_matrix(dc)
 
     #Parameter definition
