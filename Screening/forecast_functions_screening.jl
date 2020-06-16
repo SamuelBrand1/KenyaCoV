@@ -20,11 +20,11 @@ mean(d_R₀)
 Simulation functions
 """
 
-function consensus_randomise_params_β25(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
+#=function consensus_randomise_params_β25(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
     _P = deepcopy(prob.p)
     #_P.β = rand(d_R₀)
     return remake(prob,p=_P)
-end
+end=#
 function randomise_R₀(prob,i,repeat) #Remember to rescale susceptibility by the inverse leading eigenvalue
     _P = deepcopy(prob.p)
     _P.β = rand(d_R₀)
@@ -42,6 +42,11 @@ function output_daily_incidence_and_hosp_cums(sol,i)
 end
 function output_simulation_data(sol,i)
     times = sol.prob.tspan[1]:1:sol.prob.tspan[end]
+
+    total_cases_A_by_area_and_age=sol(sol.prob.tspan[end])[:,:,9]   ##
+    total_cases_M_by_area_and_age=sol(sol.prob.tspan[end])[:,:,10]  ##
+    total_cases_V_by_area_and_age=sol(sol.prob.tspan[end])[:,:,11]  ##
+
     incidence_A = diff([sum(sol(t)[:,:,9],dims=2)[:]  for t in times])
     incidence_M = diff([sum(sol(t)[:,:,10],dims=2)[:]  for t in times])
     incidence_V = diff([sum(sol(t)[:,:,11],dims=2)[:]  for t in times])
@@ -81,10 +86,13 @@ function output_simulation_data(sol,i)
             death_incidence_by_area_ts = total_death_incidence,
             total_hosp_by_area_and_age = hosp_by_area_and_age,
             total_ICU_by_area_and_age = ICU_by_area_and_age,
-            total_deaths_by_area_and_age = deaths_by_area_and_age),false
+            total_deaths_by_area_and_age = deaths_by_area_and_age,
+            total_cases_A_by_area_and_age=total_cases_A_by_area_and_age,        ##
+            total_cases_M_by_area_and_age=total_cases_M_by_area_and_age,        ##
+            total_cases_V_by_area_and_age=total_cases_V_by_area_and_age),false  ##
 end
 
-function run_simulations_β25(P::CoVParameters_Screening,prob,n_traj,cb)
+#=function run_simulations_β25(P::CoVParameters_Screening,prob,n_traj,cb)
     ensemble_prob = EnsembleProblem(prob,
                                     prob_func = consensus_randomise_params_β25,
                                     output_func = output_daily_incidence_and_hosp_cums)
@@ -95,7 +103,7 @@ function run_simulations_βrand(P::CoVParameters_Screening,prob,n_traj,cb)
                                     prob_func = consensus_randomise_params_βrand,
                                     output_func = output_daily_incidence_and_hosp_cums)
     return solve(ensemble_prob,FunctionMap(),dt = P.dt,callback = cb,trajectories = n_traj)
-end
+end=#
 
 function run_simulations_βrand_withH(P::CoVParameters_Screening,prob,n_traj;interventions = CallbackSet())
     ensemble_prob = EnsembleProblem(prob,
@@ -136,7 +144,7 @@ function run_scenarios()
 end
 
 
-function run_scenarios(sim_dur)
+#=function run_scenarios(sim_dur)
     @load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
     u0,P,P_dest = model_ingredients_from_data_screening("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
         @load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
@@ -169,7 +177,7 @@ function run_scenarios(sim_dur)
     #P.β = β#rand(d_R₀) #Choose R₀ randomly from 2-3 range
     u0[4,8,3] = 5 #10 initial Asymptomatics in Nairobi;    #u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
     return u0,P
-end
+end=#
 
 
 
@@ -214,7 +222,6 @@ function extract_information_from_simulations(sims)
         incidence_M_by_area_lpred[cn,t] = quantile(incidence_M_by_area_and_sims[cn,t,:],0.025)
         incidence_M_by_area_upred[cn,t] = quantile(incidence_M_by_area_and_sims[cn,t,:],0.975)
     end
-
 
     country_incidence_V = VectorOfArray([sum(sims[k].incidence_V,dims=1) for k = 1:n])[1,:,:]
     incidence_V_by_area_and_sims = VectorOfArray([sims[k].incidence_V for k = 1:n])[:,:,:]
@@ -345,6 +352,44 @@ function extract_information_from_simulations(sims)
                             lpred = [quantile(peak_ICU_by_area_by_sim[cn,:] .- KenyaCoV_screening.spare_capacity_ICU_by_county[cn],0.025) for cn = 1:nc],
                             upred = [quantile(peak_ICU_by_area_by_sim[cn,:] .- KenyaCoV_screening.spare_capacity_ICU_by_county[cn],0.975) for cn = 1:nc])
 
+
+
+    ##Added for final cumulative cases
+    total_cases_A_by_area_and_age_med = zeros(nc,na)
+    total_cases_A_by_area_and_age_lpred = zeros(nc,na)
+    total_cases_A_by_area_and_age_upred = zeros(nc,na)
+    for cn = 1:nc,an = 1:na
+        total_cases_A_by_area_and_age_med[cn,an] = median([sims[k].total_cases_A_by_area_and_age[cn,an] for k=1:n])
+        total_cases_A_by_area_and_age_lpred[cn,an] = quantile([sims[k].total_cases_A_by_area_and_age[cn,an] for k=1:n],0.025)
+        total_cases_A_by_area_and_age_upred[cn,an] = quantile([sims[k].total_cases_A_by_area_and_age[cn,an] for k=1:n],0.975)
+    end
+    total_cases_A_by_area_and_age=(med=total_cases_A_by_area_and_age_med,
+                                    lpred=total_cases_A_by_area_and_age_lpred,
+                                    upred=total_cases_A_by_area_and_age_upred)
+    total_cases_M_by_area_and_age_med = zeros(nc,na)
+    total_cases_M_by_area_and_age_lpred = zeros(nc,na)
+    total_cases_M_by_area_and_age_upred = zeros(nc,na)
+    for cn = 1:nc,an = 1:na
+        total_cases_M_by_area_and_age_med[cn,an] = median([sims[k].total_cases_M_by_area_and_age[cn,an] for k=1:n])
+        total_cases_M_by_area_and_age_lpred[cn,an] = quantile([sims[k].total_cases_M_by_area_and_age[cn,an] for k=1:n],0.025)
+        total_cases_M_by_area_and_age_upred[cn,an] = quantile([sims[k].total_cases_M_by_area_and_age[cn,an] for k=1:n],0.975)
+    end
+    total_cases_M_by_area_and_age=(med=total_cases_M_by_area_and_age_med,
+                                    lpred=total_cases_M_by_area_and_age_lpred,
+                                    upred=total_cases_M_by_area_and_age_upred)
+    total_cases_V_by_area_and_age_med = zeros(nc,na)
+    total_cases_V_by_area_and_age_lpred = zeros(nc,na)
+    total_cases_V_by_area_and_age_upred = zeros(nc,na)
+    for cn = 1:nc,an = 1:na
+        total_cases_V_by_area_and_age_med[cn,an] = median([sims[k].total_cases_V_by_area_and_age[cn,an] for k=1:n])
+        total_cases_V_by_area_and_age_lpred[cn,an] = quantile([sims[k].total_cases_V_by_area_and_age[cn,an] for k=1:n],0.025)
+        total_cases_V_by_area_and_age_upred[cn,an] = quantile([sims[k].total_cases_V_by_area_and_age[cn,an] for k=1:n],0.975)
+    end
+    total_cases_V_by_area_and_age=(med=total_cases_V_by_area_and_age_med,
+                                    lpred=total_cases_V_by_area_and_age_lpred,
+                                    upred=total_cases_V_by_area_and_age_upred)
+
+
     return (total_severe_cases=total_severe_cases,
             severe_cases_by_area=severe_cases_by_area,
             severe_cases_by_age=severe_cases_by_age,
@@ -368,7 +413,10 @@ function extract_information_from_simulations(sims)
             country_prevalence_H_ts=country_prevalence_H_ts,
             prevalence_H_ts=prevalence_H_ts,
             country_prevalence_ICU_ts=country_prevalence_ICU_ts,
-            prevalence_ICU_ts=prevalence_ICU_ts)
+            prevalence_ICU_ts=prevalence_ICU_ts,
+            total_cases_A_by_area_and_age=total_cases_A_by_area_and_age,
+            total_cases_M_by_area_and_age=total_cases_M_by_area_and_age,
+            total_cases_V_by_area_and_age=total_cases_V_by_area_and_age)
 end
 
 function generate_report_screening(folder,output,#=model_str,=#simulation_tag,areanames)
