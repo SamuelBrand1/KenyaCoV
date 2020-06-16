@@ -30,10 +30,11 @@ function get_hosp_forecast(sims)
     overall_ICU_exceed = zeros(47,3)
     chance_exceeds_hosp = zeros(47)
     chance_exceeds_ICU = zeros(47)
+    reps = size(sims)[2]
     for cn = 1:47
         hosp_occup_per_sim,ICU_occup_per_sim,new_ICU_per_sim,death_incidence_per_sim = total_hospital_outcomes_per_sim(sims,cn)
-        hosp_maximums = [(hosp_max,hosp_max_time) = findmax(hosp_occup_per_sim[k,:]) for k = 1:1000]
-        ICU_maximums = [(ICU_max,ICU_max_time) = findmax(ICU_occup_per_sim[k,:]) for k = 1:1000]
+        hosp_maximums = [(hosp_max,hosp_max_time) = findmax(hosp_occup_per_sim[k,:]) for k = 1:reps]
+        ICU_maximums = [(ICU_max,ICU_max_time) = findmax(ICU_occup_per_sim[k,:]) for k = 1:reps]
         perc_hosp_exceeds = [h[1]/spare_capacity_H_by_county[cn] for h in hosp_maximums]
         perc_ICU_exceeds = [h[1] - spare_capacity_ICU_by_county[cn] for h in ICU_maximums]
         chance_exceeds_hosp[cn] = mean([p >= 1 for p in perc_hosp_exceeds])
@@ -49,11 +50,12 @@ function get_hosp_forecast(sims)
 end
 
 function plot_ranked_bars_cases(sims,scenario)
-    median_final_number = [median([sum(sims.u[k][end][cn,:,3]) for k = 1:1000] ) for cn = 1:47]
-    lb_final_number = [quantile([sum(sims.u[k][end][cn,:,3]) for k = 1:1000],0.025) for cn = 1:47]
-    ub_final_number = [quantile([sum(sims.u[k][end][cn,:,3]) for k = 1:1000],0.975) for cn = 1:47]
-    deaths_matrix = zeros(1000,47)
-    for k = 1:1000,cn = 1:47
+    reps=size(sims)[2]
+    median_final_number = [median([sum(sims.u[k][end][cn,:,3]) for k = 1:reps] ) for cn = 1:47]
+    lb_final_number = [quantile([sum(sims.u[k][end][cn,:,3]) for k = 1:reps],0.025) for cn = 1:47]
+    ub_final_number = [quantile([sum(sims.u[k][end][cn,:,3]) for k = 1:reps],0.975) for cn = 1:47]
+    deaths_matrix = zeros(reps,47)
+    for k = 1:reps,cn = 1:47
         deaths_matrix[k,cn] = sum(sims.u[k][end][cn,:,4].*ICU_rate_by_age_cond_hosp.*0.625)
     end
     median_deaths = [median(deaths_matrix[:,cn] ) for cn = 1:47]

@@ -37,10 +37,10 @@ Case_Dist = LinearAlgebra.normalize(convert(Vector{Float64},vec(sum(Matrix(Kenya
 
 plt = groupedbar(hcat(Kenya_PP,v,Case_Dist),lab = ["Kenya pop." "Age indep. pred." "Conf. cases"],
         xticks=(1:17,age_cats),
-        title = "Age profile of confirmed Kenyan COVID-19 cases (26th April)",
+        title = "Age profile of confirmed Kenyan COVID-19 cases (21 May 2020)",
         ylabel = "Proportion of cases",
         xlabel = "Age of case")
-savefig(plt,"plotting/age_profile_cases.pdf") #Uniform attack rate does not seem to expalin the case distribution. Attack rate based solely on social contacts overstimates the contribution of young age groups to cases
+savefig(plt,"plotting/age_profile_cases.png") #Uniform attack rate does not seem to expalin the case distribution. Attack rate based solely on social contacts overstimates the contribution of young age groups to cases
 
 # Model fitting
 
@@ -97,10 +97,10 @@ end
 # NEED to add functions here to call model run and get expected case distibution given interventions current fit would assume interventions have had full effect and we are in a new steady state
 
 #This function returns the HMC chains with tree statistics for the run
-function HMC_for_detection_rate(χ,ϵ,n_draws)
+function HMC_for_detection_rate(ϵ,n_draws)
     cases_to_fit = CaseDistribution(Array{Int64,2}(Kenya_Case_Dis_MAT),
                         Int64(sum(Kenya_Case_Dis_MAT)),
-                        d -> pred_case_distribution_using_iter_K_model2_splitAsymp(χ,d,ϵ*ones(17),M_Kenya))
+                        χ,d -> pred_case_distribution_using_iter_K_model2_splitAsymp(χ,d,ϵ*ones(17),M_Kenya))
 
     trans = as((θ = as(Array, asℝ₊, 17),)) # All parameters are transformed to be positive.
     P = TransformedLogDensity(trans, cases_to_fit) #This creates a transformed log-likelihood
@@ -108,7 +108,7 @@ function HMC_for_detection_rate(χ,ϵ,n_draws)
     return results = mcmc_with_warmup(Random.GLOBAL_RNG, ∇P, n_draws) # reporter = NoProgressReport()
 end
 
-χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))  # age specific susceptibility
+#χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))  # age specific susceptibility
 
 #d_chain_model2_epsilon_0 = HMC_for_detection_rate(χ_zhang,0.,10000)
 #d_chain_model2_epsilon_01 = HMC_for_detection_rate(χ_zhang,0.1,10000)

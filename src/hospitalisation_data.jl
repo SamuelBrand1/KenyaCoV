@@ -2,9 +2,8 @@
 
 using CSV
 
-# hosp_capacity = CSV.read(joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/Health_system_capacity_data_Kenya.csv"))
-hosp_capacity = CSV.read(joinpath(homedir(),"Github/KenyaCoV/data/Health_system_capacity_data_Kenya.csv"))
-
+#hosp_capacity = CSV.read(joinpath(homedir(),"Github/KenyaCoVData/Health_system_capacity_data_Kenya.csv"))
+hosp_capacity = CSV.read(joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/Health_system_capacity_data_Kenya.csv"))
 spare_capacity_H_by_county = (hosp_capacity[:,2].*hosp_capacity[:,5])[2:end]
 spare_capacity_ICU_by_county = (hosp_capacity[:,3].*hosp_capacity[:,6])[2:end]
 
@@ -18,6 +17,7 @@ verity_IFR = [0.00161,0.00695,0.0309,
             1.93,
             4.28,
             7.8]./100
+
 
 
 hosp_rate_CDC = [mean([1.6,2.5]),#0-19 year olds
@@ -52,6 +52,12 @@ ICU_rate_by_age = [ICU_rate_CDC[1],ICU_rate_CDC[1],ICU_rate_CDC[1],ICU_rate_CDC[
                     ICU_rate_CDC[6],ICU_rate_CDC[7]]
 
 
+                                # 0·00260% (0·000312–0·0382) 0·0148% (0·00288–0·0759) 0·0600% (0·0317–0·132) 0·146% (0·103–0·255) 0·295% (0·221–0·422) 1·25% (1·03–1·55)
+                                # 3·99% (3·41–4·55)
+                                # 8·61% (7·48–9·99) 13·4% (11·2–15·9)
+                                #
+
+
 ICU_rate_by_age_cond_hosp = ICU_rate_by_age./hosp_rate_by_age
 ICU_rate_by_age_cond_hosp.*0.625
 
@@ -83,4 +89,4 @@ ICU_rate_by_age_cond_hosp.*0.625
 #             ylabel = "OR (Brand vs Verity)",
 #             xlabel = "Age group")
 #
-# savefig(brand_verity_comparison,"data/IFR_comparison_Brand_vs_verity.png")
+# savefig(brand_verity_comparison,"data/IFR_comparison_Brand_vs_verity.png"
