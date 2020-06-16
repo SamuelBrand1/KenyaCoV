@@ -34,13 +34,13 @@ T_regional_lockdown = deepcopy(P.T)
 
 #Outgoing travel
 #Nairobi
-T_regional_lockdown[:,Nairobi_index] *= 0.1;T_regional_lockdown[Nairobi_index,Nairobi_index] += 1 - sum(T_regional_lockdown[:,Nairobi_index])
+T_regional_lockdown[:,Nairobi_index] .*= 0.1;T_regional_lockdown[Nairobi_index,Nairobi_index] += 1 - sum(T_regional_lockdown[:,Nairobi_index])
 #Mombasa
-T_regional_lockdown[:,Mombassa_index] *= 0.1;T_regional_lockdown[Mombassa_index,Mombassa_index] += 1 - sum(T_regional_lockdown[:,Mombassa_index])
+T_regional_lockdown[:,Mombassa_index] .*= 0.1;T_regional_lockdown[Mombassa_index,Mombassa_index] += 1 - sum(T_regional_lockdown[:,Mombassa_index])
 #Kilifi
-T_regional_lockdown[:,Kilifi_index] *= 0.1;T_regional_lockdown[Kilifi_index,Kilifi_index] += 1 - sum(T_regional_lockdown[:,Kilifi_index])
+T_regional_lockdown[:,Kilifi_index] .*= 0.1;T_regional_lockdown[Kilifi_index,Kilifi_index] += 1 - sum(T_regional_lockdown[:,Kilifi_index])
 #Kwale
-T_regional_lockdown[:,Kwale_index] *= 0.1;T_regional_lockdown[Kwale_index,Kwale_index] += 1 - sum(T_regional_lockdown[:,Kwale_index])
+T_regional_lockdown[:,Kwale_index] .*= 0.1;T_regional_lockdown[Kwale_index,Kwale_index] += 1 - sum(T_regional_lockdown[:,Kwale_index])
 
 
 #Incoming travel
@@ -69,9 +69,9 @@ function ramp_down(t)
     if t < 0.
         return 1.
     elseif t>= 0. && t <= 14.
-        return (1-t/14.) + 0.5*t/14.
+        return (1-t/14.) + 0.7*t/14.
     elseif t > 14.
-        return 0.5
+        return 0.7
     end
 end
 using Dates
