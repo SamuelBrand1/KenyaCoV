@@ -1,33 +1,12 @@
 using JLD2,Plots,StatsPlots,CSV,DelimitedFiles, Dates
 include("get_scenario_data.jl");
 
+hosp_capacity = CSV.read(joinpath(homedir(),"Documents/Covid-19/jl_models/KenyaCoVOutputs/Health_system_capacity_data_Kenya.csv"))
+spare_capacity_H_by_county = (hosp_capacity[:,2].*hosp_capacity[:,5])[2:end]
+spare_capacity_ICU_by_county = (hosp_capacity[:,3].*hosp_capacity[:,6])[2:end]
+govt_hosp_capacity = CSV.read(joinpath(homedir(),"Documents/Covid-19/jl_models/data/Beds in Public Hospitals-04062020.csv"))
+govt_spare_capacity_H_by_county =  govt_hosp_capacity[:,2].*(hosp_capacity[:,5][2:end])
 
-
-
-return (total_severe_cases=total_severe_cases,
-        severe_cases_by_area=severe_cases_by_area,
-        severe_cases_by_age=severe_cases_by_age,
-        total_deaths=total_deaths,
-        deaths_by_area=deaths_by_area,
-        deaths_by_age=deaths_by_age,
-        hosp_peak_excess_demand_by_area=hosp_peak_excess_demand_by_area,
-        ICU_peak_excess_demand_by_area=ICU_peak_excess_demand_by_area,
-        incidence_H_by_area_over_sims=incidence_H_by_area_over_sims,
-        incidence_death_by_area_over_sims=incidence_death_by_area_over_sims,
-        H_occup_by_area_over_sims=H_occup_by_area_over_sims,
-        ICU_occup_by_area_over_sims=ICU_occup_by_area_over_sims,
-        country_incidence_A_ts=country_incidence_A_ts,
-        incidence_A_ts=incidence_A_ts,
-        country_incidence_M_ts=country_incidence_M_ts,
-        incidence_M_ts=incidence_M_ts,
-        country_incidence_V_ts=country_incidence_V_ts,
-        incidence_V_ts=incidence_V_ts,
-        country_incidence_death_ts=country_incidence_death_ts,
-        incidence_death_ts=incidence_death_ts,
-        country_prevalence_H_ts=country_prevalence_H_ts,
-        prevalence_H_ts=prevalence_H_ts,
-        country_prevalence_ICU_ts=country_prevalence_ICU_ts,
-        prevalence_ICU_ts=prevalence_ICU_ts)
 
 # per scenario:
 ##
@@ -36,10 +15,11 @@ function school_effect(scenario_input_data)
 
     scenariodata = scenario_input_data
 
-    # Number of symptomatic new/incident infections on day
+    # Number of ALL new/incident infections on day
     new_infections = [scenariodata.country_incidence_M_ts.med[t] for t in [30,45,60,90,180,360]] .+
-                     [scenariodata.country_incidence_V_ts.med[t] for t in [30,45,60,90,180,360]]  # sum mild, severe and critical incidence
-    new_infections_ts = scenariodata.country_incidence_M_ts.med .+ scenariodata.country_incidence_V_ts.med
+                     [scenariodata.country_incidence_V_ts.med[t] for t in [30,45,60,90,180,360]] .+ # sum ALL incidence
+                     [scenariodata.country_incidence_A_ts.med[t] for t in [30,45,60,90,180,360]]
+    new_infections_ts = scenariodata.country_incidence_M_ts.med .+ scenariodata.country_incidence_V_ts.med .+ scenariodata.country_incidence_A_ts.med
     peak_value, peak_position = findmax(new_infections_ts)
     new_infections_peak_date = Date(2020,3,13) + Dates.Day(peak_position)
     new_infections = [new_infections;peak_value]  # add peak incidence to vector
@@ -101,8 +81,9 @@ function school_effect(scenario_input_data)
 
     # 8. Cumulative infections by day
     new_infections = [cumsum(scenariodata.country_incidence_M_ts.med)[t] for t in [30,45,60,90,180,360]] .+
-                     [cumsum(scenariodata.country_incidence_V_ts.med)[t] for t in [30,45,60,90,180,360]]  # sum mild, severe and critical incidence
-    new_infections_ts = cumsum(scenariodata.country_incidence_M_ts.med .+ scenariodata.country_incidence_V_ts.med)
+                     [cumsum(scenariodata.country_incidence_V_ts.med)[t] for t in [30,45,60,90,180,360]] .+
+                     [cumsum(scenariodata.country_incidence_A_ts.med)[t] for t in [30,45,60,90,180,360]]  # ALLincidence
+    new_infections_ts = cumsum(scenariodata.country_incidence_M_ts.med .+ scenariodata.country_incidence_V_ts.med .+ scenariodata.country_incidence_A_ts.med)
     peak_value, peak_position = findmax(new_infections_ts)
     new_infections_peak_date = Date(2020,3,13) + Dates.Day(peak_position)
     new_infections = [new_infections;peak_value]  # add peak incidence to vector
@@ -213,7 +194,7 @@ function county_data(scenario_input_data)
 
     # 1a. Number of new infections at day of peak in new/incident infections
 
-    new_infections = scenariodata.incidence_M_ts.med .+ scenariodata.incidence_V_ts.med
+    new_infections = scenariodata.incidence_M_ts.med .+ scenariodata.incidence_V_ts.med .+ scenariodata.incidence_A_ts.med
     new_infections_by_county = zeros(Float64,47)
     for i=1:47
         new_infections_by_county[i] = findmax(new_infections[i,:])[1]
@@ -300,7 +281,7 @@ function county_data(scenario_input_data)
     end
 
     # 8. Cumulative infections at 360 days from first reported case
-    new_infections = scenariodata.incidence_M_ts.med .+ scenariodata.incidence_V_ts.med
+    new_infections = scenariodata.incidence_M_ts.med .+ scenariodata.incidence_V_ts.med .+ scenariodata.incidence_A_ts.med
     cum_infections_by_county = zeros(Float64,47)
     for i=1:47
         cum_infections_by_county[i] = cumsum(new_infections[i,:])[360]
@@ -406,5 +387,160 @@ all_scenarios = ["scenario_unmitigated",
 
 
 for i = 1:size(all_scenarios)[1]
-    writedlm("reports/county_numbers_"*all_scenarios[i]*".csv",Meta.parse(all_scenarios[i)],",")
+    writedlm("reports/county_numbers_"*all_scenarios[i]*".csv",eval(Meta.parse(all_scenarios[i])),",")
 end
+
+# Correct plotting x-axis
+
+function give_plots_for_county_temp(output,areas_to_plot,scenario_tag,areanames)
+
+    monthdates = [Date(2020,3,1) + Month(i) for i = 1:21 ]
+    monthnames = [monthname(d)[1:3]*"-$(year(d)-2000)" for d in monthdates]
+    tick_times = [(d - Date(2020,3,13)).value for d in monthdates]
+
+    median_H = output.incidence_V_ts.med[areas_to_plot,:]
+    lb_H = output.incidence_V_ts.lpred[areas_to_plot,:]
+    ub_H = output.incidence_V_ts.upred[areas_to_plot,:]
+    median_D = output.incidence_death_ts.med[areas_to_plot,:]
+    lb_D = output.incidence_death_ts.lpred[areas_to_plot,:]
+    ub_D = output.incidence_death_ts.upred[areas_to_plot,:]
+    median_H_occup = output.prevalence_H_ts.med[areas_to_plot,:]
+    lb_H_occup = output.prevalence_H_ts.lpred[areas_to_plot,:]
+    ub_H_occup = output.prevalence_H_ts.upred[areas_to_plot,:]
+    median_ICU_occup = output.prevalence_ICU_ts.med[areas_to_plot,:]
+    lb_ICU_occup = output.prevalence_ICU_ts.lpred[areas_to_plot,:]
+    ub_ICU_occup = output.prevalence_ICU_ts.upred[areas_to_plot,:]
+
+    area_name = ["Rest of Kenya"]
+    if length(areas_to_plot) == 1
+        area_name = areanames[areas_to_plot]
+    end
+
+    T= size(median_H)[1]
+
+    plt_incidence = plot(0:(T-1),median_H,
+                        lab = "Hospitalisations",
+                        lw = 3,color = :red,
+                        ribbon = (median_H.-lb_H,ub_H .- median_H),
+                        fillalpha = 0.25,
+                        xticks = (tick_times,monthnames),
+                        title = "Incidence of disease - "*area_name*scenario_tag,
+                        size = (1000,600))
+
+    plot!(plt_incidence,0:(T-1),median_D,
+                        lab = "Deaths",
+                        lw = 3,color = :black,
+                        ribbon = (median_D.-lb_D,ub_D .- median_D),
+                        fillalpha = 0.5 )
+
+    plt_health_usage = plot(0:(T-1),median_H_occup,
+                            lab = "hospital beds",
+                            lw = 3,color = :blue,
+                            ribbon = (median_H_occup.-lb_H_occup,ub_H_occup .- median_H_occup),
+                            fillalpha = 0.25,
+                            xticks = (tick_times,monthnames),
+                            ylabel = "Daily Occupancy",
+                            title = "Health system usage - "*area_name*scenario_tag,
+                            size = (1000,600))
+
+
+    plot!(plt_health_usage,0:(T-1),median_ICU_occup,
+                            lab = "ICU beds",
+                            lw = 3,color = :green,
+                            ribbon = (median_ICU_occup.-lb_ICU_occup,ub_ICU_occup .- median_ICU_occup),
+                            fillalpha = 0.25)
+    if length(areas_to_plot) == 1
+        plot!(plt_health_usage,[0,T-1],[spare_capacity_H_by_county[areas_to_plot][1],spare_capacity_H_by_county[areas_to_plot][1]],
+                lw = 2,ls = :dash,lab = "spare hosp. capacity",color = :blue)
+        plot!(plt_health_usage,[0,T-1],[spare_capacity_H_by_county[areas_to_plot][1],spare_capacity_H_by_county[areas_to_plot][1]].*1.2,
+                lw = 2,ls = :dash,lab = "20% surge capacity",color = :red)
+        plot!(plt_health_usage,[0,T-1],[govt_spare_capacity_H_by_county[areas_to_plot][1],govt_spare_capacity_H_by_county[areas_to_plot][1]],
+                lw = 2,ls = :dash,lab = "spare govt. hosp. capacity",color = :black)
+        plot!(plt_health_usage,[0,T-1],[spare_capacity_ICU_by_county[areas_to_plot][1],spare_capacity_ICU_by_county[areas_to_plot][1]],
+                lw = 2,ls = :dash,lab = "spare ICU capacity",color = :green)
+    end
+
+    return plt_incidence,plt_health_usage
+end
+
+
+function correct_county_plots(output,scenario_tag,areanames,simulation_tag)
+    plt_incidence_mombasa,plt_health_usage_mombasa=give_plots_for_county_temp(output,28,scenario_tag,areanames)
+    plt_incidence_nairobi,plt_health_usage_nairobi=give_plots_for_county_temp(output,30,scenario_tag,areanames)
+    savefig(plt_incidence_mombasa,"reports/report"*simulation_tag*"/incidence_mombasa"*simulation_tag*".png")
+    savefig(plt_health_usage_mombasa,"reports/report"*simulation_tag*"/healthsystem_mombasa"*simulation_tag*".png")
+    savefig(plt_incidence_nairobi,"reports/report"*simulation_tag*"/incidence_nairobi"*simulation_tag*".png")
+    savefig(plt_health_usage_nairobi,"reports/report"*simulation_tag*"/healthsystem_nairobi"*simulation_tag*".png")
+
+    return nothing
+end
+
+
+correct_county_plots(scenariodata_unmitigated," (Unmitigated)",counties.county,"_unmitigated")
+correct_county_plots(scenariodata_tertiary_june_90perc," (Tertiary only 90%)",counties.county,"_tertiary_june_90perc")
+correct_county_plots(scenariodata_secondary_june_90perc," (Secondary only 90%)",counties.county,"_secondary_june_90perc")
+correct_county_plots(scenariodata_primary_june_90perc," (Primary only 90%)",counties.county,"_primary_june_90perc")
+correct_county_plots(scenariodata_tertiary_june_50perc," (Tertiary only 50%)",counties.county,"_tertiary_june_50perc")
+correct_county_plots(scenariodata_secondary_june_50perc," (Secondary only 50%)",counties.county,"_secondary_june_50perc")
+correct_county_plots(scenariodata_primary_june_50perc," (Primary only 50%)",counties.county,"_primary_june_50perc")
+correct_county_plots(scenariodata_full_intervention," (Full intervention)",counties.county,"_full_intervention")
+correct_county_plots(scenariodata_1a," (June opening, contacts at 50%)",counties.county,"_scenario_1a")
+correct_county_plots(scenariodata_1b," (June opening, contacts at 90%)",counties.county,"_scenario_1b")
+correct_county_plots(scenariodata_1c," (August opening, contacts at 50%)",counties.county,"_scenario_1c")
+correct_county_plots(scenariodata_1d," (August opening, contacts at 90%)",counties.county,"_scenario_1d")
+correct_county_plots(scenariodata_end_regional_lockdown," (End movement restrictions 15th June)",counties.county,"_end_regional_lockdown")
+
+
+## Plot vulnarability index
+
+
+function plot_ranked_bars_health_usage_and_vulnarability(output,scenario_tag,areanames)
+    vulnarability_index = CSV.read(joinpath(homedir(),"Documents/Covid-19/jl_models/data/Ranked vulnerability indices_county (0406120).csv"))[:,7]
+    median_hospital_exceed = output.hosp_peak_excess_demand_by_area.med
+    median_ICU_exceed = output.ICU_peak_excess_demand_by_area.med
+    nc = length(areanames)
+
+    I = sortperm(median_hospital_exceed)
+    plt_HU = bar(median_hospital_exceed[I]*100,orientations = :horizonal,
+                yticks = (1:47,areanames[I]),size = (700,550),lab ="",
+                xlabel = "% Hospital available bed demand",title = "Hospital demand at peak"*scenario_tag,
+                fill_z=vulnarability_index[I],c=ColorGradient(:heat))
+    scatter!(plt_HU,median_hospital_exceed[I]*100,1:nc,
+                xerror = ((median_hospital_exceed[I] .- output.hosp_peak_excess_demand_by_area.lpred[I])*100
+                            ,(output.hosp_peak_excess_demand_by_area.upred[I] .- median_hospital_exceed[I])*100 ),
+                ms = 0.,color = :black,lab ="")
+
+    I = sortperm(median_ICU_exceed)
+    plt_ICU = bar(median_ICU_exceed[I,1],orientations = :horizonal,
+                yticks = (1:nc,areanames[I]),size = (700,550),lab ="",
+                xlabel = "ICU bed excess demand (numbers)",title = "ICU demand at peak"*scenario_tag,
+                fill_z=vulnarability_index[I],c=ColorGradient(:heat) )
+    scatter!(plt_ICU,median_ICU_exceed[I],1:nc,
+                xerror = ((median_ICU_exceed[I] .- output.ICU_peak_excess_demand_by_area.lpred[I]),
+                            (output.ICU_peak_excess_demand_by_area.upred[I] .- median_ICU_exceed[I]) ),
+                ms = 0.,color = :black,lab ="")
+
+
+
+        return plt_HU,plt_ICU
+end
+
+function peak_H_ICU_vulnarability_plots(output,scenario_tag,areanames,simulation_tag)
+    plt_ranked_HU,plt_ranked_ICU = plot_ranked_bars_health_usage_and_vulnarability(output,scenario_tag,areanames)
+    savefig(plt_ranked_HU,"reports/report"*simulation_tag*"/peak_hospital_usage_and_vulnarability_by_county"*simulation_tag*".png")
+    savefig(plt_ranked_ICU,"reports/report"*simulation_tag*"/peak_ICU_usage_and_vulnarability_by_county"*simulation_tag*".png")
+end
+
+peak_H_ICU_vulnarability_plots(scenariodata_unmitigated," (Unmitigated)",counties.county,"_unmitigated")
+peak_H_ICU_vulnarability_plots(scenariodata_tertiary_june_90perc," (Tertiary only 90%)",counties.county,"_tertiary_june_90perc")
+peak_H_ICU_vulnarability_plots(scenariodata_secondary_june_90perc," (Secondary only 90%)",counties.county,"_secondary_june_90perc")
+peak_H_ICU_vulnarability_plots(scenariodata_primary_june_90perc," (Primary only 90%)",counties.county,"_primary_june_90perc")
+peak_H_ICU_vulnarability_plots(scenariodata_tertiary_june_50perc," (Tertiary only 50%)",counties.county,"_tertiary_june_50perc")
+peak_H_ICU_vulnarability_plots(scenariodata_secondary_june_50perc," (Secondary only 50%)",counties.county,"_secondary_june_50perc")
+peak_H_ICU_vulnarability_plots(scenariodata_primary_june_50perc," (Primary only 50%)",counties.county,"_primary_june_50perc")
+peak_H_ICU_vulnarability_plots(scenariodata_full_intervention," (Full intervention)",counties.county,"_full_intervention")
+peak_H_ICU_vulnarability_plots(scenariodata_1a," (June opening, contacts at 50%)",counties.county,"_scenario_1a")
+peak_H_ICU_vulnarability_plots(scenariodata_1b," (June opening, contacts at 90%)",counties.county,"_scenario_1b")
+peak_H_ICU_vulnarability_plots(scenariodata_1c," (August opening, contacts at 50%)",counties.county,"_scenario_1c")
+peak_H_ICU_vulnarability_plots(scenariodata_1d," (August opening, contacts at 90%)",counties.county,"_scenario_1d")
+peak_H_ICU_vulnarability_plots(scenariodata_end_regional_lockdown," (End movement restrictions 15th June)",counties.county,"_end_regional_lockdown")
