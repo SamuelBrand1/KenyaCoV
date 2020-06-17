@@ -46,6 +46,7 @@ function output_simulation_data(sol,i)
     total_cases_A_by_area_and_age=sol(sol.prob.tspan[end])[:,:,9]   ##
     total_cases_M_by_area_and_age=sol(sol.prob.tspan[end])[:,:,10]  ##
     total_cases_V_by_area_and_age=sol(sol.prob.tspan[end])[:,:,11]  ##
+    total_q_by_area_and_age=sol(sol.prob.tspan[end])[:,:,16]        ##
 
     incidence_A = diff([sum(sol(t)[:,:,9],dims=2)[:]  for t in times])
     incidence_M = diff([sum(sol(t)[:,:,10],dims=2)[:]  for t in times])
@@ -89,7 +90,8 @@ function output_simulation_data(sol,i)
             total_deaths_by_area_and_age = deaths_by_area_and_age,
             total_cases_A_by_area_and_age=total_cases_A_by_area_and_age,        ##
             total_cases_M_by_area_and_age=total_cases_M_by_area_and_age,        ##
-            total_cases_V_by_area_and_age=total_cases_V_by_area_and_age),false  ##
+            total_cases_V_by_area_and_age=total_cases_V_by_area_and_age,         ##
+            total_q_by_area_and_age=total_q_by_area_and_age),false              ##
 end
 
 #=function run_simulations_β25(P::CoVParameters_Screening,prob,n_traj,cb)
@@ -389,6 +391,17 @@ function extract_information_from_simulations(sims)
                                     lpred=total_cases_V_by_area_and_age_lpred,
                                     upred=total_cases_V_by_area_and_age_upred)
 
+    total_q_by_area_and_age_med = zeros(nc,na)
+    total_q_by_area_and_age_lpred = zeros(nc,na)
+    total_q_by_area_and_age_upred = zeros(nc,na)
+    for cn = 1:nc,an = 1:na
+        total_q_by_area_and_age_med[cn,an] = median([sims[k].total_q_by_area_and_age[cn,an] for k=1:n])
+        total_q_by_area_and_age_lpred[cn,an] = quantile([sims[k].total_q_by_area_and_age[cn,an] for k=1:n],0.025)
+        total_q_by_area_and_age_upred[cn,an] = quantile([sims[k].total_q_by_area_and_age[cn,an] for k=1:n],0.975)
+    end
+    total_q_by_area_and_age=(med=total_q_by_area_and_age_med,
+                                    lpred=total_q_by_area_and_age_lpred,
+                                    upred=total_q_by_area_and_age_upred)
 
     return (total_severe_cases=total_severe_cases,
             severe_cases_by_area=severe_cases_by_area,
@@ -414,9 +427,10 @@ function extract_information_from_simulations(sims)
             prevalence_H_ts=prevalence_H_ts,
             country_prevalence_ICU_ts=country_prevalence_ICU_ts,
             prevalence_ICU_ts=prevalence_ICU_ts,
-            total_cases_A_by_area_and_age=total_cases_A_by_area_and_age,
-            total_cases_M_by_area_and_age=total_cases_M_by_area_and_age,
-            total_cases_V_by_area_and_age=total_cases_V_by_area_and_age)
+            total_cases_A_by_area_and_age=total_cases_A_by_area_and_age,    ##
+            total_cases_M_by_area_and_age=total_cases_M_by_area_and_age,    ##
+            total_cases_V_by_area_and_age=total_cases_V_by_area_and_age,    ##
+            total_q_by_area_and_age=total_q_by_area_and_age)                ##
 end
 
 function generate_report_screening(folder,output,#=model_str,=#simulation_tag,areanames)
