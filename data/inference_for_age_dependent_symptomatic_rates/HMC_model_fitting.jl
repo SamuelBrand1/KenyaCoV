@@ -5,13 +5,13 @@ using MCMCDiagnostics, LinearAlgebra
 using Parameters, Statistics, Random
 import ForwardDiff
 using CSV,DataFrames,JLD2
+using BenchmarkTools
 
 #Age-structured contact matrix from Prem et al
-@load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work # general contacts in kenya (home, school, work, other, This is already extended into 17 age groups
-M_fit = 1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # Matrix during intervention - schools closed
+@load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya # general contacts in kenya (home, school, work, other, This is already extended into 17 age groups
 
 #Kenyan case data for confirmed cases broken down by age and symptomatic vs. not symptomatic
-Kenya_Case_Dis = CSV.read("/Users/Ojal/Documents/Covid-19/R_models/Kenya_Case_Data.csv")
+Kenya_Case_Dis = CSV.read("data/inference_for_age_dependent_symptomatic_rates/Kenya_Case_Data.csv")
 
 #Kenyan population pyramid
 Kenya_PP_County =  CSV.read("data/2019_census_age_pyramids_counties.csv")
@@ -22,15 +22,15 @@ LinearAlgebra.normalize!(Kenya_PP,1)
 age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39",
             "40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"];
 
-plt_heatmap = heatmap(M_fit,xticks=(1:2:17,age_cats[1:2:17]),yticks=(1:2:17,age_cats[1:2:17]),
+plt_heatmap = heatmap(M_Kenya,xticks=(1:2:17,age_cats[1:2:17]),yticks=(1:2:17,age_cats[1:2:17]),
     title = "Age-structured contact rates: Kenya (all contacts)",
     xlabel = "Contact from individual in age group",
     ylabel = "Contact received by someone in age group ")
-savefig(plt_heatmap,"plotting/Kenya_all_contacts.pdf")
+# savefig(plt_heatmap,"plotting/Kenya_all_contacts.pdf")
 
 #Calculate eigenvalues and eigenvectors of the contact matrix. The (L_1) normalised leading eigenvector
 #is the case distribution **if**
-evals,evects = eigen(M_fit);
+evals,evects = eigen(M_Kenya);
 
 R₀= Real(evals[end])
 v = Real.(evects[:,end])
@@ -41,7 +41,7 @@ plt = groupedbar(hcat(Kenya_PP,v,Case_Dist),lab = ["Kenya pop." "Age indep. pred
         title = "Age profile of confirmed Kenyan COVID-19 cases (21 May 2020)",
         ylabel = "Proportion of cases",
         xlabel = "Age of case")
-savefig(plt,"plotting/age_profile_cases.png") #Uniform attack rate does not seem to expalin the case distribution. Attack rate based solely on social contacts overstimates the contribution of young age groups to cases
+# savefig(plt,"plotting/age_profile_cases.png") #Uniform attack rate does not seem to expalin the case distribution. Attack rate based solely on social contacts overstimates the contribution of young age groups to cases
 
 # Model fitting
 
@@ -61,7 +61,7 @@ function (cases::CaseDistribution)(θ) #Susceptibility form of likelihood
     @unpack χ,d,ϵ = θ               # extract the parameters θ is a generic label for any set of params, the difference is in the prediction function
     @unpack C, n, prediction = cases   # extract the data and prediction function
     T = eltype(χ)
-    p = prediction(θ) #predicted number of cases, asymptomatic and symptomatic
+    p = prediction(χ,d,ϵ) #predicted number of cases, asymptomatic and symptomatic
     obs_tot_cases_age = vec(sum(C,dims=2))  # Observed total cases by age
     pred_tot_cases_age = vec(sum(p,dims=2))  # predicted total cases by age
     pred_agedist = vec(pred_tot_cases_age./sum(p)) # predicted case (both symp and asymp) distribution by age
@@ -80,7 +80,7 @@ function (cases::CaseDistribution)(θ) #Susceptibility form of likelihood
 end
 
 #Function for calculating the case distribution
-#Prediction  function assumes mean 7 days infectious period for
+#Prediction  function assumes mean 2 days of pre-symptomatic transmission, mean 7 days infectious period for
 #mild infecteds and that the eventually severe cases don't transmit more than mild cases
 
 function pred_case_distribution_using_iter_K_model2_splitAsymp(χ::Vector,d::Vector,ϵ::Vector,C)
@@ -101,33 +101,91 @@ end
 function HMC_for_detection_rate(n_draws)
     cases_to_fit = CaseDistribution(Array{Int64,2}(Kenya_Case_Dis_MAT),
         Int64(sum(Kenya_Case_Dis_MAT)),
-        χ,d,ϵ -> pred_case_distribution_using_iter_K_model2_splitAsymp(χ,d,ϵ,M_fit))
+        (χ,d,ϵ) -> pred_case_distribution_using_iter_K_model2_splitAsymp(χ,d,ϵ,M_Kenya))
     trans = as((χ = as(Array, asℝ₊, 17),d= as(Array, asℝ₊, 17), ϵ=as(Array, asℝ₊, 1))) # All parameters are transformed to be positive.
     P = TransformedLogDensity(trans, cases_to_fit) #This creates a transformed log-likelihood
     ∇P = ADgradient(:ForwardDiff, P) #This automatically generates a log-likelihood gradient at the same time as the likelihood is called
     #q₀ = fill(0.5,17)  # initial values
-    return results = mcmc_with_warmup(Random.GLOBAL_RNG, ∇P, n_draws) # reporter = NoProgressReport()
+    results = mcmc_with_warmup(Random.GLOBAL_RNG, ∇P, n_draws,
+                                        initialization=(q = vcat(zeros(17),log.(0.1*ones(17)),log(1.)),) ) # reporter = NoProgressReport()
+    # return TransformVariables.transform.(trans,results.chain)
+    return results
 end
 
 
+@time results = HMC_for_detection_rate(10)
+@save "MCMC_results_.jld2" results
 
-#initialization=(κ=GaussianKineticEnergy(17, 0.001),ϵ=0.001)
-#χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))  # age specific susceptibility
+# Diagnostics
+trans = as((χ = as(Array, asℝ₊, 17),d= as(Array, asℝ₊, 17), ϵ=as(Array, asℝ₊, 1)))
+  # Tree statistics
+summarize_tree_statistics(results.tree_statistics)
 
-#d_chain_model2_epsilon_0 = HMC_for_detection_rate(χ_zhang,0.,10000)
-#d_chain_model2_epsilon_01 = HMC_for_detection_rate(χ_zhang,0.1,10000)
-#d_chain_model2_epsilon_025 = HMC_for_detection_rate(χ_zhang,0.25,10000)
-#d_chain_model2_epsilon_05 = HMC_for_detection_rate(χ_zhang,0.5,10000)
-d_chain_model2_epsilon_1 = HMC_for_detection_rate(100)
-  # Initial kinetic energy set way lower
-  # not well defined region
-@save "HMC_chains_for_model2.jld2" d_chain_model2_epsilon_0 d_chain_model2_epsilon_01 d_chain_model2_epsilon_025 d_chain_model2_epsilon_05 d_chain_model2_epsilon_1
+  # Effective sample sizes
+posterior = first.(transform.(trans, results.chain)) #Apply transformation to chain, use the first paramter χ
+eff_sample_sizes = Float64[]
+for a = 1:17
+    posterior_samples_for_group_a = [posterior[i][a] for i = 1:length(posterior)]
+    push!(eff_sample_sizes,effective_sample_size(posterior_samples_for_group_a)   )
+end
+
+plt=histogram(eff_sample_sizes,bins = 100,lab = "",xlabel = "Eff. sample size",
+            title = "Frequency of eff. sample size by age group",
+            xticks = (1:1:10),yticks = 0:1:15)
+
+savefig(plt,"plotting/effective_sample_sizes.png")
+
+# Posterior distribution
+trans = as((χ = as(Array, asℝ₊, 17),d= as(Array, asℝ₊, 17), ϵ=as(Array, asℝ₊, 1)))
+posterior = TransformVariables.transform.(trans,results.chain)
+
+posterior_χ =[c.χ for c in posterior]
+posterior_d =[c.d for c in posterior]
+posterior_ϵ =[c.ϵ for c in posterior]
+
+posterior_array_ϵ = zeros(length(posterior),1)
+for i = 1:length(posterior_ϵ)
+    posterior_array_ϵ[i] = posterior_ϵ[i][1]
+end
+median(posterior_array_ϵ)
+quantile(posterior_array_ϵ[:],0.025)
+quantile(posterior_array_ϵ[:],0.975)
+
+posterior_array_χ = zeros(length(posterior),17)
+for i = 1:length(posterior),j=1:17
+     posterior_array_χ[i,j] = posterior_χ[i][j]
+end
+med= [mean(posterior_array_χ[:,i]) for i = 1:17]
+lb = [quantile(posterior_array_χ[:,i],0.025) for i = 1:17]
+ub = [quantile(posterior_array_χ[:,i],0.975) for i = 1:17]
 
 
-zhang_sus_dist = pred_case_distribution_using_iter_K_model2(χ_zhang,ones(17),ones(17),China_to_from)
-_zhang_sus_dist = convert_to_data_agegroups(zhang_sus_dist)
-plt = groupedbar(hcat(_zhang_sus_dist,_v,Case_Dist),lab = ["Zhang sus. profile only" "Age indep. pred." "Conf. cases"],
-        xticks=(1:9,["0-9","10-19","20-29","30-39","40-49","50-59","60-69","70-79","80+"]),
-        title = "Age profile of confirmed Chinese COVID-19 cases (11/2)",
-        ylabel = "Proportion of cases",
-        xlabel = "Age of case")
+fig = scatter(med,yerr = (lb,ub),fillalpha = 0.3,legend = nothing,
+        xticks = (1:17,age_cats), size=(800,400),
+        ylabel = "Susceptibility",xlabel="Age groups",
+        yscale = :log10)
+savefig(fig,"plotting/fitted_age_susceptibility.png")
+
+
+
+posterior_array_d = zeros(length(posterior),17)
+for i = 1:length(posterior),j=1:17
+     posterior_array_d[i,j] = posterior_d[i][j]
+end
+med= [mean(posterior_array_d[:,i]) for i = 1:17]
+lb = [quantile(posterior_array_d[:,i],0.025) for i = 1:17]
+ub = [quantile(posterior_array_d[:,i],0.975) for i = 1:17]
+
+fig = scatter(med,yerr = (lb,ub),fillalpha = 0.3,legend = nothing,
+        xticks = (1:17,age_cats), size=(800,400), ylims=(0,1),
+        ylabel = "Symptomatic rate",xlabel="Age groups")
+savefig(fig,"plotting/fitted_symptomatic_rates.png")
+
+
+# Plot fit to data
+function posterior_prediction(result)
+    posterior = transform.(trans, result.chain)
+    pred = map((χ,d,ϵ) -> pred_case_distribution_using_iter_K_model2(χ,d,ϵ,M_Kenya),posterior);
+    return groupedbar(hcat(Case_Dist,mean(pred)),lab = ["True distrib." "Post. prediction"])
+end
+plt1 = posterior_prediction(results);
