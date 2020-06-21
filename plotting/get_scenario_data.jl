@@ -1,5 +1,9 @@
 @load("reports/report_unmitigated/scenario_data_unmitigated.jld2");
 scenariodata_unmitigated = deepcopy(scenariodata);
+
+@load("reports/report_end_regional_lockdown/scenario_data_end_regional_lockdown.jld2");
+scenariodata_end_regional_lockdown = deepcopy(scenariodata);
+
 @load("reports/report_full_intervention/scenario_data_full_intervention.jld2");
 scenariodata_full_intervention = deepcopy(scenariodata);
 
