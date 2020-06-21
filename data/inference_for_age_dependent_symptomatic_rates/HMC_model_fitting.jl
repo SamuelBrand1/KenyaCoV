@@ -96,6 +96,7 @@ function pred_case_distribution_using_iter_K_model2_splitAsymp(χ::Vector,d::Vec
 end
 
 # NEED to add functions here to call model run and get expected case distibution given interventions current fit would assume interventions have had full effect and we are in a new steady state
+χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))
 
 #This function returns the HMC chains with tree statistics for the run
 function HMC_for_detection_rate(n_draws)
@@ -107,14 +108,14 @@ function HMC_for_detection_rate(n_draws)
     ∇P = ADgradient(:ForwardDiff, P) #This automatically generates a log-likelihood gradient at the same time as the likelihood is called
     #q₀ = fill(0.5,17)  # initial values
     results = mcmc_with_warmup(Random.GLOBAL_RNG, ∇P, n_draws,
-                                        initialization=(q = vcat(zeros(17),log.(0.1*ones(17)),log(1.)),) ) # reporter = NoProgressReport()
+                                        initialization=(q = vcat(zeros(17),log.(0.1*ones(17)),log(1.)),),reporter = NoProgressReport()) # reporter = NoProgressReport()
     # return TransformVariables.transform.(trans,results.chain)
     return results
 end
 
 
-@time results = HMC_for_detection_rate(10)
-@save "MCMC_results_.jld2" results
+@time results = HMC_for_detection_rate(10000)
+@save "data/inference_for_age_dependent_symptomatic_rates/MCMC_results_noprior.jld2" results
 
 # Diagnostics
 trans = as((χ = as(Array, asℝ₊, 17),d= as(Array, asℝ₊, 17), ϵ=as(Array, asℝ₊, 1)))
@@ -130,13 +131,14 @@ for a = 1:17
 end
 
 plt=histogram(eff_sample_sizes,bins = 100,lab = "",xlabel = "Eff. sample size",
-            title = "Frequency of eff. sample size by age group",
-            xticks = (1:1:10),yticks = 0:1:15)
+            title = "Frequency of eff. sample size by age group",yticks = 0:1:15)
 
 savefig(plt,"plotting/effective_sample_sizes.png")
 
+
+
+
 # Posterior distribution
-trans = as((χ = as(Array, asℝ₊, 17),d= as(Array, asℝ₊, 17), ϵ=as(Array, asℝ₊, 1)))
 posterior = TransformVariables.transform.(trans,results.chain)
 
 posterior_χ =[c.χ for c in posterior]
@@ -147,6 +149,10 @@ posterior_array_ϵ = zeros(length(posterior),1)
 for i = 1:length(posterior_ϵ)
     posterior_array_ϵ[i] = posterior_ϵ[i][1]
 end
+
+plt=plot(posterior_array_ϵ, xlabel="Iteration",ylabel="Epsilon", legend=nothing)
+savefig(plt,"plotting/chain_epsilon.png")
+
 median(posterior_array_ϵ)
 quantile(posterior_array_ϵ[:],0.025)
 quantile(posterior_array_ϵ[:],0.975)
@@ -155,6 +161,10 @@ posterior_array_χ = zeros(length(posterior),17)
 for i = 1:length(posterior),j=1:17
      posterior_array_χ[i,j] = posterior_χ[i][j]
 end
+
+plt=plot(posterior_array_χ, xlabel="Iteration",ylabel="Chi", size=(800,400),legend=nothing)
+savefig(plt,"plotting/chain_chi.png")
+
 med= [mean(posterior_array_χ[:,i]) for i = 1:17]
 lb = [quantile(posterior_array_χ[:,i],0.025) for i = 1:17]
 ub = [quantile(posterior_array_χ[:,i],0.975) for i = 1:17]
@@ -172,6 +182,10 @@ posterior_array_d = zeros(length(posterior),17)
 for i = 1:length(posterior),j=1:17
      posterior_array_d[i,j] = posterior_d[i][j]
 end
+
+plt=plot(posterior_array_d, xlabel="Iteration",ylabel="Symptomatic rate", size=(800,400),legend=nothing)
+savefig(plt,"plotting/chain_Symp_rate.png")
+
 med= [mean(posterior_array_d[:,i]) for i = 1:17]
 lb = [quantile(posterior_array_d[:,i],0.025) for i = 1:17]
 ub = [quantile(posterior_array_d[:,i],0.975) for i = 1:17]
@@ -185,7 +199,31 @@ savefig(fig,"plotting/fitted_symptomatic_rates.png")
 # Plot fit to data
 function posterior_prediction(result)
     posterior = transform.(trans, result.chain)
-    pred = map((χ,d,ϵ) -> pred_case_distribution_using_iter_K_model2(χ,d,ϵ,M_Kenya),posterior);
+    pred = map((χ,d,ϵ)-> pred_case_distribution_using_iter_K_model2_splitAsymp(χ,d,ϵ,M_Kenya),posterior);
     return groupedbar(hcat(Case_Dist,mean(pred)),lab = ["True distrib." "Post. prediction"])
 end
 plt1 = posterior_prediction(results);
+
+
+obs_symp = vec( Kenya_Case_Dis_MAT[:,2]./sum(Kenya_Case_Dis_MAT,dims=2))
+obs_agedist = Case_Dist
+
+posterior_symp_rates = zeros(17,length(posterior))
+posterior_case_dist  = zeros(17,length(posterior))
+for i in 1:length(posterior)
+    res = pred_case_distribution_using_iter_K_model2_splitAsymp(posterior_array_χ[i,:],posterior_array_d[i,:],posterior_array_ϵ[i,:],M_Kenya)
+    pred_tot_cases_age = vec(sum(res,dims=2))  # predicted total cases by age
+    pred_symp = res[:,2]./pred_tot_cases_age # predicted symptomatic rate by age
+    pred_agedist = vec(pred_tot_cases_age./sum(res)) # predicted case (both symp and asymp) distribution by age
+    posterior_symp_rates[:,i] = pred_symp
+    posterior_case_dist[:,i] = pred_agedist
+
+end
+
+posterior_symp_rates = median(posterior_symp_rates,dims=2)
+posterior_case_dist = median(posterior_case_dist,dims=2)
+
+plt1= groupedbar(hcat(Case_Dist,posterior_case_dist),lab = ["Obs. case dist." "Pred. case dist."],xticks=(1:17,age_cats),size=(800,400))
+savefig(plt1,"plotting/obs_and_fitted_case_distribution.png")
+plt2= groupedbar(hcat(obs_symp,posterior_symp_rates),lab = ["True symp rate." "Pred. symp rate"],xticks=(1:17,age_cats), size=(800,400))
+savefig(plt2,"plotting/obs_and_fitted_symptomatic_rates.png")
