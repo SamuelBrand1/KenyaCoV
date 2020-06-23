@@ -2,6 +2,7 @@
 using DataFrames,Plots,JLD2,MAT,LinearAlgebra,Distances,StatsPlots,CSV,RData
 using LinearAlgebra:normalize,normalize!
 using TransformVariables, DynamicHMC, DynamicHMC.Diagnostics, Distributions
+using RData
 age_cats = ["0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65-69","70-74","75-79","80+"]
 # age_cats_in
 # Age specific rates of hospitalisation if becoming a case
@@ -206,7 +207,7 @@ plt_s = bar(M_Kenya_school[:,17],xticks = (1:17,age_cats),size = (800,300),title
 
 plt_before = heatmap(M_Kenya,xticks = (1:17,age_cats),yticks = (1:17,age_cats),size = (800,600),title = "Estimated contacts before social distancing",clims = (0,3),
                     xlabel = "Contact from individual in age group",ylabel = "Contact received by someone in age group")
-plt_after = heatmap(1.5*M_Kenya_ho .+ 0.25*M_Kenya_other .+ 0.75*M_Kenya_work,xticks = (1:17,age_cats),yticks = (1:17,age_cats),size = (800,600),title = "Estimated contacts after social distancing",clims = (0,3),
+plt_after = heatmap(M_Kenya_ho,xticks = (1:17,age_cats),yticks = (1:17,age_cats),size = (800,600),title = "Estimated contacts after social distancing",clims = (0,1),
             xlabel = "Contact from individual in age group",ylabel = "Contact received by someone in age group")
 
 plt_before_and_after = groupedbar(hcat(M_Kenya[:,17], 1.5*M_Kenya_ho[:,17] .+ 0.25*M_Kenya_other[:,17] .+ 0.75*M_Kenya_work[:,17]),
@@ -223,8 +224,25 @@ layout = @layout [a b]
 plot(plt_before,plt_after,layout=layout)
 plot!(size = (1200,800))
 
-
-
+## Load the county specific home mixing matrices
+home_matrices = RData.load("data/hh_mixing_matrices_80.rda")["mixing_matrices"]
+nairobi_hh = Matrix(home_matrices[30,:,:])
+heatmap(nairobi_hh')
+plt_nairobi_hh = heatmap(nairobi_hh',
+                    xticks = (1:17,age_cats),
+                    yticks = (1:17,age_cats),
+                    size = (800,600),
+                    title = "Nairobi hh matrix",
+                    clims = (0,1),
+                    xlabel = "Contact from individual in age group",
+                    ylabel = "Contact received by someone in age group")
+heatmap(Matrix(home_matrices[30,:,:])',
+        xticks = (1:17,age_cats),
+        yticks = (1:17,age_cats),
+        size = (800,600),
+        title = "hh matrix",
+        xlabel = "Contact from individual in age group",
+        ylabel = "Contact received by someone in age group")
 ## Load movement matrix - then derive the P,ρ and T values
 
 @load "data/mv_matrix.jld2" mv_matrix
