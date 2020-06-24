@@ -48,8 +48,8 @@ function model_ingredients_from_data(datafile)
     # change_matrix(dc)
     #
     # #Parameter definition
-    P = CoVParameters_HH(n_age = n_a,n_area=n,n_state = n_s,
-                        T = T,ρ = ρ,χ = σ,rel_detection_rate = rel_detection_rates[:,2], #This assumes that the detection rates match ϵ = 0.1
+    P = KenyaCoV.CoVParameters_HH(n_age = n_a,n_area=n,n_state = n_s,
+                        T = T,ρ = ρ,χ = σ,symptomatic_rate = rel_detection_rates[:,2], #This assumes that the detection rates match ϵ = 0.1
                         M = M_Kenya,
                         M_ho = [M_Kenya_ho for i = 1:47],
                         hₐ = hosp_rate_by_age,
@@ -66,14 +66,14 @@ function model_ingredients_from_data(datafile)
                         index_as_events = CartesianIndices((1:n, 1:n_a,1:n_ta)),
                         linear_as= LinearIndices((1:n, 1:n_a,1:n_s)),
                         linear_as_events = LinearIndices((1:n, 1:n_a,1:n_ta)))
-    #Matrix for in-place tau-leap calculations
-    # return suspop_kenya,P,P_dest
-    return N_region_age
+
+    return suspop_kenya,P,P_dest
+
 
 end
 
-model_ingredients_from_data("data/data_for_age_structuredmodel_with_counties.jld2")
-
+suspop_kenya,P,P_dest = model_ingredients_from_data("data/data_for_age_structuredmodel_with_counties.jld2")
+P.linear_as
 
 
 

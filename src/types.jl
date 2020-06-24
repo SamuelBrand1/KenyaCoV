@@ -51,10 +51,10 @@ end
 
 
 """
-$(TYPEDEF)
+    mutable struct CoVParameters_HH
+
 Struct for containing relevant epidemilogical parameters for the age-structured version of KenyaCoV with explict
     differences between within and without household transmission
-$(FIELDS)    
 """
 @with_kw mutable struct CoVParameters_HH <: AbstractCoVParameters
     #Number of age, area and state types
