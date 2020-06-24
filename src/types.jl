@@ -121,6 +121,7 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     #Calculation variables
     dt::Float64 = 1. #Useful for the non-negative method
     Î::Matrix{Float64} = zeros(n,n_a) #For inplace calculations
+    N::Matrix{Int64} = zeros(Int64,n,n_a)
     N̂::Matrix{Float64} = zeros(n,n_a)#For inplace calculations
     λ::Matrix{Float64} = zeros(n,n_a)#For inplace calculations
     λ_loc::Matrix{Float64} = zeros(n,n_a)#For inplace calculations

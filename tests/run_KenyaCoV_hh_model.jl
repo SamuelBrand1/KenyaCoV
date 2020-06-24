@@ -9,6 +9,14 @@ function transmissionrateinHH(ϵ,γ,σ₂,SAR)
         return (-(ϵ*γ + σ₂) + sqrt((ϵ*γ + σ₂)^2 + 4*ϵ*σ₂*γ*(SAR/(1-SAR))))/(2*ϵ)
 end
 
+function eff_popsize!(P::KenyaCoV.CoVParameters_HH,immobile_age_indices)
+    P.N̂ = P.T*P.N
+    P.N̂[:,immobile_age_indices] .= P.N_region_age[:,immobile_age_indices]
+
+
+
+end
+
 n_s = 12
 n_ta = 8
 """
@@ -17,7 +25,7 @@ function model_ingredients_from_data(filename)
 model_ingredients_from_data reads in a JLD2 file which includes all the relevant information required for simulation.
 """
 function model_ingredients_from_data(datafile)
-    @load(datafile,
+    JLD2.@load(datafile,
             N_region_age,
             M_Kenya,
             movements_per_person,
@@ -28,23 +36,19 @@ function model_ingredients_from_data(datafile)
             ICU_rate_by_age_cond_hosp)
 
     n,n_a = size(N_region_age)
-
+    index_as = CartesianIndices((1:n, 1:n_a,1:n_s))
+    index_as_events = CartesianIndices((1:n, 1:n_a,1:n_ta))
+    linear_as= LinearIndices((1:n, 1:n_a,1:n_s))
+    linear_as_events = LinearIndices((1:n, 1:n_a,1:n_ta))
     #Population state array
     suspop_kenya = zeros(Int64,n,n_a,n_s) #Array by area, age group and disease state
     for i = 1:n,j=1:n_a
         suspop_kenya[i,j,1] = N_region_age[i,j]
     end
-    #
-    #Estimate effective population size in each area after mobility
-    # N̂ = T*N_region_age
-    # N̂[immobile_age_indices] .= N_region_age[immobile_age_indices]
 
-    # # Now get flight numbers and global prevalence
-    # global_prev = get_prevdata(prev_filename)
-    # into_mom, into_nai = get_flightdata(flight_filename)
-    #
     #Define the change matrix
     dc = sparse(zeros(Int64,n*n_a*n_s,n*n_a*n_ta))
+    KenyaCoV.change_matrix!(dc,index_as_events,linear_as)
     # change_matrix(dc)
     #
     # #Parameter definition
@@ -62,19 +66,18 @@ function model_ingredients_from_data(datafile)
                         dN= zeros(Int64,n*n_a*n_ta),
                         poi_rates = zeros(n*n_a*n_ta),
                         du_linear = zeros(Int64,n*n_a*n_s),
-                        index_as = CartesianIndices((1:n, 1:n_a,1:n_s)),
-                        index_as_events = CartesianIndices((1:n, 1:n_a,1:n_ta)),
-                        linear_as= LinearIndices((1:n, 1:n_a,1:n_s)),
-                        linear_as_events = LinearIndices((1:n, 1:n_a,1:n_ta)))
+                        index_as = index_as,
+                        index_as_events = index_as_events,
+                        linear_as= linear_as,
+                        linear_as_events = linear_as_events)
 
     return suspop_kenya,P,P_dest
-
-
 end
 
 suspop_kenya,P,P_dest = model_ingredients_from_data("data/data_for_age_structuredmodel_with_counties.jld2")
-P.linear_as
 
+
+P.βᵢ = transmissionrateinHH(P.ϵ,P.γ,P.σ₂,0.2)
 
 
 """

@@ -258,8 +258,7 @@ Inplace method for creating a change matrix, using linear indexing from the para
     occuring and the change this causes in the state of the epidemic. Both the list of events and the list of states
     are encoded in a linear index.
 """
-function change_matrix!(dc,p::CoVParameters_HH)
-    @unpack index_as_events,linear_as = p
+function change_matrix!(dc,index_as_events,linear_as)
     d1,d2 = size(dc)
     for k = 1:d2 #loop over
         i,a,eventtype = Tuple(index_as_events[k]) #
