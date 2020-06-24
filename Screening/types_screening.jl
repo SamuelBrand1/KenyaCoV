@@ -68,20 +68,20 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     detected::Array{Int64,2} =zeros(n,n_a) #Number of individuals detected per region and age
 
     #Mass screening parameters:
-    S_strategy::Array{Int64,2}=zeros(Int64,n,370)    #number of tests performed per day per region
+    S_strategy::Array{Int64,2}=zeros(Int64,n,1200)    #number of tests performed per day per region
     screening_delay::Int64=2  #number of days the tests results are delayed
-    selection_Pa::Array{Float64,3}=zeros(370,n,n_a)  # for inplace calculations of probability of an individual of age a to be selected (for testing) each day, for a given location (∑selection_Pa[d,r,:] = 1)
+    selection_Pa::Array{Float64,3}=zeros(1200,n,n_a)  # for inplace calculations of probability of an individual of age a to be selected (for testing) each day, for a given location (∑selection_Pa[d,r,:] = 1)
     test_sensitivity::Float64=.0    #proba(I|I)     #drawn from distribution?
     test_specificity::Float64=.0    #proba(!I|!I)   #drawn from distribution?
-    Sympt_scr_strategies::Vector{Float64}=zeros(370)
+    Sympt_scr_strategies::Vector{Float64}=zeros(1200)
 
     #For interventions based on history
-    selection_P::Array{Float64,4}=zeros(370,n,n_a,8)  # for inplace calculations of probability of an individual of state s to be selected (for testing or as a contact) each day, for a given location and age (∑selection_P[d,r,a,:] = 1)
+    selection_P::Array{Float64,4}=zeros(1200,n,n_a,8)  # for inplace calculations of probability of an individual of state s to be selected (for testing or as a contact) each day, for a given location and age (∑selection_P[d,r,a,:] = 1)
     selection_N::Array{Int64,2} = zeros(Int64,CT_dur,8#=n_s=#)  #for inplace calculations of number of contacted per age, date and state in a specific region #selection_N[a,day,s]
-    state_mvt_P::Array{Float64,4}=zeros(370,n,n_a,15)    # for inplace calculations of numbers/probabilities of movements between states
+    state_mvt_P::Array{Float64,4}=zeros(1200,n,n_a,15)    # for inplace calculations of numbers/probabilities of movements between states
     toQ::Array{Int64,3}=zeros(Int64,n,n_a,8#=n_s=#)  #number of individuals to quarantine
-    selection_P_symptomatics::Array{Float64,4}=zeros(370,n,n_a,8)  # for inplace calculations of probability of an individual of state M or V to be selected (for testing) each day, for a given location and age (∑selection_P[d,r,a,1:2] = 1)
-    selection_Pa_symptomatics::Array{Float64,3}=zeros(370,n,n_a)  # for inplace calculations of probability of a symptomatic individual of age a to be selected (for testing) each day, for a given location (∑selection_Pa[d,r,:] = 1)
+    selection_P_symptomatics::Array{Float64,4}=zeros(1200,n,n_a,8)  # for inplace calculations of probability of an individual of state M or V to be selected (for testing) each day, for a given location and age (∑selection_P[d,r,a,1:2] = 1)
+    selection_Pa_symptomatics::Array{Float64,3}=zeros(1200,n,n_a)  # for inplace calculations of probability of a symptomatic individual of age a to be selected (for testing) each day, for a given location (∑selection_Pa[d,r,:] = 1)
     multinomial_vector2::Vector{Int64}=zeros(Int64,2) # for inplace calculations of multinomial distribution in update_states!
     multinomial_vector4::Vector{Int64}=zeros(Int64,4) # for inplace calculations of multinomial distribution in update_states!
 end

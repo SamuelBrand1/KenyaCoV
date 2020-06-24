@@ -1,7 +1,6 @@
 push!(LOAD_PATH, "./src")
     push!(LOAD_PATH, "./Screening")
-    using JLD2#DifferentialEquations,JLD2, CSV, DataFrames,Dates,Statistics
-    #include("../forecast_functions_screening.jl")
+    using JLD2#,Plots#DifferentialEquations,JLD2, CSV, DataFrames,Dates,Statistics
     import KenyaCoV_screening
 
 function make_reports(folders)
@@ -18,9 +17,9 @@ end
 
 ######
 
-folders=["./Screening/output/0_NoInterv/session1_1sims/",
-         "./Screening/output/1_CTH/session1_1sims/",
-         "./Screening/output/2_SympS/session1_1sims/","./Screening/output/2_SympS/session2_1sims/",
+folders=["./Screening/output/0_NoInterv/session1_1000sims/"#,
+         #"./Screening/output/1_CTH/session1_1000sims/","./Screening/output/1_CTH/session3_1000sims/",
+         #"./Screening/output/2_SympS/session1_1000sims/","./Screening/output/2_SympS/session2_1000sims/"#,
          #"./Screening/3_SympSCT/session3_1000sims/",#"./Screening/3_SympSCT/session4_1000sims/",
          #"./Screening/4_MS/session3_1000sims/","./Screening/4_MS/session4_1000sims/"#,
          #"./Screening/5_MSCT/session1_500sims/","./Screening/5_MSCT/session2_500sims/"

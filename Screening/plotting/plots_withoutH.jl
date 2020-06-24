@@ -2,7 +2,7 @@ push!(LOAD_PATH, "./src")
     push!(LOAD_PATH, "./Screening")
     using DifferentialEquations,JLD2, CSV, DataFrames,Dates,Statistics
 
-####### to CSV
+####### get cumI and cumQ functions
 function final_cumulatives_CSV(folders)
     cumIs=[];cumQs=[];files=[]
     cumIs_sd=[];cumQs_sd=[]
@@ -24,25 +24,13 @@ function final_cumulatives_CSV(folders)
 end
 
 ######## final cumulatives to CSV
-#with Random β
-folders=["./Screening/0_NoInterv/session2_1000sims/",
-         "./Screening/1_CTH/session2_1000sims/",
-         "./Screening/2_SympS/session3_1000sims/","./Screening/2_SympS/session4_1000sims/",
-         "./Screening/3_SympSCT/session3_1000sims/",#"./Screening/3_SympSCT/session4_1000sims/",
-         "./Screening/4_MS/session3_1000sims/","./Screening/4_MS/session4_1000sims/"#,
-         #"./Screening/5_MSCT/session1_500sims/","./Screening/5_MSCT/session2_500sims/"
-         ]
-    cumIs,cumQs=final_cumulatives_CSV(folders)
-
-
-
 #with β=2.5
-folders=["./Screening/0_NoInterv/session2_1000sims/",
-         "./Screening/1_CTH/session2_1000sims/",
-         "./Screening/2_SympS/session3_1000sims/","./Screening/2_SympS/session4_1000sims/",
-         "./Screening/3_SympSCT/session3_1000sims/","./Screening/3_SympSCT/session4_1000sims/",
-         "./Screening/4_MS/session3_1000sims/","./Screening/4_MS/session4_1000sims/",
-         "./Screening/5_MSCT/session3_1000sims/"#,"./Screening/5_MSCT/session4_1000sims/"
+folders=["./Screening/output_withoutH/0_NoInterv/session2_1000sims/",
+         "./Screening/output_withoutH/1_CTH/session2_1000sims/","./Screening/output_withoutH/1_CTH/session4_1000sims/",
+         "./Screening/output_withoutH/2_SympS/session3_1000sims/","./Screening/output_withoutH/2_SympS/session4_1000sims/",
+         "./Screening/output_withoutH/3_SympSCT/session3_1000sims/","./Screening/output_withoutH/3_SympSCT/session4_1000sims/","./Screening/output_withoutH/3_SympSCT/session7_1000sims/","./Screening/output_withoutH/3_SympSCT/session8_1000sims/",
+         "./Screening/output_withoutH/4_MS/session3_1000sims/","./Screening/output_withoutH/4_MS/session4_1000sims/",
+         "./Screening/output_withoutH/5_MSCT/session3_1000sims/","./Screening/output_withoutH/5_MSCT/session4_1000sims/","./Screening/output_withoutH/5_MSCT/session7_1000sims/","./Screening/output/5_MSCT/session8_1000sims/"
          ]
     cumIs,cumQs=final_cumulatives_CSV(folders)
 
@@ -77,3 +65,32 @@ p2=plot();for sim=1:size(R.u,1)   plot!(p2,R.u[sim][end][:],color=:blue,legend=f
 
 using Plots;p=plot();for sim=1:size(R_0.u,1)   plot!(p,R_0.u[sim][end][:],color=:red);end;
                     for sim=1:size(R.u,1)   plot!(p,R.u[sim][end][:],color=:blue,legend=false);end;display(p)
+
+
+## Bar plots for comparison
+
+function final_cumulatives(files)
+    cumIs=[];cumQs=[]#;files=[]
+    cumIs_sd=[];cumQs_sd=[]
+    #for folder in folders
+    #    data_files=readdir(folder)
+    #    data_files=[s for s in data_files if endswith(s,".jld2")]
+        for data_file in files#data_files
+            @load #=folder*=#data_file  R
+            push!(files,#=folder*=#data_file)
+            push!(cumIs,median( [sum(R.u[sim][1][:,:])+sum(R.u[sim][2][:,:])+sum(R.u[sim][3][:,:])   for sim=1:size(R.u,1)]))
+            push!(cumQs,median( [sum(R.u[sim][5][:,:])   for sim=1:size(R.u,1)]))
+            push!(cumIs_sd,std( [sum(R.u[sim][1][:,:])+sum(R.u[sim][2][:,:])+sum(R.u[sim][3][:,:])   for sim=1:size(R.u,1)]))
+            push!(cumQs_sd,std( [sum(R.u[sim][5][:,:])   for sim=1:size(R.u,1)]))
+        end
+    #end
+    #df=DataFrame(files=files,cumIs=cumIs,cumIs_sd=cumIs_sd,cumQs=cumQs,cumQs_sd=cumQs_sd)
+    #CSV.write(folders[1]*"final_cumulatives__2020_"*Dates.format(now(), "mm_dd__HH_MM") *".csv",df)
+    return cumIs,cumQs
+end
+
+files=["./Screening/output_withoutH/0_NoInterv/session2_1000sims/noInterv_sc1_1000sims.jld2",
+        "./Screening/output_withoutH/1_CTH/session2_1000sims/intervCTH_sc1_1000sims.jld2",
+        "./Screening/output_withoutH/1_CTH/session4_1000sims/intervCTH_sc1_1000sims.jld2"#,
+        ]
+    cumIs,cumQs=final_cumulatives(files)

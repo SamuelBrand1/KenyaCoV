@@ -9,7 +9,7 @@
     include("../callbacks_screening.jl")
 
 ########
-n_traj=30
+n_traj=500
     counties = CSV.read("data/2019_census_age_pyramids_counties.csv")
     u0_0,P_0=KenyaCoV_screening.run_scenarios()
     P_0.β=rand(KenyaCoV_screening.d_R₀)
@@ -27,7 +27,7 @@ n_traj=30
 
 ######## Intervention 3 : Symptomatic screening and contact tracing
 
-session=04  ;    scenarios=[i  for i=1:15]
+session=04  ;    scenarios=[i  for i=1:10]
     folder="./Screening/output/3_SympSCT/session"*string(session)*"_"*string(n_traj)*"sims/";if !isdir(folder)   mkdir(folder)   end
     @time for i=1:size(scenarios,1)
         println("Intervention=3_SympSCT\tsession=",session,"\tsc=",scenarios[i],"\tn_traj=",n_traj)

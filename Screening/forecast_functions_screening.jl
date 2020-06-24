@@ -47,6 +47,8 @@ function output_simulation_data(sol,i)
     total_cases_M_by_area_and_age=sol(sol.prob.tspan[end])[:,:,10]  ##
     total_cases_V_by_area_and_age=sol(sol.prob.tspan[end])[:,:,11]  ##
     total_q_by_area_and_age=sol(sol.prob.tspan[end])[:,:,16]        ##
+    #total_cases=sum(sol(sol.prob.tspan[end])[:,:,9])+sum(sol(sol.prob.tspan[end])[:,:,10])+sum(sol(sol.prob.tspan[end])[:,:,11])  ###
+    #total_q=sum(sol(sol.prob.tspan[end])[:,:,16])                   ###
 
     incidence_A = diff([sum(sol(t)[:,:,9],dims=2)[:]  for t in times])
     incidence_M = diff([sum(sol(t)[:,:,10],dims=2)[:]  for t in times])
@@ -144,44 +146,6 @@ function run_scenarios()
     u0[4,8,3] = 5 #10 initial Asymptomatics in Nairobi;    #u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
     return u0,P
 end
-
-
-#=function run_scenarios(sim_dur)
-    @load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
-    u0,P,P_dest = model_ingredients_from_data_screening("data/data_for_age_structuredmodel.jld2","data/flight_numbers.csv","data/projected_global_prevelance.csv")
-        @load "data/detection_rates_for_different_taus.jld2" d_0 d_01 d_025 d_05 d_1
-        #Redistribute susceptibility JUST to rescale infectiousness so we get the correct R₀/r
-        P.χ = ones(n_a)
-        P.rel_detection_rate = d_1
-        P.dt = 0.25
-        P.ext_inf_rate = 0.
-        P.ϵ = 1.
-        #Set the susceptibility vector --- just to specify the correct R₀
-        sus_matrix = repeat(P.χ,1,17)
-        R_A = P.ϵ*((1/P.σ₂) + (1/P.γ) ) #effective duration of asymptomatic
-        R_M = (P.ϵ/P.σ₂) + (P.ϵ_D/P.γ) #effective duration of mild
-        R_V = (P.ϵ/P.σ₂) + (P.ϵ_V/P.τ) #effective duration of severe
-        R_vector = [(1-P.rel_detection_rate[a])*R_A + P.rel_detection_rate[a]*(1-P.hₐ[a])*R_M + P.rel_detection_rate[a]*P.hₐ[a]*R_V for a = 1:17]
-        inf_matrix = repeat(R_vector',17,1)
-        eigs, = eigen(sus_matrix.*P.M.*inf_matrix)
-        max_eigval = Real(eigs[end])
-        P.χ = ones(n_a)/max_eigval #This rescales everything so β is the same as R₀
-
-    #Initializing inplace arrays with a long enough number of days sim_dur
-    P.S_strategy=zeros(Int64,n,Int(ceil(sim_dur+10)))
-    selection_Pa=zeros(Int(ceil(sim_dur+10)),n,n_a)
-    Sympt_scr_strategies=zeros(Int(ceil(sim_dur+10)))
-    selection_P=zeros(Int(ceil(sim_dur+10)),n,n_a,8)
-    state_mvt_P=zeros(Int(ceil(sim_dur+10)),n,n_a,15)
-    selection_P_symptomatics=zeros(Int(ceil(sim_dur+10)),n,n_a,8)
-    selection_Pa_symptomatics=zeros(Int(ceil(sim_dur+10)),n,n_a)
-
-    #P.β = β#rand(d_R₀) #Choose R₀ randomly from 2-3 range
-    u0[4,8,3] = 5 #10 initial Asymptomatics in Nairobi;    #u0[12,8,3] = 10 #10 initial pre-symptomatics in Mombasa
-    return u0,P
-end=#
-
-
 
 
 
@@ -368,6 +332,7 @@ function extract_information_from_simulations(sims)
     total_cases_A_by_area_and_age=(med=total_cases_A_by_area_and_age_med,
                                     lpred=total_cases_A_by_area_and_age_lpred,
                                     upred=total_cases_A_by_area_and_age_upred)
+
     total_cases_M_by_area_and_age_med = zeros(nc,na)
     total_cases_M_by_area_and_age_lpred = zeros(nc,na)
     total_cases_M_by_area_and_age_upred = zeros(nc,na)
@@ -403,6 +368,15 @@ function extract_information_from_simulations(sims)
                                     lpred=total_q_by_area_and_age_lpred,
                                     upred=total_q_by_area_and_age_upred)
 
+    total_cases_A=(med=median([sum(sims[k].total_cases_A_by_area_and_age[:,:]) for k=1:n]),
+                    lpred=quantile([sum(sims[k].total_cases_A_by_area_and_age[:,:]) for k=1:n],0.025),
+                    upred=quantile([sum(sims[k].total_cases_A_by_area_and_age[:,:]) for k=1:n],0.975))
+    total_cases_M=(med=median([sum(sims[k].total_cases_M_by_area_and_age[:,:]) for k=1:n]),
+                    lpred=quantile([sum(sims[k].total_cases_M_by_area_and_age[:,:]) for k=1:n],0.025),
+                    upred=quantile([sum(sims[k].total_cases_M_by_area_and_age[:,:]) for k=1:n],0.975))
+    total_cases=(med=median([sum(sims[k].total_cases_A_by_area_and_age[:,:])+sum(sims[k].total_cases_M_by_area_and_age[:,:])+sum(sims[k].total_cases_V_by_area_and_age[:,:]) for k=1:n]),
+                    lpred=quantile([sum(sims[k].total_cases_A_by_area_and_age[:,:])+sum(sims[k].total_cases_M_by_area_and_age[:,:])+sum(sims[k].total_cases_V_by_area_and_age[:,:]) for k=1:n],0.025),
+                    upred=quantile([sum(sims[k].total_cases_A_by_area_and_age[:,:])+sum(sims[k].total_cases_M_by_area_and_age[:,:])+sum(sims[k].total_cases_V_by_area_and_age[:,:]) for k=1:n],0.975))
     return (total_severe_cases=total_severe_cases,
             severe_cases_by_area=severe_cases_by_area,
             severe_cases_by_age=severe_cases_by_age,
@@ -430,6 +404,9 @@ function extract_information_from_simulations(sims)
             total_cases_A_by_area_and_age=total_cases_A_by_area_and_age,    ##
             total_cases_M_by_area_and_age=total_cases_M_by_area_and_age,    ##
             total_cases_V_by_area_and_age=total_cases_V_by_area_and_age,    ##
+            total_cases_A=total_cases_A,                                    ##
+            total_cases_M=total_cases_M,                                    ##
+            total_cases=total_cases,                                        ##
             total_q_by_area_and_age=total_q_by_area_and_age)                ##
 end
 
@@ -645,7 +622,6 @@ end
 function run_βrand(P::KenyaCoV_screening.CoVParameters_Screening,prob,n_traj;interventions = CallbackSet())
     sims = run_simulations_βrand_withH(P,prob,n_traj;interventions=interventions)
     output = extract_information_from_simulations(sims);
-    #scenariodata = generate_report_screening(folder,output,simulation_tag,areanames,n_traj,s,sc)
     return output
 end
 
