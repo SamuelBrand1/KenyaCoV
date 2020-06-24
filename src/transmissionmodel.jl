@@ -1,4 +1,13 @@
 """
+function transmissionrateinHH(ϵ,γ,σ₂,SAR)
+
+This calculates the (density-dependent) daily transmission rate that corresponds to the secondary attack rate SAR over a whole infectious period
+"""
+function transmissionrateinHH(ϵ,γ,σ₂,SAR)
+        return (-(ϵ*γ + σ₂) + sqrt((ϵ*γ + σ₂)^2 + 4*ϵ*σ₂*γ*(SAR/(1-SAR))))/(2*ϵ)
+end
+
+"""
     function get_flightdata(filename)
 
 Method for collecting flight data from relevant .csv file
@@ -103,6 +112,8 @@ function model_ingredients_from_data(agestructuredata_filename,flight_filename,p
     return suspop_kenya,P,P_dest
 
 end
+
+
 
 """
     function create_KenyaCoV_non_neg_prob(u0,tspan,P::CoVParameters_AS)
