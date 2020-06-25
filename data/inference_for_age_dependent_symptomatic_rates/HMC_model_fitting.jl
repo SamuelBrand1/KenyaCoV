@@ -38,10 +38,13 @@ Case_Dist = LinearAlgebra.normalize(convert(Vector{Float64},vec(sum(Matrix(Kenya
 
 plt = groupedbar(hcat(Kenya_PP,v,Case_Dist),lab = ["Kenya pop." "Age indep. pred." "Conf. cases"],
         xticks=(1:17,age_cats),
-        title = "Age profile of confirmed Kenyan COVID-19 cases (21 May 2020)",
+        size = (800,400),
+        title = "Age profile of confirmed Kenyan COVID-19 cases (19th June 2020)",
         ylabel = "Proportion of cases",
         xlabel = "Age of case")
-# savefig(plt,"plotting/age_profile_cases.png") #Uniform attack rate does not seem to expalin the case distribution. Attack rate based solely on social contacts overstimates the contribution of young age groups to cases
+savefig(plt,"plotting/age_profile_cases.png") #Uniform attack rate does not seem to expalin the case distribution. Attack rate based solely on social contacts overstimates the contribution of young age groups to cases
+
+
 
 # Model fitting
 
@@ -52,16 +55,19 @@ struct CaseDistribution
     C::Array{Int64,2} #Total number of cases in each age group by symptomatic category
     n::Int64 #Total number of cases
     prediction::Function #This is the function that makes a prediction about case distribution
+    prior::Function
 end
+
 
 #This is the log-likelihood function (a callable function on CaseDistribution structs).
 # Use a binomial likelihood at the age group level
 
 function (cases::CaseDistribution)(θ) #Susceptibility form of likelihood
     @unpack χ,d,ϵ = θ               # extract the parameters θ is a generic label for any set of params, the difference is in the prediction function
-    @unpack C, n, prediction = cases   # extract the data and prediction function
+    @unpack C, n, prediction,prior = cases   # extract the data and prediction function
     T = eltype(χ)
     p = prediction(χ,d,ϵ) #predicted number of cases, asymptomatic and symptomatic
+    prior_vec = prior()
     obs_tot_cases_age = vec(sum(C,dims=2))  # Observed total cases by age
     pred_tot_cases_age = vec(sum(p,dims=2))  # predicted total cases by age
     pred_agedist = vec(pred_tot_cases_age./sum(p)) # predicted case (both symp and asymp) distribution by age
@@ -70,7 +76,7 @@ function (cases::CaseDistribution)(θ) #Susceptibility form of likelihood
     try
         logL = 0.
         for i = 1:17
-            logL += C[i,1]*log(1-pred_symp[i]) +  C[i,2]*log(pred_symp[i]) + obs_tot_cases_age[i]*log(pred_agedist[i])  # C[,1] has number asymptomatic and C[,2] has number symptomatic. The third element of the log lik is a multinomial distribution of cases by age.
+            logL += C[i,1]*log(1-pred_symp[i]) +  C[i,2]*log(pred_symp[i]) + obs_tot_cases_age[i]*log(pred_agedist[i]) + log(prior_vec[i]) # C[,1] has number asymptomatic and C[,2] has number symptomatic. The third element of the log lik is a multinomial distribution of cases by age.
         end
         return logL
     catch errtype
@@ -82,6 +88,11 @@ end
 #Function for calculating the case distribution
 #Prediction  function assumes mean 2 days of pre-symptomatic transmission, mean 7 days infectious period for
 #mild infecteds and that the eventually severe cases don't transmit more than mild cases
+
+function prior_fn()
+    vc=vcat(rand(Gamma(9,0.0378))*ones(3),rand(Gamma(9,0.1111))*ones(10),rand(Gamma(9,0.0522))*ones(4))
+    return vc
+end
 
 function pred_case_distribution_using_iter_K_model2_splitAsymp(χ::Vector,d::Vector,ϵ::Vector,C)
     d1, = size(C) # number of age groups
@@ -96,13 +107,14 @@ function pred_case_distribution_using_iter_K_model2_splitAsymp(χ::Vector,d::Vec
 end
 
 # NEED to add functions here to call model run and get expected case distibution given interventions current fit would assume interventions have had full effect and we are in a new steady state
-χ_zhang = vcat(0.34*ones(3),ones(10),1.47*ones(4))
+
 
 #This function returns the HMC chains with tree statistics for the run
 function HMC_for_detection_rate(n_draws)
     cases_to_fit = CaseDistribution(Array{Int64,2}(Kenya_Case_Dis_MAT),
         Int64(sum(Kenya_Case_Dis_MAT)),
-        (χ,d,ϵ) -> pred_case_distribution_using_iter_K_model2_splitAsymp(χ,d,ϵ,M_Kenya))
+        (χ,d,ϵ) -> pred_case_distribution_using_iter_K_model2_splitAsymp(χ,d,ϵ,M_Kenya),
+        prior_fn())
     trans = as((χ = as(Array, asℝ₊, 17),d= as(Array, asℝ₊, 17), ϵ=as(Array, asℝ₊, 1))) # All parameters are transformed to be positive.
     P = TransformedLogDensity(trans, cases_to_fit) #This creates a transformed log-likelihood
     ∇P = ADgradient(:ForwardDiff, P) #This automatically generates a log-likelihood gradient at the same time as the likelihood is called
