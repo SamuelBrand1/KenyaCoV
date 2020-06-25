@@ -13,7 +13,8 @@ using DifferentialEquations,
     RecursiveArrayTools,
     Dates,
     Plots,
-    DelimitedFiles
+    DelimitedFiles,
+    Roots
 
 export model_ingredients_from_data,
         transportstructure_params!,
