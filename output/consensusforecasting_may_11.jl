@@ -117,9 +117,9 @@ function affect_regional_lockdown!(integrator)
 end
 cb_regional_lockdown = DiscreteCallback(regional_lockdown_timing,affect_regional_lockdown!)
 
-#End the regional lockdown on day 64 (May 16th)
+#End the regional lockdown on day 94 (June 15th)
 function regional_lockdown_ending(u,t,integrator)
-  integrator.p.lockdown && t > 64.
+  integrator.p.lockdown && t > 94.
 end
 function affect_regional_lockdown_end!(integrator)
   integrator.p.T = T_normal
@@ -127,8 +127,6 @@ function affect_regional_lockdown_end!(integrator)
 end
 cb_regional_lockdown_end = DiscreteCallback(regional_lockdown_ending,affect_regional_lockdown_end!)
 
-regional_lockdown_starts = CallbackSet(cb_regional_lockdown)
-regional_lockdown_starts_and_finishes = CallbackSet(cb_regional_lockdown,cb_regional_lockdown_end)
 
 # After 14 days to first school opening
 function after_first_14_days(u,t,integrator)
@@ -192,6 +190,7 @@ function affect_close_schools!(integrator)  # contact distribution applies to al
   integrator.p.M = 1.2*M_Kenya_ho .+ 0.55*M_Kenya_other .+ 0.55*M_Kenya_work  # contacts at home left at 110% of what they were pre-interventions; room for +-20% allowed by COMORT
   integrator.p.schools_closed = true
 end
+
 
 
 # open school call backs for the 50% scenarios
@@ -270,6 +269,10 @@ measures_schools_open_august_2020_90pct = CallbackSet(
                                             cb_close_schools_oct2021)
 measures_full_intervention = CallbackSet(cb_after_first_14_days,
                                         cb_regional_lockdown)
+
+
+measures_end_regional_lockdown = CallbackSet(cb_after_first_14_days,cb_regional_lockdown, cb_regional_lockdown_end)
+
 
 """
 Set up parameters
@@ -388,3 +391,18 @@ P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # ma
 
 prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
 data = KenyaCoV.run_scenario(P,prob,200,model_str,"_schools_august_90perc"," (August opening, contacts at 90%)",counties.county;interventions = measures_schools_open_august_2020_90pct,make_new_directory= false)
+
+
+"""
+SCENARIO: End regional lockdown
+
+Closing schools after two weeks, lockdown starts on 7th April and ends on 15th June, SD
+
+"""
+
+model_str = "This is scenario where lockdown is lifted"
+P.c_t = t -> 1.
+P.M =0.8*M_Kenya_ho .+ M_Kenya_other .+ M_Kenya_work .+ 0.5*M_Kenya_school  # matrix in the initial 14 days
+
+prob = KenyaCoV.create_KenyaCoV_non_neg_prob(u0,(0.,1*658.),P)
+data = KenyaCoV.run_scenario(P,prob,200,model_str,"_end_regional_lockdown"," (End movement restrictions 15th June)",counties.county;interventions = measures_end_regional_lockdown ,make_new_directory= false)
