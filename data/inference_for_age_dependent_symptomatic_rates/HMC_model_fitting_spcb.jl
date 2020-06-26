@@ -127,17 +127,17 @@ function pred_case_distribution_using_iter_K_model2_splitAsymp(χ::Vector,d::Vec
 end
 
 #Proposing a slightly different model which constrains the attack rate for symptomatic cases in the household to fit an estimate (usually ~20%)
-# function pred_case_distribution_HH(χ::Vector,d::Vector,ϵ::Vector,C_out,C_in,SAR)
-#     d1, = size(C) # number of age groups
-#     K = zeros(eltype(d),d1,d1)
-#     for a = 1:d1,b=1:d1
-#         K[a,b] = χ[a]*C_out[a,b]*(2*ϵ[1] + 7*d[b] + 7*(1-d[b])*ϵ[1]) + χ[a]*SAR*C_in[a,b]
-#     end
-#     v = (K^10)*ones(d1)
-#     symp = d.*v  # predicted symptomatics cases
-#     asymp = v - symp # predicted asymptomatics cases
-#     return hcat(asymp,symp)
-# end
+function pred_case_distribution_HH(χ::Vector,d::Vector,ϵ::Vector,C_out,C_in,SAR)
+    d1, = size(C) # number of age groups
+    K = zeros(eltype(d),d1,d1)
+    for a = 1:d1,b=1:d1
+        K[a,b] = χ[a]*C_out[a,b]*(2*ϵ[1] + 7*d[b] + 7*(1-d[b])*ϵ[1]) + χ[a]*SAR*C_in[a,b]
+    end
+    v = (K^10)*ones(d1)
+    symp = d.*v  # predicted symptomatics cases
+    asymp = v - symp # predicted asymptomatics cases
+    return hcat(asymp,symp)
+end
 
 # NEED to add functions here to call model run and get expected case distibution given interventions current fit would assume interventions have had full effect and we are in a new steady state
 
@@ -162,6 +162,14 @@ end
 @time results = HMC_for_detection_rate(10000)
 trans = as((χ = as(Array, asℝ₊, 17),d= as(Array, asℝ₊, 17), ϵ=as(Array, asℝ₊, 1)))
 results_trans = TransformVariables.transform.(trans,results.chain)
+res = results_trans[1]
+pred_distribs = [sum(pred_case_distribution_using_iter_K_model2_splitAsymp(res.χ,res.d,res.ϵ,0.5*M_Kenya_work .+ 0.5*M_Kenya_other .+ M_Kenya_ho),dims = 2)/sum(pred_case_distribution_using_iter_K_model2_splitAsymp(res.χ,res.d,res.ϵ,0.5*M_Kenya_work .+ 0.5*M_Kenya_other .+ M_Kenya_ho)) for res in results_trans]
+
+data_distribution = sum(Kenya_Case_Dis_MAT,dims = 2)/sum(Kenya_Case_Dis_MAT)
+groupedbar(hcat(data_distribution,mean(pred_distribs)))
+bar(mean([res.d for res in results_trans]))
+
+
 posterior_ϵ = [res.ϵ[1] for res in results_trans]
 plot(posterior_ϵ,lab = "epsilon")
 histogram(posterior_ϵ)
