@@ -134,10 +134,10 @@ end
 
 
 #This function returns the HMC chains with tree statistics for the run
-function HMC_for_detection_rate(n_draws)
+function HMC_for_detection_rate(n_draws,SAR)
     cases_to_fit = CaseDistribution(Array{Int64,2}(Kenya_Case_Dis_MAT),
         Int64(sum(Kenya_Case_Dis_MAT)),
-        (χ,d,ϵ,R) -> pred_case_distribution_HH(χ,d,ϵ,R,M_Kenya_work,M_Kenya_other,hh_mat_vector[28]',0.2),
+        (χ,d,ϵ,R) -> pred_case_distribution_HH(χ,d,ϵ,R,M_Kenya_work,M_Kenya_other,hh_mat_vector[28]',SAR),
         logprior_zhang)
     trans = as((χ = as(Array, asℝ₊, 17),d= as(Array, asℝ₊, 17), ϵ=asℝ₊,R=asℝ₊)) # All parameters are transformed to be positive.
     P = TransformedLogDensity(trans, cases_to_fit) #This creates a transformed log-likelihood
@@ -150,7 +150,7 @@ function HMC_for_detection_rate(n_draws)
 end
 
 
-@time results = HMC_for_detection_rate(10000)
+@time results = HMC_for_detection_rate(10000,0.3)
 trans = as((χ = as(Array, asℝ₊, 17),d= as(Array, asℝ₊, 17), ϵ=asℝ₊,R=asℝ₊)) # All parameters are transformed to be positive.
 results_trans = TransformVariables.transform.(trans,results.chain)
 res = results_trans[1]
