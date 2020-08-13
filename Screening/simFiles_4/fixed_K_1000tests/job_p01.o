@@ -1,0 +1,173 @@
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+Worker 31 terminated.
+ERROR: LoadError: ProcessExitedException(31)
+Stacktrace:
+ [1] (::Base.var"#732#734")(::Task) at ./asyncmap.jl:178
+ [2] foreach(::Base.var"#732#734", ::Array{Any,1}) at ./abstractarray.jl:1920
+ [3] maptwice(::Function, ::Channel{Any}, ::Array{Any,1}, ::UnitRange{Int64}) at ./asyncmap.jl:178
+ [4] wrap_n_exec_twice(::Channel{Any}, ::Array{Any,1}, ::Distributed.var"#208#211"{CachingPool}, ::Function, ::UnitRange{Int64}) at ./asyncmap.jl:154
+ [5] #async_usemap#717(::Function, ::Nothing, ::typeof(Base.async_usemap), ::Distributed.var"#192#194"{Distributed.var"#192#193#195"{CachingPool,DiffEqBase.var"#360#361"{Base.Iterators.Pairs{Symbol,Any,Tuple{Symbol,Symbol},NamedTuple{(:dt, :callback),Tuple{Float64,CallbackSet{Tuple{},Tuple{DiscreteCallback{typeof(timing_daily),typeof(affect_selection_and_mvt_probabilities!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_detect_H!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_CT!),typeof(DiffEqBase.INITIALIZE_DEFAULT)}}}}}},EnsembleProblem{DiscreteProblem{Array{Int64,3},Tuple{Float64,Float64},true,KenyaCoV_screening.CoVParameters_Screening,DiscreteFunction{true,typeof(KenyaCoV_screening.nonneg_tauleap),Nothing,Nothing},Base.Iterators.Pairs{Union{},Union{},Tuple{},NamedTuple{(),Tuple{}}}},typeof(KenyaCoV_screening.remake_prob),typeof(KenyaCoV_screening.output_simulation_data),typeof(DiffEqBase.DEFAULT_REDUCTION),Nothing},Nothing}}}, ::UnitRange{Int64}) at ./asyncmap.jl:103
+ [6] (::Base.var"#kw##async_usemap")(::NamedTuple{(:ntasks, :batch_size),Tuple{Distributed.var"#208#211"{CachingPool},Nothing}}, ::typeof(Base.async_usemap), ::Function, ::UnitRange{Int64}) at ./none:0
+ [7] #asyncmap#716 at ./asyncmap.jl:81 [inlined]
+ [8] #asyncmap at ./none:0 [inlined]
+ [9] #pmap#207(::Bool, ::Int64, ::Nothing, ::Array{Any,1}, ::Nothing, ::typeof(pmap), ::Function, ::CachingPool, ::UnitRange{Int64}) at /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.3/Distributed/src/pmap.jl:126
+ [10] #pmap at ./none:0 [inlined]
+ [11] #solve_batch#359(::Base.Iterators.Pairs{Symbol,Any,Tuple{Symbol,Symbol},NamedTuple{(:dt, :callback),Tuple{Float64,CallbackSet{Tuple{},Tuple{DiscreteCallback{typeof(timing_daily),typeof(affect_selection_and_mvt_probabilities!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_detect_H!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_CT!),typeof(DiffEqBase.INITIALIZE_DEFAULT)}}}}}}, ::typeof(DiffEqBase.solve_batch), ::EnsembleProblem{DiscreteProblem{Array{Int64,3},Tuple{Float64,Float64},true,KenyaCoV_screening.CoVParameters_Screening,DiscreteFunction{true,typeof(KenyaCoV_screening.nonneg_tauleap),Nothing,Nothing},Base.Iterators.Pairs{Union{},Union{},Tuple{},NamedTuple{(),Tuple{}}}},typeof(KenyaCoV_screening.remake_prob),typeof(KenyaCoV_screening.output_simulation_data),typeof(DiffEqBase.DEFAULT_REDUCTION),Nothing}, ::Nothing, ::EnsembleDistributed, ::UnitRange{Int64}, ::Int64) at /home/gemvi/rabia_aziza_midasnetwork_us/.julia/packages/DiffEqBase/c1hSM/src/ensemble/basic_ensemble_solve.jl:172
+ [12] #solve_batch at ./none:0 [inlined]
+ [13] batch_function at /home/gemvi/rabia_aziza_midasnetwork_us/.julia/packages/DiffEqBase/c1hSM/src/ensemble/basic_ensemble_solve.jl:108 [inlined]
+ [14] macro expansion at ./util.jl:212 [inlined]
+ [15] #__solve#356(::Int64, ::Int64, ::Int64, ::Base.Iterators.Pairs{Symbol,Any,Tuple{Symbol,Symbol},NamedTuple{(:dt, :callback),Tuple{Float64,CallbackSet{Tuple{},Tuple{DiscreteCallback{typeof(timing_daily),typeof(affect_selection_and_mvt_probabilities!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_detect_H!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_CT!),typeof(DiffEqBase.INITIALIZE_DEFAULT)}}}}}}, ::typeof(DiffEqBase.__solve), ::EnsembleProblem{DiscreteProblem{Array{Int64,3},Tuple{Float64,Float64},true,KenyaCoV_screening.CoVParameters_Screening,DiscreteFunction{true,typeof(KenyaCoV_screening.nonneg_tauleap),Nothing,Nothing},Base.Iterators.Pairs{Union{},Union{},Tuple{},NamedTuple{(),Tuple{}}}},typeof(KenyaCoV_screening.remake_prob),typeof(KenyaCoV_screening.output_simulation_data),typeof(DiffEqBase.DEFAULT_REDUCTION),Nothing}, ::Nothing, ::EnsembleDistributed) at /home/gemvi/rabia_aziza_midasnetwork_us/.julia/packages/DiffEqBase/c1hSM/src/ensemble/basic_ensemble_solve.jl:112
+ [16] (::DiffEqBase.var"#kw##__solve")(::NamedTuple{(:trajectories, :dt, :callback),Tuple{Int64,Float64,CallbackSet{Tuple{},Tuple{DiscreteCallback{typeof(timing_daily),typeof(affect_selection_and_mvt_probabilities!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_detect_H!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_CT!),typeof(DiffEqBase.INITIALIZE_DEFAULT)}}}}}, ::typeof(DiffEqBase.__solve), ::EnsembleProblem{DiscreteProblem{Array{Int64,3},Tuple{Float64,Float64},true,KenyaCoV_screening.CoVParameters_Screening,DiscreteFunction{true,typeof(KenyaCoV_screening.nonneg_tauleap),Nothing,Nothing},Base.Iterators.Pairs{Union{},Union{},Tuple{},NamedTuple{(),Tuple{}}}},typeof(KenyaCoV_screening.remake_prob),typeof(KenyaCoV_screening.output_simulation_data),typeof(DiffEqBase.DEFAULT_REDUCTION),Nothing}, ::Nothing, ::EnsembleDistributed) at ./none:0
+ [17] #__solve#355(::Base.Iterators.Pairs{Symbol,Any,Tuple{Symbol,Symbol,Symbol},NamedTuple{(:dt, :callback, :trajectories),Tuple{Float64,CallbackSet{Tuple{},Tuple{DiscreteCallback{typeof(timing_daily),typeof(affect_selection_and_mvt_probabilities!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_detect_H!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_CT!),typeof(DiffEqBase.INITIALIZE_DEFAULT)}}},Int64}}}, ::typeof(DiffEqBase.__solve), ::EnsembleProblem{DiscreteProblem{Array{Int64,3},Tuple{Float64,Float64},true,KenyaCoV_screening.CoVParameters_Screening,DiscreteFunction{true,typeof(KenyaCoV_screening.nonneg_tauleap),Nothing,Nothing},Base.Iterators.Pairs{Union{},Union{},Tuple{},NamedTuple{(),Tuple{}}}},typeof(KenyaCoV_screening.remake_prob),typeof(KenyaCoV_screening.output_simulation_data),typeof(DiffEqBase.DEFAULT_REDUCTION),Nothing}, ::EnsembleDistributed) at /home/gemvi/rabia_aziza_midasnetwork_us/.julia/packages/DiffEqBase/c1hSM/src/ensemble/basic_ensemble_solve.jl:87
+ [18] #__solve at ./none:0 [inlined]
+ [19] #solve#464 at /home/gemvi/rabia_aziza_midasnetwork_us/.julia/packages/DiffEqBase/c1hSM/src/solve.jl:128 [inlined]
+ [20] #solve at ./none:0 [inlined]
+ [21] #run_simulations#47(::CallbackSet{Tuple{},Tuple{DiscreteCallback{typeof(timing_daily),typeof(affect_selection_and_mvt_probabilities!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_detect_H!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_CT!),typeof(DiffEqBase.INITIALIZE_DEFAULT)}}}, ::typeof(KenyaCoV_screening.run_simulations), ::KenyaCoV_screening.CoVParameters_Screening, ::DiscreteProblem{Array{Int64,3},Tuple{Float64,Float64},true,KenyaCoV_screening.CoVParameters_Screening,DiscreteFunction{true,typeof(KenyaCoV_screening.nonneg_tauleap),Nothing,Nothing},Base.Iterators.Pairs{Union{},Union{},Tuple{},NamedTuple{(),Tuple{}}}}, ::Int64, ::Bool, ::Bool) at /home/gemvi/rabia_aziza_midasnetwork_us/julia_projects/2020-07-22_KenyaCoV/Screening/forecast_functions_screening.jl:66
+ [22] (::KenyaCoV_screening.var"#kw##run_simulations")(::NamedTuple{(:interventions,),Tuple{CallbackSet{Tuple{},Tuple{DiscreteCallback{typeof(timing_daily),typeof(affect_selection_and_mvt_probabilities!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_detect_H!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_CT!),typeof(DiffEqBase.INITIALIZE_DEFAULT)}}}}}, ::typeof(KenyaCoV_screening.run_simulations), ::KenyaCoV_screening.CoVParameters_Screening, ::DiscreteProblem{Array{Int64,3},Tuple{Float64,Float64},true,KenyaCoV_screening.CoVParameters_Screening,DiscreteFunction{true,typeof(KenyaCoV_screening.nonneg_tauleap),Nothing,Nothing},Base.Iterators.Pairs{Union{},Union{},Tuple{},NamedTuple{(),Tuple{}}}}, ::Int64, ::Bool, ::Bool) at ./none:0
+ [23] macro expansion at ./util.jl:155 [inlined]
+ [24] macro expansion at /home/gemvi/rabia_aziza_midasnetwork_us/julia_projects/2020-07-22_KenyaCoV/Screening/simFiles_4/fixed_K_1000tests/heading_1.jl:94 [inlined]
+ [25] macro expansion at ./util.jl:155 [inlined]
+ [26] run_intervention_session(::Int64, ::Array{Int64,1}, ::String, ::Int64, ::CallbackSet{Tuple{},Tuple{DiscreteCallback{typeof(timing_daily),typeof(affect_selection_and_mvt_probabilities!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_detect_H!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_CT!),typeof(DiffEqBase.INITIALIZE_DEFAULT)}}}, ::Int64, ::Int64) at /home/gemvi/rabia_aziza_midasnetwork_us/julia_projects/2020-07-22_KenyaCoV/Screening/simFiles_4/fixed_K_1000tests/heading_1.jl:78
+ [27] run_intervention_session(::Int64, ::Array{Int64,1}, ::String, ::Int64, ::CallbackSet{Tuple{},Tuple{DiscreteCallback{typeof(timing_daily),typeof(affect_selection_and_mvt_probabilities!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_detect_H!),typeof(DiffEqBase.INITIALIZE_DEFAULT)},DiscreteCallback{typeof(timing_daily),typeof(affect_CT!),typeof(DiffEqBase.INITIALIZE_DEFAULT)}}}, ::Int64) at /home/gemvi/rabia_aziza_midasnetwork_us/julia_projects/2020-07-22_KenyaCoV/Screening/simFiles_4/fixed_K_1000tests/heading_1.jl:77
+ [28] top-level scope at /home/gemvi/rabia_aziza_midasnetwork_us/julia_projects/2020-07-22_KenyaCoV/Screening/simFiles_4/fixed_K_1000tests/p01_CTH.jl:7
+ [29] include at ./boot.jl:328 [inlined]
+ [30] include_relative(::Module, ::String) at ./loading.jl:1105
+ [31] include(::Module, ::String) at ./Base.jl:31
+ [32] exec_options(::Base.JLOptions) at ./client.jl:287
+ [33] _start() at ./client.jl:460
+in expression starting at /home/gemvi/rabia_aziza_midasnetwork_us/julia_projects/2020-07-22_KenyaCoV/Screening/simFiles_4/fixed_K_1000tests/p01_CTH.jl:6
+Intervention=I1_CTH	session=1	sc=1	n_traj=2
+119.763945 seconds (73.00 M allocations: 4.637 GiB, 1.47% gc time)
+Intervention=I1_CTH	session=1	sc=2	n_traj=2
+ 34.069620 seconds (794.17 k allocations: 84.828 MiB)
+Intervention=I1_CTH	session=1	sc=3	n_traj=2
+ 38.312379 seconds (794.16 k allocations: 84.825 MiB)
+Intervention=I1_CTH	session=1	sc=4	n_traj=2
+ 43.014157 seconds (794.13 k allocations: 84.827 MiB)
+Intervention=I1_CTH	session=1	sc=5	n_traj=2
+ 43.573274 seconds (879.55 k allocations: 89.188 MiB, 0.92% gc time)
+285.488943 seconds (89.16 M allocations: 6.356 GiB, 0.84% gc time)
+
+
+Intervention=I1_CTH	session=1	sc=1	n_traj=100
+266.674703 seconds (978.74 k allocations: 1.099 GiB)
+Intervention=I1_CTH	session=1	sc=2	n_traj=100

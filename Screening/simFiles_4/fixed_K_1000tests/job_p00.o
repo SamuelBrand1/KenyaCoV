@@ -1,0 +1,134 @@
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+┌ Warning: `CSV.read(input; kw...)` is deprecated in favor of `CSV.read(input, DataFrame; kw...)
+└ @ CSV ~/.julia/packages/CSV/fOEbk/src/CSV.jl:41
+Intervention=I0_NoInterv	session=1	sc=1	n_traj=2
+112.260384 seconds (72.68 M allocations: 4.622 GiB, 1.61% gc time)
+119.150032 seconds (85.56 M allocations: 5.396 GiB, 1.62% gc time)
+
+
+Intervention=I0_NoInterv	session=1	sc=1	n_traj=100
+138.760650 seconds (1.06 M allocations: 1.103 GiB, 0.47% gc time)
+139.446352 seconds (1.07 M allocations: 1.255 GiB, 0.60% gc time)
+
+

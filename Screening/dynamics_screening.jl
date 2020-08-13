@@ -29,7 +29,9 @@ States:
 13 -> Quarantine
 14 -> Q(uarantined) (se)V(ere) Qᵥ
 15 -> Quarantined Susceptibles Qₛ
-16 -> Cumulative Q (Q+Qᵥ+Qₛ)
+16 -> Cumulative Q ######(Q+Qᵥ+Qₛ)
+17 -> Cumulative Qᵥ
+18 -> Cumulative Qₛ
 
 
 Events for each wider area and age group:
@@ -281,18 +283,18 @@ function change_matrix(dc)
         if eventtype ==17# R->Q via CT
             ind_R = linear_as[i,a,8]
             ind_Q = linear_as[i,a,13]
-            ind_cumQ = linear_as[i,a,16]
+            #ind_cumQ = linear_as[i,a,16]
             dc[ind_R,k] = -1
             dc[ind_Q,k] = 1
-            dc[ind_cumQ,k] = 1
+            #dc[ind_cumQ,k] = 1
         end
         if eventtype ==18# S->Qₛ via CT
             ind_S = linear_as[i,a,1]
             ind_Qₛ = linear_as[i,a,15]
-            ind_cumQ = linear_as[i,a,16]
+            ind_cumQₛ = linear_as[i,a,17]
             dc[ind_S,k] = -1
             dc[ind_Qₛ,k] = 1
-            dc[ind_cumQ,k] = 1
+            dc[ind_cumQₛ,k] = 1
         end
     end
 end
@@ -387,8 +389,8 @@ end
 This performs one in-place simulation of a time step
 """
 function nonneg_tauleap(du,u,p::CoVParameters_Screening,t)
-    @unpack dc,dN,poi_rates,du_linear,dN_S = p
-    if t%1==0 && t>0
+    @unpack dc,dN,poi_rates,du_linear,dN_S,𝜠,λ,Λ,dt = p
+    if (t-dt)%1==0 && t>0
         push_intervention(dN_S,p,t)
         max_change(dN_S,u,p)
         mul!(du_linear,dc,dN_S)#Calculates the effect on the state in the inplace du vector
@@ -403,6 +405,17 @@ function nonneg_tauleap(du,u,p::CoVParameters_Screening,t)
     mul!(du_linear,dc,dN)#Calculates the effect on the state in the inplace du vector
     du .= reshape(du_linear,n,n_a,n_s)
     du .+= u #Calculates how the state should change
+
+    #Saving the history of the number of events occuring:
+    if t==0
+        𝜠[1] .+= dN
+    else
+        𝜠[Int(ceil(t))] .+= dN
+    end
+    #Saving the history of the force of infection
+    if t!=0
+        Λ[Int(ceil(t))] .= λ
+    end
 end
 
 """
@@ -430,18 +443,19 @@ function ode_model(du,u,p::CoVParameters_Screening,t)
 end
 
 ############ Call intervention into nonneg tau leap
-function push_intervention(dN,p,t)
-    @unpack toQ=p
-    if t%1==0 && t>0 && sum(toQ)!=0   #Contact tracing of hospitalized only  OR Mass screening OR
+function push_intervention(dN_S,p,t)
+    @unpack toQ,dt=p
+    #println("\t ---------> toQ=",sum(toQ))
+    if (t-dt)%1==0 && t>0 && sum(toQ)!=0   #Contact tracing of hospitalized only  OR Mass screening OR
        for r=1:n,a=1:n_a
            if sum(toQ[r,a,:])!=0
-               if toQ[r,a,1]!=0    dN[linear_as_events[r,a,18]]=toQ[r,a,1];    end
-               if toQ[r,a,2]!=0    dN[linear_as_events[r,a,12]]=toQ[r,a,2];    end
-               if toQ[r,a,3]!=0    dN[linear_as_events[r,a,13]]=toQ[r,a,3];    end
-               if toQ[r,a,4]!=0    dN[linear_as_events[r,a,14]]=toQ[r,a,4];    end
-               if toQ[r,a,5]!=0    dN[linear_as_events[r,a,15]]=toQ[r,a,5];    end
-               if toQ[r,a,6]!=0    dN[linear_as_events[r,a,16]]=toQ[r,a,6];    end
-               if toQ[r,a,8]!=0    dN[linear_as_events[r,a,17]]=toQ[r,a,8];    end
+               if toQ[r,a,1]!=0    dN_S[linear_as_events[r,a,18]]=toQ[r,a,1];    end
+               if toQ[r,a,2]!=0    dN_S[linear_as_events[r,a,12]]=toQ[r,a,2];    end
+               if toQ[r,a,3]!=0    dN_S[linear_as_events[r,a,13]]=toQ[r,a,3];    end
+               if toQ[r,a,4]!=0    dN_S[linear_as_events[r,a,14]]=toQ[r,a,4];    end
+               if toQ[r,a,5]!=0    dN_S[linear_as_events[r,a,15]]=toQ[r,a,5];    end
+               if toQ[r,a,6]!=0    dN_S[linear_as_events[r,a,16]]=toQ[r,a,6];    end
+               if toQ[r,a,8]!=0    dN_S[linear_as_events[r,a,17]]=toQ[r,a,8];    end
            end
        end
        fill!(toQ, 0)
