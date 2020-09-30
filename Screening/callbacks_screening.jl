@@ -37,7 +37,6 @@ function make_selection_P!(integrator)  # for inplace calculations of probabilit
                 for neg_i in findall(x->x<0, selection_P[t,r,a,:])
                     selection_P[t,r,a,neg_i]=0
                 end
-                #normalize_!(selection_P[t,r,a,:])
             end
             normalize_!(selection_P[t,r,a,:])
         end
@@ -166,7 +165,7 @@ function make_transmission_chain!(integrator)
                     n_p_a=rand(Binomial(detected_transitions[r,a,day+1,4],transition_proba_b[day⁺,r,a,3]))
                     n_p_m=rand(Binomial(detected_transitions[r,a,day+1,5],transition_proba_b[day⁺,r,a,4]))
                     n_p_v=rand(Binomial(detected_transitions[r,a,day+1,6],transition_proba_b[day⁺,r,a,5]))
-                    n_v_h=rand(Binomial(detected_transitions[r,a,day+1,7],transition_proba_b[day⁺,r,a,6]))#;print("\ttransition_proba_b[day⁺,r,a,7]=",transition_proba_b[day⁺,r,a,7])
+                    n_v_h=rand(Binomial(detected_transitions[r,a,day+1,7],transition_proba_b[day⁺,r,a,6]))
                     n_m_r=rand(Binomial(detected_transitions[r,a,day+1,8],transition_proba_b[day⁺,r,a,7]))
                     n_a_r=rand(Binomial(detected_transitions[r,a,day+1,8],transition_proba_b[day⁺,r,a,8]))
 
@@ -241,7 +240,6 @@ function do_screening!(integrator,selection_Pa_vector,selection_P_vector)
     if t_test>0
         u_test=@view integrator.sol(t_test)[:,:,:] # state at the testing day
 
-        #if t_test>0 && sum(strategy[:,t_test])>0            print(t,"/\tt_test=",t_test);println();        end
         for r=1:KenyaCoV_screening.n   #region
             if t_test>0 && strategy[r,t_test]>0 && sum(selection_Pa_vector[t_test,r,:])>0  #number of tests in this region on the testing day (for which the results will come out today)
 
@@ -265,11 +263,6 @@ function do_screening!(integrator,selection_Pa_vector,selection_P_vector)
                 end
             end
         end
-        #fill!(toQ, 0);toQ[28,10,5]=1
-        #fill!(detected, 0);detected[28,10,5]=1
-        #=if sum(strategy[:,t_test])>0
-            print("screened_toQ=",sum(toQ[:,:,:]))
-        end=#
     end
 end
 callback_MS = DiscreteCallback(timing_daily,affect_MS!)
@@ -281,9 +274,10 @@ This function is a DiscreteCallback integrated to the solver for detecting the H
 function affect_detect_H!(integrator)
     @unpack dt,detected = integrator.p
     today=Int(integrator.t-dt) #time the detection is performed = today
-    for r=1:KenyaCoV_screening.n, a=1:KenyaCoV_screening.n_a
+    #===for r=1:KenyaCoV_screening.n, a=1:KenyaCoV_screening.n_a
         detected[r,a,7] = integrator.sol(today)[r,a,12] - integrator.sol(today-1)[r,a,12] #here we detect all those who moved into the H class
-    end
+    end===#
+    detected[:,:,7] .= integrator.sol(today)[:,:,12] .- integrator.sol(today-1)[:,:,12] #here we detect all those who moved into the H class
 end
 callback_detect_H = DiscreteCallback(timing_daily,affect_detect_H!)
 
@@ -295,14 +289,11 @@ function affect_CT!(integrator)
     @unpack CT_dur,#=CT_n,=#CT_nₜ,selection_P,toQ,detected,detected_transitions,𝜠,𝜠ᵘ,CT_E,β,C₁,C₂,C₃,C₄,Λ,ϵ,ϵ_D,ϵ_V,dt,M_rescaled,M,strategy = integrator.p
     t=Int(ceil(integrator.t-dt)) #time the contact tracing is performed = today
     if sum(detected)>0
-        #print("\tdeleted before CT=",sum(toQ[:,:,:]))
-        #fill!(toQ, 0)                                                                               #####????????????????????????????????????????????????????
         u=@view integrator.sol(t)[:,:,:]
         #make the history of transmision chain of detecteds using p←
         make_transmission_chain!(integrator)
         #Find direct infections to detecteds:
         𝜠ᵘ .= 𝜠[t][KenyaCoV_screening.linear_as_events[:,:,1]]#Set the number of unassigned infections
-        #sum_n_traced_contacteds=0;sum_n_actual_contacteds=0;sum_n_actual_contacteds2=0
         for r=1:KenyaCoV_screening.n
             if strategy[r,t]>0
                 for a=1:KenyaCoV_screening.n_a,c_a=1:KenyaCoV_screening.n_a,day=1:CT_dur
@@ -342,14 +333,8 @@ function affect_CT!(integrator)
                 end
                 #Rescaling by CT_n per detected
                 n_traced_contacteds=pois_rand(CT_nₜ[t]*sum(detected[r,:,:])) #Draw random Poisson of mean CT_n * #detecteds per region (summed for ages, days, and states)
-                #print("\t(pois_rand=",n_traced_contacteds,")")
-                #sum_n_traced_contacteds+=n_traced_contacteds
                 n_actual_contacteds=sum(C₃[r,:,:,:])
-                #sum_n_actual_contacteds+=n_actual_contacteds
                 if n_actual_contacteds > n_traced_contacteds    #if the number of actual contacteds at location r is > number of traced in r
-                    #=for day=1:CT_dur,c_a=1:KenyaCoV_screening.n_a,s=1:8
-                        C₃[r,c_a,s,day] = Int(floor(C₃[r,c_a,s,day] * n_traced_contacteds / n_actual_contacteds))
-                    end=#
                     C₄ .= reshape(C₃[r,:,:,:],KenyaCoV_screening.n_a*8*CT_dur)
                     C₃[r,:,:,:] .= reshape(  rand(Multinomial(n_traced_contacteds,LinearAlgebra.normalize!(C₄,1)))   ,KenyaCoV_screening.n_a,8,CT_dur)
                 end
@@ -366,11 +351,7 @@ function affect_CT!(integrator)
         end
         fill!(detected, 0) #deleting all
         fill!(detected_transitions, 0) #deleting all
-        #print("\tsum_traced=",sum_n_traced_contacteds,"\tsum_actual=",sum_n_actual_contacteds,"\tsum_actual2=",sum_n_actual_contacteds2)
-        #print("\tCT_E=",sum(CT_E))
         fill!(CT_E,0) #deleting all
-
-        #print("\tCT toQ=",sum(toQ[:,:,:]))
     end
 end
 callback_CT = DiscreteCallback(timing_daily,affect_CT!)
