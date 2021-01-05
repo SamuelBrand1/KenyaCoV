@@ -1,11 +1,53 @@
 """
-function transmissionrateinHH(ϵ,γ,σ₂,SAR)
-
-This calculates the (density-dependent) daily transmission rate that corresponds to the secondary attack rate SAR over a whole infectious period
+function transmissionrateinHH!(p::KenyaCoV.CoVParameters_HH,SAR)
+In-place method that sets the βᵢ (density dependent transmission rate in HHs) so that the
+secondary attack rate from a symptomatic case within the household is SAR
 """
-function transmissionrateinHH(ϵ,γ,σ₂,SAR)
-        return (-(ϵ*γ + σ₂) + sqrt((ϵ*γ + σ₂)^2 + 4*ϵ*σ₂*γ*(SAR/(1-SAR))))/(2*ϵ)
+function transmissionrateinHH!(p::CoVParameters_HH,SAR)
+    @unpack ϵ,γ,σ₂ = p
+    p.βᵢ = (-(ϵ*γ + σ₂) + sqrt((ϵ*γ + σ₂)^2 + 4*ϵ*σ₂*γ*(SAR/(1-SAR))))/(2*ϵ)
+    return nothing
 end
+
+"""
+function eff_popsize!(p::KenyaCoV.CoVParameters_HH,immobile_age_indices)
+In-place method that creates the effective pop size (after population flux) for each age-area group
+"""
+function eff_popsize!(p::CoVParameters_HH,immobile_age_indices)
+    p.N̂ = p.T*p.N
+    p.N̂[:,immobile_age_indices] .= p.N[:,immobile_age_indices]
+    return nothing
+end
+
+"""
+function leadingeval(β_fit,p::KenyaCoV.CoVParameters_HH,r,area)
+Find the leading eigenvalue of the Laplace transformed time-since-infection transmission between different
+age groups
+"""
+function leadingeval(β_fit,p::KenyaCoV.CoVParameters_HH,r,area)
+    @unpack n_age,hₐ,symptomatic_rate,ϵ,ϵ_M,ϵ_V,σ₁,σ₂,τ,γ,βₒ,βᵢ,χ,M,M_ho,δ = p
+    M_ho_area = M_ho[area]
+    P̂_P = σ₁/((σ₁ + r)*(σ₂ + r))
+    P̂_V = [hₐ[a]*δ*symptomatic_rate[a]*P̂_P/(τ+r) for a = 1:n_age]
+    P̂_M = [(1-hₐ[a])*δ*symptomatic_rate[a]*P̂_P/(γ+r) for a = 1:n_age]
+    P̂_A = [(1-δ*symptomatic_rate[a])*P̂_P/(γ+r) for a = 1:n_age]
+    β̂ = zeros(n_age,n_age)
+    for a = 1:n_age,b = 1:n_age
+        β̂[a,b] = χ[a]*(β_fit*M[a,b] + βᵢ*M_ho_area[a,b])*(ϵ*P̂_P + ϵ*P̂_A[b] + ϵ_M*P̂_M[b] + ϵ_V*P̂_V[b])
+    end
+    evals, = eigen(β̂)
+    return Real(evals[end])
+end
+"""
+function realtimegrowthrate_beta_O(p::KenyaCoV.CoVParameters_HH,r,area)
+Uses a zero finder to find the transmission rate outside the household that gives the observed realtime
+reproductive growth rate.
+"""
+function realtimegrowthrate_beta_O(p::KenyaCoV.CoVParameters_HH,r,area)
+    f = β_fit -> leadingeval(β_fit,p,r,area) - 1
+    return find_zero(f,(0.,5.))
+end
+
 
 """
     function get_flightdata(filename)

@@ -90,7 +90,7 @@ Struct for containing relevant epidemilogical parameters for the age-structured 
     "Relative infectiousness of undetectable/undetected infecteds both pre-symptomatic and asymptomatic"
     ϵ::Float64 = 0.1
     "Relative infectiousness of mild infecteds due to social avoidance"
-    ϵ_D::Float64 = 1.
+    ϵ_M::Float64 = 1.
     "Relative infectiousness of mild, then severe, infecteds due to social avoidance --- default is to set so that M and V have same number of infectious contacts per age group"
     ϵ_V::Float64 = 7. /5.
     "relative symptomatic rate"

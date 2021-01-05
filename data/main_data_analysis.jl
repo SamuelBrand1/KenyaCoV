@@ -55,8 +55,9 @@ death_rate_by_age_cond_ICU = death_rate_by_age./hosp_rate_by_age
 death_rate_by_age_cond_ICU[isnan.(death_rate_by_age_cond_ICU)] .= 0.
 
 ## Bring in county specific age mixing matrices
+
 hh_mats = RData.load("data/hh_mixing_matrices_80.rda")["mixing_matrices"]
-hh_mat_vector = [Matrix(hh_mats[i,:,:]) for i = 1:47]
+hh_mat_vector = [Matrix(hh_mats[i,:,:]) for i = 1:size(hh_mats,1)]
 
 ## Load the MCMC outputs for the age-specific relative symptomatic rate
 
@@ -200,6 +201,9 @@ M_Kenya_work = extend_and_convert_Prem_matrix(agemixingmatrix,prop_75_79_amongst
 # Some heatmap plots of age mixing matrices
 
 @load "data/agemixingmatrix_Kenya_all_types.jld2" M_Kenya M_Kenya_ho M_Kenya_other M_Kenya_school M_Kenya_work
+
+M_kenya_outside_house = M_Kenya_work .+ M_Kenya_other .+ M_Kenya_school
+
 heatmap(M_Kenya,clims = (0.,1))
 plt_w = bar(M_Kenya_work[:,17],xticks = (1:17,age_cats),size = (800,300),title = "work contacts",ylims = (0,0.6))
 plt_o = bar(M_Kenya_other[:,17],xticks = (1:17,age_cats),size = (800,300),title = "other contacts",ylims = (0,0.6))
@@ -272,3 +276,25 @@ P_dest = P_opt
 rel_detection_rates = hcat(d_0,d_01,d_025,d_05,d_1)
 
 @save "data/data_for_age_structuredmodel_with_counties.jld2" N_region_age M_Kenya movements_per_person P_dest ρ T σ rel_detection_rates M_Kenya_ho hosp_rate_by_age ICU_rate_by_age_cond_hosp
+
+
+JLD2.@load("data/data_for_age_structuredmodel_with_counties.jld2",
+        N_region_age,
+        M_Kenya,
+        movements_per_person,
+        P_dest,
+        ρ,T,σ,rel_detection_rates,
+        M_Kenya_ho,
+        hosp_rate_by_age,
+        ICU_rate_by_age_cond_hosp)
+
+JLD2.@save("data/data_hh_model.jld2",
+        N_region_age,
+        M_kenya_outside_house,
+        movements_per_person,
+        P_dest,
+        ρ,T,σ,rel_detection_rates,
+        M_Kenya_ho,
+        hosp_rate_by_age,
+        ICU_rate_by_age_cond_hosp,
+        hh_mat_vector)

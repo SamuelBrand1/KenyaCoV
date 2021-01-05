@@ -1,21 +1,10 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 
-using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,CSV,RecursiveArrayTools,DelimitedFiles,SparseArrays
+using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,CSV,RecursiveArrayTools,DelimitedFiles,SparseArrays,Roots
 using Revise
 import KenyaCoV
 using LinearAlgebra:eigen,normalize
 
-function transmissionrateinHH(ϵ,γ,σ₂,SAR)
-        return (-(ϵ*γ + σ₂) + sqrt((ϵ*γ + σ₂)^2 + 4*ϵ*σ₂*γ*(SAR/(1-SAR))))/(2*ϵ)
-end
-
-function eff_popsize!(P::KenyaCoV.CoVParameters_HH,immobile_age_indices)
-    P.N̂ = P.T*P.N
-    P.N̂[:,immobile_age_indices] .= P.N_region_age[:,immobile_age_indices]
-
-
-
-end
 
 n_s = 12
 n_ta = 8
@@ -27,13 +16,14 @@ model_ingredients_from_data reads in a JLD2 file which includes all the relevant
 function model_ingredients_from_data(datafile)
     JLD2.@load(datafile,
             N_region_age,
-            M_Kenya,
+            M_kenya_outside_house,
             movements_per_person,
             P_dest,
             ρ,T,σ,rel_detection_rates,
             M_Kenya_ho,
             hosp_rate_by_age,
-            ICU_rate_by_age_cond_hosp)
+            ICU_rate_by_age_cond_hosp,
+            hh_mat_vector)
 
     n,n_a = size(N_region_age)
     index_as = CartesianIndices((1:n, 1:n_a,1:n_s))
@@ -54,11 +44,12 @@ function model_ingredients_from_data(datafile)
     # #Parameter definition
     P = KenyaCoV.CoVParameters_HH(n_age = n_a,n_area=n,n_state = n_s,
                         T = T,ρ = ρ,χ = σ,symptomatic_rate = rel_detection_rates[:,2], #This assumes that the detection rates match ϵ = 0.1
-                        M = M_Kenya,
-                        M_ho = [M_Kenya_ho for i = 1:47],
+                        M = M_kenya_outside_house,
+                        M_ho = hh_mat_vector,
                         hₐ = hosp_rate_by_age,
                         ICUₐ = ICU_rate_by_age_cond_hosp,
                         dc=dc,
+                        N=N_region_age,
                         N̂=N_region_age,
                         Î = zeros(n,n_a),
                         λ = zeros(n,n_a),
@@ -74,10 +65,13 @@ function model_ingredients_from_data(datafile)
     return suspop_kenya,P,P_dest
 end
 
-suspop_kenya,P,P_dest = model_ingredients_from_data("data/data_for_age_structuredmodel_with_counties.jld2")
+suspop_kenya,P,P_dest = model_ingredients_from_data("data/data_hh_model.jld2")
+KenyaCoV.transmissionrateinHH!(P,0.2)
+mobile_age_indices = 5:11; #This assumes that 16-49 year ols move around and others don't
+immobile_age_indices = [1,2,3,4,12,13,14,15,16,17]
+KenyaCoV.eff_popsize!(P,immobile_age_indices)
+βₒ_nairobi = realtimegrowthrate_beta_O(P,0.05,30)
 
-
-P.βᵢ = transmissionrateinHH(P.ϵ,P.γ,P.σ₂,0.2)
 
 
 """
