@@ -1,9 +1,11 @@
 push!(LOAD_PATH, joinpath(homedir(),"GitHub/KenyaCoV/src"))
 
-using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,CSV,RecursiveArrayTools,DelimitedFiles
+# using Plots,Parameters,Distributions,DifferentialEquations,JLD2,DataFrames,CSV,RecursiveArrayTools,DelimitedFiles
 using Revise
 import KenyaCoV
-using LinearAlgebra:eigen,normalize
+# using LinearAlgebra:eigen,normalize
+
+
 
 
 """
