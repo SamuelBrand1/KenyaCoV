@@ -1,44 +1,4 @@
-"""
-Basic representation of the state of the age structured model:
-u[wa_index,age_group,disease state]
 
-This is row major unpacked so
-first 1,...,n_wa entries are 0-4 year old susceptibles in wider areas 1,...,n_wa
-then n_wa+1,...,2n_wa are 5-9 year old susceptibles in wider areas 1,...,n_wa
-.
-.
-.
-then n_wa*n_s + 1, ...,  n_wa*n_s + n_wa entries are 0-4 year old exposed in wider areas 1,...,n_wa
-.
-.
-.
-
-States:
-1 -> S(usceptibles)
-2 -> E(xposed/latent infected)
-3 -> P(re-symptomatic infected)
-4 -> A(symptomatic)
-5 -> M(ild) symptomatics
-6 -> first mild then eventually (se)V(ere) symptomatics
-7 -> H(ospitalised)
-8 -> Recovered
-9 -> Cumulative P->A
-10-> Cumulative P->M
-11-> Cumulative P->V
-12 -> Cumulative V->H
-
-Events for each wider area and age group:
-
-1-> S to E
-2-> E to P
-3-> P to A
-4-> P to M
-5-> P to V
-6-> V to H
-7-> M to R
-8-> A to R
-
-"""
 
 dc_age = zeros(Int64,n_wa*n_a*n_s,n_ta*n*n_a)
 
