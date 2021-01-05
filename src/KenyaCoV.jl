@@ -15,11 +15,11 @@ using DifferentialEquations,
     Plots,
     DelimitedFiles
 
-export n,n_t,n_s,n_a,
-        model_ingredients_from_data,
-        transportstructure_params!,
-        create_KenyaCoV_prob,
-        solve_KenyaCoV_prob
+# export n,n_t,n_s,n_a,
+#         model_ingredients_from_data,
+#         transportstructure_params!,
+#         create_KenyaCoV_prob,
+#         solve_KenyaCoV_prob
 n = 47 #global defining number of counties
 n_s = 12 #global defining number of state
 n_t = 16 #global defining number of events per location
@@ -45,15 +45,15 @@ index_as_events = CartesianIndices((1:n, 1:n_a,1:n_ta))
 linear_as = LinearIndices((1:n, 1:n_a,1:n_s))
 linear_as_events = LinearIndices((1:n, 1:n_a,1:n_ta))
 
-@load "data/posterior_distribution_R0.jld2" posterior_R₀
-
-
-include("types.jl");
-include("dynamics.jl")
-include("transmissionmodel.jl");
-include("hospitalisation_data.jl")
-include("hospital_model.jl")
-include("forecast_functions.jl");
+# @load "data/posterior_distribution_R0.jld2" posterior_R₀
+#
+#
+# include("types.jl");
+# include("dynamics.jl")
+# include("transmissionmodel.jl");
+# include("hospitalisation_data.jl")
+# include("hospital_model.jl")
+# include("forecast_functions.jl");
 
 
 
