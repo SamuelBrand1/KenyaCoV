@@ -46,7 +46,7 @@ linear_as_events = LinearIndices((1:n, 1:n_a,1:n_ta))
 # @load "data/posterior_distribution_R0.jld2" posterior_R₀
 #
 #
-# include("types.jl");
+include("types.jl");
 # include("dynamics.jl")
 # include("transmissionmodel.jl");
 # include("hospitalisation_data.jl")
