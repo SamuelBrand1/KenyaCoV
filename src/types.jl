@@ -1,9 +1,9 @@
 """
-    mutable struct CoVParameters_AS
+    mutable struct CoVParameters_inplace
 
-Struct for containing relevant epidemilogical parameters for the age-structured version of KenyaCoV
+Struct for containing relevant epidemilogical parameters for the age-structured version of KenyaCoV, has variables for in-place operations
 """
-Base.@kwdef mutable struct CoVParameters_AS
+Base.@kwdef mutable struct CoVParameters_inplace
     #Epidemiological parameters and social contact/mixing rates
     β::Float64 = 1. #Basic transmission probability per contact OR infectious contact rate (can be greater than one depending on scaling)
     c_t::Function = t -> 1. #Time varying basic contact rate
