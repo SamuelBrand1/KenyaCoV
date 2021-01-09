@@ -1,9 +1,21 @@
 push!(LOAD_PATH,joinpath(homedir(),"Github/KenyaCoV/src"))
+
 # using Revise
 # import KenyaCoV
 using DifferentialEquations,ModelingToolkit,Latexify,SparseArrays,StaticArrays,LinearAlgebra,Plots
 using DelimitedFiles,JLD2,Interpolations
 JLD2.@load("data/agemixingmatrix_Kenya_norestrictions.jld2")
+
+f(x) = log(x)
+xs = 1:0.2:10
+A = [f(x) for x in xs]
+interp_cubic = CubicSplineInterpolation(xs, A,extrapolation_bc = Flat())
+scatter!(xs,A,lab="")
+ys = [interp_cubic(x) for x in 1:0.1:20]
+plot!(1:0.1:20,ys,lab="")
+etpf = extrapolate(interp_cubic, 0)
+
+
 # heatmap(M_Kenya)
 M_Kenya[2,1]
 
