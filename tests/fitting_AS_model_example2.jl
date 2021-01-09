@@ -2,7 +2,7 @@ push!(LOAD_PATH,joinpath(homedir(),"Github/KenyaCoV/src"))
 # using Revise
 # import KenyaCoV
 using DifferentialEquations,ModelingToolkit,Latexify,SparseArrays,StaticArrays,LinearAlgebra,Plots
-using DelimitedFiles,JLD2,Interpolations
+using DelimitedFiles,JLD2
 JLD2.@load("data/agemixingmatrix_Kenya_norestrictions.jld2")
 # heatmap(M_Kenya)
 M_Kenya[2,1]
@@ -23,17 +23,14 @@ const β = 1/Real(evals[end])
 # λ = β.*γ.*M_Kenya*I
 
 # f_sym = vcat(-R₀*S*λ,R₀*S - σ.*E,σ.*E - γ.*I,γ.*I)
-function calculate_forceofinfection(β,γ,M,I)
-        β*γ*(M*I)
-end
+
 function AgemixingSEIR(du,u,p,t)
-        S = @view u[:,1]
-        E = @view u[:,2]
-        I = @view u[:,3]
-        R = @view u[:,4]
+        S = u[:,1]
+        E = u[:,2]
+        I = u[:,3]
+        R = u[:,4]
         R₀,N = p
-        # λ  = β*γ*(M*I)
-        λ = calculate_forceofinfection(β,γ,M,I)
+        λ  = β*γ*(M*I)
         du[:,1] .= -R₀.*S.*λ
         du[:,2] .= (R₀.*S.*λ) .- σ.*E
         du[:,3] .= σ.*E .- γ.*I
@@ -60,7 +57,7 @@ J
 AgemixingSEIR_sym = ODEFunction(AgemixingSEIR,jac=jac,tgrad=tgrad,jac_prototype = similar(J),sparsity = sp_pattern)
 prob_sym = ODEProblem(AgemixingSEIR_sym,u0,tspan,p)
 @time sol2 = solve(prob_sym,AutoTsit5(Rosenbrock23()),p = [2.5,N])
-plot(sol2,vars = collect((2*17 +1 ):(2*17 + 17)))
+plot(sol2,vars = collect((3*17 +1 ):(3*17 + 17)))
 
 
 DiffEqBase.has_jac(AgemixingSEIR_sym)
