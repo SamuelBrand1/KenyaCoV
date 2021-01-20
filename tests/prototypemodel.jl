@@ -5,7 +5,7 @@ using DifferentialEquations,ModelingToolkit,Latexify,SparseArrays,StaticArrays,L
 using DelimitedFiles,JLD2,BenchmarkTools
 JLD2.@load("data/agemixingmatrix_Kenya_norestrictions.jld2")
 # heatmap(M_Kenya)
-M_Kenya[2,1]
+
 
 const σ = 1/3.1
 const γ = 1/2.4
@@ -29,8 +29,9 @@ function AgemixingSEIR(du,u,p,t)
         E = @view u[:,2]
         I = @view u[:,3]
         R = @view u[:,4]
+
         R₀,N = p
-        λ  = β.*γ.*(M*I)
+        λ = β.*γ.*(M*(I .+ I₁))
         du[:,1] .= -R₀.*S.*λ
         du[:,2] .= (R₀.*S.*λ) .- σ.*E
         du[:,3] .= σ.*E .- γ.*I
