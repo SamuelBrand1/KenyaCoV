@@ -6,7 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ d72ad6f2-5b0a-11eb-2ebd-fb584a8b4696
 #Underlying dependencies
-using LinearAlgebra,Distributions,Roots,Parameters,DelimitedFiles,Plots
+using LinearAlgebra,Distributions,Roots,Parameters,DelimitedFiles,StatsPlots
 
 # ╔═╡ efbe0910-5b09-11eb-38b8-854a30129d2e
 md"
@@ -63,10 +63,12 @@ md"
 The early growth data that informs our priors is drawn from the early stages of the epidemic in the UK:
 * The early exponential growth rate $r$ in the UK corresponded to a doubling time of 3.3 days (r = $(round(log(2)/3.3,digits=3))) (SAGE minutes, 2020).
 * The relative attack rate of age groups (>18 year olds) can be estimated from the the REACT2 survey in June (Ward et al, 2020).
+
+First: attach the June REACT2 % prevalence estimate to each year of life.
 "
 
 # ╔═╡ 2507bcba-5b3e-11eb-02f8-df5974baad20
-#REACT2 data uniformised by year of life. Missing data is a missing entry
+#REACT2 data uniformised by year of life. Missing data is a missing entry.
 begin
 	prop_attack_rate = Union{Float64,Missing}[]
 	for a = 1:100
@@ -95,8 +97,18 @@ begin
 			push!(prop_attack_rate,0.0331)
 		end		
 	end
-	prop_attack_rate
+	
+	scatter(prop_attack_rate,
+			xlabel = "Year of life",
+			ylabel = "Est. prop. of group infected in UK first wave",
+			lab = "",
+			title = "REACT2 June Sero-prevalence")
 end
+
+# ╔═╡ 83b39838-5bd2-11eb-0ed2-4518b6194b28
+md"
+Second: Gather the UK population size by year of life. 
+"
 
 # ╔═╡ 2a6a1870-5b40-11eb-2a50-83af2c5e752b
 begin
@@ -124,33 +136,278 @@ begin
 		append!(UK_pop_by_year,fill(N/5,5))
 	end
 	append!(UK_pop_by_year,fill(UK_pop_5years_bands[end]/10,10))
+	bar(UK_pop_by_year,
+			xlabel = "Year of life",
+			ylabel = "N",
+			lab = "",
+			title = "UK population size")
 end
+
+# ╔═╡ 9f84377a-5bd2-11eb-0657-2314b0925317
+md"
+Third: create an estimated numbers of infected by year of life
+"
 
 # ╔═╡ d4440036-5b40-11eb-17d6-c52e21f9150c
 begin
 	UK_attack_rate = prop_attack_rate.*UK_pop_by_year
-	scatter(UK_attack_rate)
+	scatter(UK_attack_rate,
+			xlabel = "Year of life",
+			ylabel = "Est. number of infected in UK first wave",
+			lab = "")
 end
 
 # ╔═╡ 16773d86-5b3e-11eb-324b-514d22072f47
 md"
-Other data we use:
-
-* The pre-measures age-structured mixing matrix for UK (estimated from Prem et al, 2017).
-* UK population size by age."
+In order to apply the analytic results outlined above we also use the pre-measures age-structured mixing matrix for UK (estimated from Prem et al, 2017).
+"
 
 # ╔═╡ 47ee4d2e-5b38-11eb-221e-97edf8e0af66
 #We use the transposed from of the mixing matrix from Prem et al 2017
 # and normalise the columns
 begin
 	T=Matrix(readdlm("resources/mixingmatrix_UK_from_to.csv", ',', Float64, '\n';header = true)[1]')
-	for j = 1:size(T,2)
-		T[:,j] = normalize(T[:,j],1)
+	heatmap(T,
+			xticks = (1:1:16,vcat([string(k)*"-"*string(k+4) for k = 0:5:70],["75+"])),
+		yticks = (1:1:16,vcat([string(k)*"-"*string(k+4) for k = 0:5:70],["75+"])),
+		title = "Prem et al estimates for age-structured mixing (UK)",
+		ylabel = "Age group being contacted",
+		xlabel = "Age group of person seeking contact"
+	)
+end
+
+# ╔═╡ 970828f2-5bd4-11eb-36f5-2b64c6d793df
+md"
+Its useful to prefactor the `T` matrix so that its leading eigenvalue is one, this gives the $\beta_0$ parameter the interpretation of being $R_0$ for a counter-factual disease that **doesn't have strong age differences in susceptibility/transmissibility**.
+"
+
+# ╔═╡ 8bf233da-5bd5-11eb-3e64-31299446486d
+begin
+	prefactor = Real(eigen(T).values[end])
+	rescaled_T = T./prefactor
+	heatmap(rescaled_T,
+			xticks = (1:1:16,vcat([string(k)*"-"*string(k+4) for k = 0:5:70],["75+"])),
+		yticks = (1:1:16,vcat([string(k)*"-"*string(k+4) for k = 0:5:70],["75+"])),
+		title = "Rescaled age-structured mixing; prefactor = $(round(prefactor,digits=3))",
+		ylabel = "Age group being contacted",
+		xlabel = "Age group of person seeking contact"
+	)
+end
+
+# ╔═╡ 29f311be-5c01-11eb-1036-6953abca540a
+md"
+It is useful to group the infected number so that they are in 5 year bins and can be put on a scale relative to the 75+ category.
+"
+
+# ╔═╡ 43d37af8-5c01-11eb-1b2a-bd4b071568b0
+begin	
+	UK_rel_attack_rate = [sum(UK_attack_rate[((a-1)*5 + 1):(a*5 )]) for a = 1:15]
+	append!(UK_rel_attack_rate,sum(UK_attack_rate[(15*5 + 1):end]))
+	UK_rel_attack_rate .= UK_rel_attack_rate./UK_rel_attack_rate[end]
+	scatter(UK_rel_attack_rate)
+end
+
+# ╔═╡ 3a629928-5bd6-11eb-1c64-4387b5e719da
+md"
+### Julia functions
+
+We create Julia functions to recreate the analysis outlined above.
+"
+
+# ╔═╡ 89a91d60-5b36-11eb-0efc-6324bdf17549
+#Define the ϕ function described above.
+function ϕ(b::Integer,r::Real,params)
+	@unpack β₀,α,ϵ,δ,υ,αP,γA,γM,γV = params
+	return β₀*(α/(α+r))*((ϵ*(1-δ[b])/(γA + r)) + (δ[b]/(αP + r))*(1 + ((1-υ[b])*αP/(γM + r) ) +( υ[b]*αP /(γV + r) ) ))
+end
+
+# ╔═╡ c2c359a8-5b39-11eb-04b2-a9d9ad3b4526
+function create_K_matrix(T,params,r::Float64)
+	@unpack σ = params
+	[σ[a]*T[a,b]*ϕ(b,r,params) for a = 1:length(σ),b = 1:length(σ)]
+end
+
+# ╔═╡ 8c5009b0-5b3a-11eb-056d-cdc747f38701
+function find_group_rel_attack_rate(T,params)
+	K = create_K_matrix(T,params,0.)
+	F = eigen(K)
+	return abs.(F.vectors[:,end])./abs.(F.vectors[end,end])
+end
+
+# ╔═╡ c87577f2-5b3c-11eb-0643-01a1cdbcd023
+function find_leading_eval_K(T,params,r)
+	K = create_K_matrix(T,params,r)
+	F = eigen(K)
+	leading_eval = Real(F.values[end])
+end
+
+# ╔═╡ 5f401a52-5b3b-11eb-225a-59634b976264
+function find_exp_growth_rate(T,params)
+	try
+		f = r -> find_leading_eval_K(T,params,r) - 1.
+		find_zero(f, (0.00001, 1.))
+	catch 
+		-1.
 	end
 end
 
-# ╔═╡ 12c8ed54-5b3e-11eb-256b-871303bc4414
+# ╔═╡ d8e23d6e-5bd7-11eb-2a7c-930d706d315d
+md"
+### Univariate independent priors for each parameter
+And gather evidence from the literature to inform a **univariate** independent prior for each unknown parameter.
+"
 
+# ╔═╡ 2fa1d2a2-5bdf-11eb-2d80-c119edf7835c
+md"
+*$\beta_0$ baseline transmissibility.* Given that the age-dependent effects probably depress the true $R_0$ compared to a baseline of no age-dependent effects we have a high prior for $\beta_0$.  
+"
+
+# ╔═╡ 40b9e162-5bdd-11eb-3b63-ff5069580271
+begin
+	d_β₀ = Gamma(10,3.5/10)
+	plt_beta = plot(d_β₀,lab="β₀",title = "β₀ prior");
+	# nothing
+end
+
+# ╔═╡ 55b21b60-5bde-11eb-3a59-f71bbb49f27c
+md"
+*Latency, incubation, infectious period and presymptomatic transmission.* There are reports of high rates of pre-symptomatic transmission which informs our **assumption** that individuals in the pre-symptomatic phase are as infectious as the symptomatic phase. The % of transmission before and after onset is likely to heavily on aggressiveness of isolation measures.
+"
+
+# ╔═╡ c153bbba-5be5-11eb-2d49-35259eb41749
+#Parameter priors
+begin
+	d_meanlatent =Gamma(20,3.1/20)
+	d_Pduration =Gamma(15,2/15)
+	d_meaninf = Gamma(15,5/15)
+	d_meanAinf= Gamma(15,5/15)
+	plot(d_meanlatent,lab="mean latent",xlabel = "Mean value of period",ylabel = "Density",title = "Prior distributions for means")
+	plot!(d_Pduration,lab="mean pre-symptomatic inf.")
+	plot!(d_meaninf,lab="mean post-symptomatic inf.")
+end
+
+# ╔═╡ 655ecd36-5bf9-11eb-3595-c51b2d215cf9
+md"
+*Relative infectiousness of asymptomatic infections, relative symptomatic rate by age, relative susceptibility by age.* We prior each age group by the Polletti et al follow up on contacts study.
+"
+
+# ╔═╡ 5244de94-5bfd-11eb-2019-f5c7a45ababe
+begin
+	dispersion = 0.2
+	d_symp_0_19 = Beta(55*dispersion,(304-55)*dispersion)
+	d_symp_20_39 = Beta(119*dispersion,(531-119)*dispersion)
+	d_symp_40_59 = Beta(306*dispersion,(1002-306)*dispersion)
+	d_symp_60_79 = Beta(294*dispersion,(829-294)*dispersion)
+	d_symp_80_ = Beta(102*dispersion,(158-102)*dispersion)
+
+
+	plot(d_symp_0_19,lab= "0-19",xlabel = "prob. symptomatic",ylabel = "Density",
+			title = "Priors for age-dependent symptomatic prob.")
+	plot!(d_symp_20_39,lab= "20-39")
+	plot!(d_symp_40_59,lab= "40-59")
+	plot!(d_symp_60_79,lab= "60-79")
+	plot!(d_symp_80_,lab= "80+")	
+end
+
+# ╔═╡ 2cb525ce-5bff-11eb-2b5e-cb03a5d0b271
+begin
+	d_ϵ = Beta(10,25-10)
+	plot(d_ϵ,lab= "",title = "Prior for relative infectiousness of asymptomatics")
+end
+
+# ╔═╡ 96f1e65c-5bff-11eb-3576-45b4c8a8c5da
+begin
+	d_children_sus = Beta((34/1.47)*dispersion,(100-(34/1.47))*dispersion)
+	d_adults_sus = Beta(1,1)
+	plot(d_children_sus,lab = "0-14",title = "Priors for relative susceptibility compared to 65+",
+	xlabel = "rel. sus.",ylabel = "Density")
+	plot!(d_adults_sus,lab = "15-64")
+end
+
+# ╔═╡ 9cc36794-5c00-11eb-3639-adfb2ece3cb8
+md"
+### Drawing from the univariate priors and eliminating prior combinations that fail to match observables
+Below we list the criteria that observables need to match to be accepted into our joint prior.
+"
+
+# ╔═╡ 2c30f1d4-5bdf-11eb-3473-a7582367c79e
+incubation_mean_range = [2.5,7.5]
+
+# ╔═╡ 692218d8-5be5-11eb-0e04-d560bba66e95
+presymptomatic_transmission_prop_range = [0.4,0.7]
+
+# ╔═╡ 880c2fe6-5c02-11eb-1be4-9f8418aa859e
+r_range = [log(2)/5,log(2)/3]
+
+# ╔═╡ 9a02fa9a-5c02-11eb-16e1-e1d83982e27f
+mean_abs_err_attack_range = 5.
+
+# ╔═╡ 3466631e-5c04-11eb-3d18-bfe5e088b3df
+md"
+We create a function for drawing from the univariate priors.
+"
+
+# ╔═╡ b5ccc8ca-5c02-11eb-1412-33123caa8c4a
+function draw_parameter_set()
+	δ = [rand(d_symp_0_19) for a = 1:4]
+	append!(δ,[rand(d_symp_20_39) for a = 5:8])
+	append!(δ,[rand(d_symp_40_59) for a = 9:12])
+	append!(δ,[rand(d_symp_60_79) for a = 13:15])
+	append!(δ,rand(d_symp_80_))
+	σ =  [rand(d_children_sus) for a = 1:3]
+	append!(σ, [rand(d_adults_sus) for a = 4:13])
+	append!(σ,ones(3))		
+
+	θ = (β₀ = rand(d_β₀),
+		α = 1/rand(d_meanlatent),
+		ϵ= rand(d_ϵ),
+		δ = δ,
+		υ = zeros(16),
+		αP = 1/rand(d_Pduration),
+		γA = 1/rand(d_meanAinf),
+		γM = 1/rand(d_meaninf),
+		γV = 1/5,
+		σ = σ)
+	return θ
+end
+
+# ╔═╡ 5ae8f506-5c04-11eb-0927-3752b906b091
+md"
+And a function for accepting or rejecting the prior set drawn.
+"
+
+# ╔═╡ 7110b0da-5c04-11eb-2126-69f99575a96b
+θ₀ = draw_parameter_set()
+
+# ╔═╡ e88d5f64-5c04-11eb-04ee-1d965ffb2837
+function accept_reject_params(θ)
+	r = find_exp_growth_rate(rescaled_T,θ)
+	v = find_group_rel_attack_rate(rescaled_T,θ)
+	mean_abs_err = mean(abs.(v[5:end] .- UK_rel_attack_rate[5:end]))
+	isinincubrange = (1/θ.α)  + (1/θ.αP) >= incubation_mean_range[1] && (1/θ.α)  + (1/θ.αP) <= incubation_mean_range[2] 
+	ispresymp_range = (1/θ.αP)/((1/θ.αP) + (1/θ.γM))  >= presymptomatic_transmission_prop_range[1] && (1/θ.αP)/((1/θ.αP) + (1/θ.γM))  <= presymptomatic_transmission_prop_range[2] 
+	isr_range = r >= r_range[1] && r <= r_range[2]
+	is_abs_err_range = mean_abs_err <= mean_abs_err_attack_range
+	return isinincubrange && ispresymp_range && isr_range && is_abs_err_range
+end
+	
+
+# ╔═╡ 652a4a14-5c05-11eb-30b7-7fb982654d0c
+sum([accept_reject_params(draw_parameter_set()) for k = 1:1000])
+
+# ╔═╡ c1e48092-5c07-11eb-293d-2da52426657d
+begin
+	accepted_parameter_set = []
+	for k = 1:100000
+		θ = draw_parameter_set()
+		if accept_reject_params(θ)
+			append!(accepted_parameter_set,[θ])
+		end
+	end
+end
+
+# ╔═╡ 117832fc-5c08-11eb-0ef3-11f49debc582
+accepted_parameter_set
 
 # ╔═╡ e2199394-5b37-11eb-0444-3713fd68d281
 begin
@@ -166,68 +423,51 @@ begin
 		σ = ones(16))
 end
 
-# ╔═╡ 89a91d60-5b36-11eb-0efc-6324bdf17549
-#Define the ϕ function described above.
-function ϕ(b::Integer,r::Real,params)
-	@unpack β₀,α,ϵ,δ,υ,αP,γA,γM,γV = params
-	return β₀*(α/(α+r))*((ϵ*(1-δ[b])/(γA + r)) + (δ[b]/(αP + r))*(1 + ((1-υ[b])*αP/(γM + r) ) +( υ[b]*αP /(γV + r) ) ))
-end
-
-# ╔═╡ c2c359a8-5b39-11eb-04b2-a9d9ad3b4526
-function create_K_matrix(T,params,r::Float64)
-	@unpack σ = params
-	[σ[a]*T[a,b]*ϕ(b,r,params) for a = 1:length(σ),b = 1:length(σ)]
-end
-
-# ╔═╡ f4eb1352-5b3c-11eb-2304-0b9fcf5e7210
-K = create_K_matrix(T,θ,0.21)
-
-# ╔═╡ 52f48d46-5b3d-11eb-29d3-21e62f690be8
-F= eigen(K)
-
-# ╔═╡ 8c5009b0-5b3a-11eb-056d-cdc747f38701
-function find_group_attack_rate(T,params)
-	K = create_K_matrix(T,params,0.)
-	F = eigen(K)
-	return normalize(abs.(F.vectors[:,end]),1)
-end
-
-# ╔═╡ c87577f2-5b3c-11eb-0643-01a1cdbcd023
-function find_leading_eval_K(T,params,r)
-	K = create_K_matrix(T,params,r)
-	F = eigen(K)
-	leading_eval = Real(F.values[end])
-end
-
 # ╔═╡ 6b010218-5b3d-11eb-3e61-57b213348c54
-R₀ = find_leading_eval_K(T,θ,0.)
-
-# ╔═╡ 5f401a52-5b3b-11eb-225a-59634b976264
-function find_exp_growth_rate(T,params)
-	f = r -> find_leading_eval_K(T,params,r) - 1.
-	find_zero(f, (0.0001, 1.))
-end
-
-# ╔═╡ 8daf5ff6-5b3d-11eb-260b-2f927f507cb8
-find_exp_growth_rate(T,θ)
+R₀ = find_group_rel_attack_rate(rescaled_T,θ₀)
 
 # ╔═╡ Cell order:
 # ╠═d72ad6f2-5b0a-11eb-2ebd-fb584a8b4696
 # ╟─efbe0910-5b09-11eb-38b8-854a30129d2e
 # ╟─76b31d52-5b14-11eb-228b-bbcb9cf17fee
-# ╠═2507bcba-5b3e-11eb-02f8-df5974baad20
-# ╠═2a6a1870-5b40-11eb-2a50-83af2c5e752b
+# ╟─2507bcba-5b3e-11eb-02f8-df5974baad20
+# ╟─83b39838-5bd2-11eb-0ed2-4518b6194b28
+# ╟─2a6a1870-5b40-11eb-2a50-83af2c5e752b
+# ╟─9f84377a-5bd2-11eb-0657-2314b0925317
 # ╠═d4440036-5b40-11eb-17d6-c52e21f9150c
 # ╟─16773d86-5b3e-11eb-324b-514d22072f47
-# ╠═47ee4d2e-5b38-11eb-221e-97edf8e0af66
-# ╠═12c8ed54-5b3e-11eb-256b-871303bc4414
-# ╠═e2199394-5b37-11eb-0444-3713fd68d281
-# ╠═89a91d60-5b36-11eb-0efc-6324bdf17549
-# ╠═c2c359a8-5b39-11eb-04b2-a9d9ad3b4526
-# ╠═f4eb1352-5b3c-11eb-2304-0b9fcf5e7210
-# ╠═52f48d46-5b3d-11eb-29d3-21e62f690be8
-# ╠═8c5009b0-5b3a-11eb-056d-cdc747f38701
-# ╠═c87577f2-5b3c-11eb-0643-01a1cdbcd023
-# ╠═6b010218-5b3d-11eb-3e61-57b213348c54
+# ╟─47ee4d2e-5b38-11eb-221e-97edf8e0af66
+# ╟─970828f2-5bd4-11eb-36f5-2b64c6d793df
+# ╟─8bf233da-5bd5-11eb-3e64-31299446486d
+# ╟─29f311be-5c01-11eb-1036-6953abca540a
+# ╠═43d37af8-5c01-11eb-1b2a-bd4b071568b0
+# ╟─3a629928-5bd6-11eb-1c64-4387b5e719da
+# ╟─89a91d60-5b36-11eb-0efc-6324bdf17549
+# ╟─c2c359a8-5b39-11eb-04b2-a9d9ad3b4526
+# ╟─8c5009b0-5b3a-11eb-056d-cdc747f38701
+# ╟─c87577f2-5b3c-11eb-0643-01a1cdbcd023
 # ╠═5f401a52-5b3b-11eb-225a-59634b976264
-# ╠═8daf5ff6-5b3d-11eb-260b-2f927f507cb8
+# ╟─d8e23d6e-5bd7-11eb-2a7c-930d706d315d
+# ╟─2fa1d2a2-5bdf-11eb-2d80-c119edf7835c
+# ╠═40b9e162-5bdd-11eb-3b63-ff5069580271
+# ╟─55b21b60-5bde-11eb-3a59-f71bbb49f27c
+# ╟─c153bbba-5be5-11eb-2d49-35259eb41749
+# ╟─655ecd36-5bf9-11eb-3595-c51b2d215cf9
+# ╟─5244de94-5bfd-11eb-2019-f5c7a45ababe
+# ╟─2cb525ce-5bff-11eb-2b5e-cb03a5d0b271
+# ╠═96f1e65c-5bff-11eb-3576-45b4c8a8c5da
+# ╠═9cc36794-5c00-11eb-3639-adfb2ece3cb8
+# ╠═2c30f1d4-5bdf-11eb-3473-a7582367c79e
+# ╠═692218d8-5be5-11eb-0e04-d560bba66e95
+# ╠═880c2fe6-5c02-11eb-1be4-9f8418aa859e
+# ╠═9a02fa9a-5c02-11eb-16e1-e1d83982e27f
+# ╟─3466631e-5c04-11eb-3d18-bfe5e088b3df
+# ╠═b5ccc8ca-5c02-11eb-1412-33123caa8c4a
+# ╟─5ae8f506-5c04-11eb-0927-3752b906b091
+# ╠═7110b0da-5c04-11eb-2126-69f99575a96b
+# ╠═e88d5f64-5c04-11eb-04ee-1d965ffb2837
+# ╠═652a4a14-5c05-11eb-30b7-7fb982654d0c
+# ╠═c1e48092-5c07-11eb-293d-2da52426657d
+# ╠═117832fc-5c08-11eb-0ef3-11f49debc582
+# ╠═e2199394-5b37-11eb-0444-3713fd68d281
+# ╠═6b010218-5b3d-11eb-3e61-57b213348c54
