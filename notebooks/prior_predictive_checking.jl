@@ -6,7 +6,10 @@ using InteractiveUtils
 
 # ╔═╡ d72ad6f2-5b0a-11eb-2ebd-fb584a8b4696
 #Underlying dependencies
-using LinearAlgebra,Distributions,Roots,Parameters,DelimitedFiles,StatsPlots
+using LinearAlgebra,Distributions,Roots,Parameters,DelimitedFiles,StatsPlots,JLD2
+
+# ╔═╡ 1d163474-5c3a-11eb-23f0-53daebc2852c
+plotlyjs()
 
 # ╔═╡ efbe0910-5b09-11eb-38b8-854a30129d2e
 md"
@@ -281,7 +284,7 @@ begin
 	d_Pduration =Gamma(15,2/15)
 	d_meaninf = Gamma(15,5/15)
 	d_meanAinf= Gamma(15,5/15)
-	plot(d_meanlatent,lab="mean latent",xlabel = "Mean value of period",ylabel = "Density",title = "Prior distributions for means")
+	plot(d_meanlatent,lab="mean latent",xlabel = "Mean value of period",ylabel = "Density",title = "Prior distributions for means",legend = :right)
 	plot!(d_Pduration,lab="mean pre-symptomatic inf.")
 	plot!(d_meaninf,lab="mean post-symptomatic inf.")
 end
@@ -320,7 +323,7 @@ begin
 	d_children_sus = Beta((34/1.47)*dispersion,(100-(34/1.47))*dispersion)
 	d_adults_sus = Beta(1,1)
 	plot(d_children_sus,lab = "0-14",title = "Priors for relative susceptibility compared to 65+",
-	xlabel = "rel. sus.",ylabel = "Density")
+	xlabel = "rel. sus.",ylabel = "Density",legend = :right)
 	plot!(d_adults_sus,lab = "15-64")
 end
 
@@ -349,14 +352,15 @@ We create a function for drawing from the univariate priors.
 
 # ╔═╡ b5ccc8ca-5c02-11eb-1412-33123caa8c4a
 function draw_parameter_set()
-	δ = [rand(d_symp_0_19) for a = 1:4]
-	append!(δ,[rand(d_symp_20_39) for a = 5:8])
-	append!(δ,[rand(d_symp_40_59) for a = 9:12])
-	append!(δ,[rand(d_symp_60_79) for a = 13:15])
+	δ = sort!([rand(d_symp_0_19) for a = 1:4])
+	append!(δ,sort!([rand(d_symp_20_39) for a = 5:8]))
+	append!(δ,sort!([rand(d_symp_40_59) for a = 9:12]))
+	append!(δ,sort!([rand(d_symp_60_79) for a = 13:15]))
 	append!(δ,rand(d_symp_80_))
-	σ =  [rand(d_children_sus) for a = 1:3]
-	append!(σ, [rand(d_adults_sus) for a = 4:13])
-	append!(σ,ones(3))		
+	
+	σ =  sort!([rand(d_children_sus) for a = 1:3])
+	append!(σ, sort!([rand(d_adults_sus) for a = 4:15]))
+	append!(σ,1.)		
 
 	θ = (β₀ = rand(d_β₀),
 		α = 1/rand(d_meanlatent),
@@ -398,7 +402,7 @@ sum([accept_reject_params(draw_parameter_set()) for k = 1:1000])
 # ╔═╡ c1e48092-5c07-11eb-293d-2da52426657d
 begin
 	accepted_parameter_set = []
-	for k = 1:100000
+	for k = 1:50000
 		θ = draw_parameter_set()
 		if accept_reject_params(θ)
 			append!(accepted_parameter_set,[θ])
@@ -406,28 +410,64 @@ begin
 	end
 end
 
-# ╔═╡ 117832fc-5c08-11eb-0ef3-11f49debc582
-accepted_parameter_set
-
-# ╔═╡ e2199394-5b37-11eb-0444-3713fd68d281
+# ╔═╡ 712f46d8-5c42-11eb-3cd7-8547406ef6c9
 begin
-	θ = (β₀ = 1.,
-		α = 1/3.1,
-		ϵ=0.4,
-		δ = ones(16),
-		υ = fill(0.1,16),
-		αP = 1/2,
-		γA = 1/9,
-		γM = 1/3.1,
-		γV = 1/5,
-		σ = ones(16))
+	accepted_parameter_set_matrix = zeros(length(accepted_parameter_set),6+16+16)
+	for i = 1:size(accepted_parameter_set_matrix,1)
+		accepted_parameter_set_matrix[i,:] .= vcat(accepted_parameter_set[i].β₀,
+													accepted_parameter_set[i].α,
+													accepted_parameter_set[i].ϵ,
+													accepted_parameter_set[i].αP,
+													accepted_parameter_set[i].γA,
+													accepted_parameter_set[i].γM,
+													accepted_parameter_set[i].δ,
+													accepted_parameter_set[i].σ)
+	end
+	accepted_parameter_set_matrix = Matrix(accepted_parameter_set_matrix')
+end	
+
+# ╔═╡ 63e45682-5c45-11eb-20d2-372938f4eefc
+D = accepted_parameter_set_matrix[1:37,:]#Remove the row of ones for rel. susceptibility of 75+ yos
+
+# ╔═╡ c5608da2-5c44-11eb-03be-a3b3b35672da
+det(log.(D)*log.(D)')
+
+# ╔═╡ f0472210-5c42-11eb-241a-191e0011b084
+open("drawn_priors.csv", "w") do io
+           writedlm(io, accepted_parameter_set_matrix,',')
+       end
+
+# ╔═╡ 4c695f7a-5c45-11eb-3805-a5878cd30ab2
+d_log_priors = fit_mle(MvNormal,log.(D))
+
+# ╔═╡ 92151488-5c43-11eb-1259-5fb43d168eda
+heatmap(d_log_priors.Σ)
+
+# ╔═╡ d8b3d354-5c45-11eb-1007-61a768b1240e
+JLD2.@save("d_log_priors.jld2",d_log_priors)
+
+# ╔═╡ 14d88b7a-5c46-11eb-1327-319ee8250de7
+JLD2.@save("accepted_parameters.jld2",accepted_parameter_set)
+
+# ╔═╡ 37f2604a-5c46-11eb-0cc8-2d96ffb62b71
+r_prior = [find_exp_growth_rate(rescaled_T,θ) for θ in accepted_parameter_set]
+
+# ╔═╡ 629cae5e-5c46-11eb-2875-d786b01c1c64
+histogram(log(2)./r_prior,norm = :pdf,bins = 50)
+
+# ╔═╡ 9b270fda-5c46-11eb-1408-9fbefe624912
+v_prior = [find_group_rel_attack_rate(rescaled_T,θ) for θ in accepted_parameter_set]
+
+# ╔═╡ c02f7e8c-5c46-11eb-0343-cf09ac7c3584
+begin
+bar(mean(v_prior),yerr = 3*std(v_prior))
+scatter!(UK_rel_attack_rate)
 end
 
-# ╔═╡ 6b010218-5b3d-11eb-3e61-57b213348c54
-R₀ = find_group_rel_attack_rate(rescaled_T,θ₀)
 
 # ╔═╡ Cell order:
 # ╠═d72ad6f2-5b0a-11eb-2ebd-fb584a8b4696
+# ╠═1d163474-5c3a-11eb-23f0-53daebc2852c
 # ╟─efbe0910-5b09-11eb-38b8-854a30129d2e
 # ╟─76b31d52-5b14-11eb-228b-bbcb9cf17fee
 # ╟─2507bcba-5b3e-11eb-02f8-df5974baad20
@@ -446,15 +486,15 @@ R₀ = find_group_rel_attack_rate(rescaled_T,θ₀)
 # ╟─c2c359a8-5b39-11eb-04b2-a9d9ad3b4526
 # ╟─8c5009b0-5b3a-11eb-056d-cdc747f38701
 # ╟─c87577f2-5b3c-11eb-0643-01a1cdbcd023
-# ╠═5f401a52-5b3b-11eb-225a-59634b976264
+# ╟─5f401a52-5b3b-11eb-225a-59634b976264
 # ╟─d8e23d6e-5bd7-11eb-2a7c-930d706d315d
 # ╟─2fa1d2a2-5bdf-11eb-2d80-c119edf7835c
 # ╠═40b9e162-5bdd-11eb-3b63-ff5069580271
 # ╟─55b21b60-5bde-11eb-3a59-f71bbb49f27c
-# ╟─c153bbba-5be5-11eb-2d49-35259eb41749
+# ╠═c153bbba-5be5-11eb-2d49-35259eb41749
 # ╟─655ecd36-5bf9-11eb-3595-c51b2d215cf9
-# ╟─5244de94-5bfd-11eb-2019-f5c7a45ababe
-# ╟─2cb525ce-5bff-11eb-2b5e-cb03a5d0b271
+# ╠═5244de94-5bfd-11eb-2019-f5c7a45ababe
+# ╠═2cb525ce-5bff-11eb-2b5e-cb03a5d0b271
 # ╠═96f1e65c-5bff-11eb-3576-45b4c8a8c5da
 # ╠═9cc36794-5c00-11eb-3639-adfb2ece3cb8
 # ╠═2c30f1d4-5bdf-11eb-3473-a7582367c79e
@@ -468,6 +508,15 @@ R₀ = find_group_rel_attack_rate(rescaled_T,θ₀)
 # ╠═e88d5f64-5c04-11eb-04ee-1d965ffb2837
 # ╠═652a4a14-5c05-11eb-30b7-7fb982654d0c
 # ╠═c1e48092-5c07-11eb-293d-2da52426657d
-# ╠═117832fc-5c08-11eb-0ef3-11f49debc582
-# ╠═e2199394-5b37-11eb-0444-3713fd68d281
-# ╠═6b010218-5b3d-11eb-3e61-57b213348c54
+# ╠═712f46d8-5c42-11eb-3cd7-8547406ef6c9
+# ╠═63e45682-5c45-11eb-20d2-372938f4eefc
+# ╠═c5608da2-5c44-11eb-03be-a3b3b35672da
+# ╠═f0472210-5c42-11eb-241a-191e0011b084
+# ╠═4c695f7a-5c45-11eb-3805-a5878cd30ab2
+# ╠═92151488-5c43-11eb-1259-5fb43d168eda
+# ╠═d8b3d354-5c45-11eb-1007-61a768b1240e
+# ╠═14d88b7a-5c46-11eb-1327-319ee8250de7
+# ╠═37f2604a-5c46-11eb-0cc8-2d96ffb62b71
+# ╠═629cae5e-5c46-11eb-2875-d786b01c1c64
+# ╠═9b270fda-5c46-11eb-1408-9fbefe624912
+# ╠═c02f7e8c-5c46-11eb-0343-cf09ac7c3584
