@@ -105,7 +105,7 @@ function kenyacov_ode_with_contactrates(du,u,p,t)
         R = @view u[:,7]
         cum_incidence = @view u[:,8]
         #Force of infection
-        λ = β₀.*((M_Kenya_ho .+ ct_from_data(t,1.:length()).*M_Kenya_other .+ 0*M_Kenya_school)*(ϵ.*A .+ P .+ M .+V))./N
+        λ = β₀.*((M_Kenya_ho .+ ct_from_data(t,contactrate).*M_Kenya_other .+ 0*M_Kenya_school)*(ϵ.*A .+ P .+ M .+V))./N
         #RHS of vector field (in-place calculation)
         du[:,1] .= -S.*λ
         du[:,2] .= S.*λ .- α.*E
@@ -287,6 +287,7 @@ u0[:,2] = I₀
 tspan = (0.,365*1)
 p = copy(parameters)
 p[1] = p[1]/3
+p2 = copy(vcat(p,contact_data))
 
 ## Underlying sparse arrays for jac
 
@@ -337,6 +338,7 @@ kenyacov_ode_opt_tgrad = ODEFunction(kenyacov_ode;tgrad = kenyacov_ode_tgrad)
 
 prob_nojac = ODEProblem(kenyacov_ode,u0,tspan,p)
 prob_tgrad = ODEProblem(kenyacov_ode_opt_tgrad,u0,tspan,p)
+prob_withcts = ODEProblem(kenyacov_ode_with_contactrates,u0,tspan,p2)
 
 prob_jac = ODEProblem(kenyacov_ode_opt,u0,tspan,p)
 
@@ -345,6 +347,8 @@ prob_jac = ODEProblem(kenyacov_ode_opt,u0,tspan,p)
 @benchmark sol = solve(prob_jac,Rosenbrock23(),p = p,saveat = 1.,u0=u0)
 sol = solve(prob_jac,Rosenbrock23(),p = p,saveat = 1.,u0=u0)
 @benchmark sol = solve(prob_nojac,BS3(),p = p,saveat = 1.,u0=u0)
+@benchmark sol = solve(prob_withcts,BS3(),p = p2,saveat = 1.,u0=u0)
+
 @benchmark sol = solve(prob_tgrad,BS3(),p = p,saveat = 1.,u0=u0)
 @time sol = solve(prob_tgrad,BS3(),p = p,saveat = 1.,u0=u0)
 @benchmark sol = solve(prob_nojac,Tsit5(),p = p,saveat = 1.,u0=u0)
