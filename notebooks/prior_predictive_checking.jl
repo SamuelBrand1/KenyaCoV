@@ -267,7 +267,7 @@ md"
 
 # ╔═╡ 40b9e162-5bdd-11eb-3b63-ff5069580271
 begin
-	d_β₀ = Gamma(10,3.5/10)
+	d_β₀ = Gamma(5,2.5/5)
 	plt_beta = plot(d_β₀,lab="β₀",title = "β₀ prior");
 	# nothing
 end
@@ -320,8 +320,8 @@ end
 
 # ╔═╡ 96f1e65c-5bff-11eb-3576-45b4c8a8c5da
 begin
-	d_children_sus = Beta((34/1.47)*dispersion,(100-(34/1.47))*dispersion)
-	d_adults_sus = Beta(1,1)
+	d_children_sus = Beta((34/1.47)*dispersion*2,(100-(34/1.47))*dispersion*2)
+	d_adults_sus = Beta(1+ 0.5*dispersion*100/1.47,1 + 0.5*dispersion*(100 - 100/1.47) )
 	plot(d_children_sus,lab = "0-14",title = "Priors for relative susceptibility compared to 65+",
 	xlabel = "rel. sus.",ylabel = "Density",legend = :right)
 	plot!(d_adults_sus,lab = "15-64")
@@ -343,7 +343,7 @@ presymptomatic_transmission_prop_range = [0.4,0.7]
 r_range = [log(2)/5,log(2)/3]
 
 # ╔═╡ 9a02fa9a-5c02-11eb-16e1-e1d83982e27f
-mean_abs_err_attack_range = 5.
+mean_abs_err_attack_range = 2.
 
 # ╔═╡ 3466631e-5c04-11eb-3d18-bfe5e088b3df
 md"
@@ -360,7 +360,8 @@ function draw_parameter_set()
 	
 	σ =  sort!([rand(d_children_sus) for a = 1:3])
 	append!(σ, sort!([rand(d_adults_sus) for a = 4:15]))
-	append!(σ,1.)		
+	append!(σ,1.)	
+	# sort!(σ)
 
 	θ = (β₀ = rand(d_β₀),
 		α = 1/rand(d_meanlatent),
@@ -402,7 +403,7 @@ sum([accept_reject_params(draw_parameter_set()) for k = 1:1000])
 # ╔═╡ c1e48092-5c07-11eb-293d-2da52426657d
 begin
 	accepted_parameter_set = []
-	for k = 1:50000
+	for k = 1:1000000
 		θ = draw_parameter_set()
 		if accept_reject_params(θ)
 			append!(accepted_parameter_set,[θ])
@@ -501,7 +502,7 @@ end
 # ╠═692218d8-5be5-11eb-0e04-d560bba66e95
 # ╠═880c2fe6-5c02-11eb-1be4-9f8418aa859e
 # ╠═9a02fa9a-5c02-11eb-16e1-e1d83982e27f
-# ╟─3466631e-5c04-11eb-3d18-bfe5e088b3df
+# ╠═3466631e-5c04-11eb-3d18-bfe5e088b3df
 # ╠═b5ccc8ca-5c02-11eb-1412-33123caa8c4a
 # ╟─5ae8f506-5c04-11eb-0927-3752b906b091
 # ╠═7110b0da-5c04-11eb-2126-69f99575a96b
