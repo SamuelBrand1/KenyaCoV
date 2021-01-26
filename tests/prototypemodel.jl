@@ -34,7 +34,7 @@ bar(N,xticks = (1:17,vcat([string(a*5)*"-"*string(a*5 + 4) for a = 0:15],"80+"))
 #Create function for contact rate change
 @load("data/projected_contact_data_20112020.jld2")
 contact_data = projected_contactrate_nairobi.contactrate
-xs = 1:294
+xs = 1:length(contact_data)
 
 function build_ct_and_grad_ct(xs,A)
         extrap = CubicSplineInterpolation(xs, A, extrapolation_bc = Line())
