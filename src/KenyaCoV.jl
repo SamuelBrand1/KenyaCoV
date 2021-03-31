@@ -13,7 +13,9 @@ using DifferentialEquations,
     RecursiveArrayTools,
     Dates,
     Plots,
-    DelimitedFiles
+    DelimitedFiles,
+    FileIO,
+    NamedArrays
 
 export n,n_t,n_s,n_a,
         model_ingredients_from_data,
@@ -51,8 +53,8 @@ linear_as_events = LinearIndices((1:n, 1:n_a,1:n_ta))
 include("types.jl");
 include("dynamics.jl")
 include("transmissionmodel.jl");
-include("hospitalisation_data.jl")
-include("hospital_model.jl")
+#include("hospitalisation_data.jl")
+#include("hospital_model.jl")
 include("forecast_functions.jl");
 
 

@@ -22,7 +22,7 @@ States:
 6 -> first mild then eventually (se)V(ere) symptomatics
 7 -> H(ospitalised)
 8 -> Recovered
-9 -> Cumulative P->A
+9 -> Cumulative E->A    ## P->A
 10-> Cumulative P->M
 11-> Cumulative P->V
 12 -> Cumulative V->H
@@ -31,7 +31,7 @@ Events for each wider area and age group:
 
 1-> S to E
 2-> E to P
-3-> P to A
+3-> E to A      ## P to A
 4-> P to M
 5-> P to V
 6-> V to H
@@ -70,32 +70,36 @@ end
 # asymp_indices = 0;#free memory
 # diseased_indices = 0;
 """
-    function calculate_infection_rates!(u,p::CoVParameters_AS,t)
+    function calculate_infection_rates!(u,p::CoVParameters3,t)
 
 Inplace method for calculating the force of infection on susceptibles in each spatial and age group.
 """
-function calculate_infection_rates!(u,p::CoVParameters_AS,t)
+function calculate_infection_rates!(u,p::CoVParameters3,t)
     I_P = @view u[:,:,3]
     I_A = @view u[:,:,4]
     I_M = @view u[:,:,5]
     I_V = @view u[:,:,6]
-    mul!(p.Î,p.T,p.ϵ*I_P .+ p.ϵ*I_A .+ p.ϵ_D*I_M .+ p.ϵ_V*I_V)  #Local infecteds **if** everyone moved around
+    #= mul!(p.Î,p.T,p.ϵ*I_P .+ p.ϵ*I_A .+ p.ϵ_D*I_M .+ p.ϵ_V*I_V)  #Local infecteds **if** everyone moved around
     p.Î[:,immobile_age_indices] .= p.ϵ*I_P[:,immobile_age_indices] .+ p.ϵ*I_A[:,immobile_age_indices] .+ p.ϵ_D*I_M[:,immobile_age_indices] .+ p.ϵ_V*I_V[:,immobile_age_indices]#This corrects for immobility
     mul!(p.λ_loc,p.β*p.c_t(t).*(p.Î ./p.N̂),p.M)#Local force of infection due to age-mixing --- M is in to (row), from (col) format
     mul!(p.λ,p.T',p.λ_loc)#this accounts for mobile susceptibles contracting away from home
     p.λ[:,immobile_age_indices] .= p.λ_loc[:,immobile_age_indices]#This corrects for immobility of susceptibles
     p.λ[ind_mombasa_as,:] .+= p.ext_inf_rate*import_rate_mom(t,p.into_mom,p.global_prev)
-    p.λ[ind_nairobi_as,:] .+= p.ext_inf_rate*import_rate_nai(t,p.into_nai,p.global_prev)
+    p.λ[ind_nairobi_as,:] .+= p.ext_inf_rate*import_rate_nai(t,p.into_nai,p.global_prev)=#
+
+    for i=1:n
+        p.λ[i,:] .= p.β₀.*(p.β_home.*p.M_h .+ p.β_other.*p.M_o .+ p.β_work.*p.M_w .+ p.β_school.*p.M_s)*((p.ϵ.*I_A[i,:] .+ I_P[i,:] .+ I_M[i,:] .+ I_V[i,:])./p.N[i,:])
+    end
     return nothing
 end
 
 """
-    function rates(out,u,p::CoVParameters_AS,t)
+    function rates(out,u,p::CoVParameters3,t)
 
 Inplace method for calculating the rate of each of the 8 events per spatial and age group.
     1-> S to E
     2-> E to P
-    3-> P to A
+    3-> E to A ##P to A
     4-> P to M
     5-> P to V
     6-> V to H
@@ -103,34 +107,35 @@ Inplace method for calculating the rate of each of the 8 events per spatial and 
     8-> A to R
 The out vector is in linear index form.
 """
-function rates(out,u,p::CoVParameters_AS,t)
-    @unpack λ,γ,σ₁,σ₂,δ,τ,μ₁,χ,rel_detection_rate,clear_quarantine,hₐ = p
+function rates(out,u,p::CoVParameters3,t)
+    #@unpack λ,γ,σ₁,σ₂,δ,τ,μ₁,χ,rel_detection_rate,clear_quarantine,hₐ = p
+    @unpack λ, δ, α, υ, αₚ, τ, γM, γA = p
     calculate_infection_rates!(u,p,t)
     for k = 1:length(out)
         i,a,eventtype = Tuple(index_as_events[k])
         if eventtype ==1
-            out[k] = χ[a]*λ[i,a]*u[i,a,1] #Transmission #S->E
+            out[k] = λ[i,a]*u[i,a,1] ## χ[a]*λ[i,a]*u[i,a,1] #Transmission #S->E
         end
         if eventtype ==2
-            out[k] = σ₁*u[i,a,2] #E->P
+            out[k] = δ[a]*α*u[i,a,2] #E->P                                        ## σ₁*u[i,a,2] #E->P
         end
         if eventtype ==3
-            out[k] = σ₂*(1-(δ*rel_detection_rate[a]))*u[i,a,3] #P->A
+            out[k] = (1-δ[a])*α*u[i,a,2] #E->A                                    ## σ₂*(1-(δ*rel_detection_rate[a]))*u[i,a,3] #P->A
         end
         if eventtype ==4
-            out[k] = σ₂*δ*(1-hₐ[a])*rel_detection_rate[a]*u[i,a,3] #P->M
+            out[k] = (1-υ[a])*αₚ*u[i,a,3] #P->M                                   ## σ₂*δ*(1-hₐ[a])*rel_detection_rate[a]*u[i,a,3] #P->M
         end
         if eventtype ==5
-            out[k] = σ₂*δ*hₐ[a]*rel_detection_rate[a]*u[i,a,3] #P->V
+            out[k] = υ[a]*αₚ*u[i,a,3] #P->V                                   ##σ₂*δ*hₐ[a]*rel_detection_rate[a]*u[i,a,3] #P->V
         end
         if eventtype ==6
             out[k] = τ*u[i,a,6] # V->H
         end
         if eventtype ==7
-            out[k] = γ*u[i,a,5] # M->R
+            out[k] = γM*u[i,a,5] # M->R
         end
         if eventtype ==8
-            out[k] = γ*u[i,a,4] # A->R
+            out[k] = γA*u[i,a,4] # A->R
         end
     end
 end
@@ -158,11 +163,11 @@ function change_matrix(dc)
             dc[ind_E,k] = -1
             dc[ind_P,k] = 1
         end
-        if eventtype ==3 # P->A
-            ind_P = linear_as[i,a,3]
+        if eventtype ==3 # E->A     ## P->A
+            ind_E = linear_as[i,a,2]
             ind_A = linear_as[i,a,4]
             ind_cumA = linear_as[i,a,9]
-            dc[ind_P,k] = -1
+            dc[ind_E,k] = -1
             dc[ind_A,k] = 1
             dc[ind_cumA,k] = 1
         end
@@ -208,7 +213,7 @@ end
 """
     function PP_drivers(dN::Vector{Int64},rates,p)
 This method in-place generates the crude number of each type of event proposed by a Poisson process with
-rates calculated by rates(out,u,p::CoVParameters_AS,t).
+rates calculated by rates(out,u,p::CoVParameters3,t).
 """
 function PP_drivers(dN::Vector{Int64},rates,p)
     for i = 1:length(dN)
@@ -221,17 +226,18 @@ function PP_drivers(dN::Vector{Int64},rates,p)
 end
 
 """
-    function max_change(out,u,p::CoVParameters_AS)
+    function max_change(out,u,p::CoVParameters3)
 This method in-place modifies the number of each type of event proposed by the Poisson process
     so that non-negativity is respected.
 """
-function max_change(out,u,p::CoVParameters_AS)
-    @unpack δ,rel_detection_rate,hₐ = p
+function max_change(out,u,p::CoVParameters3)
+    #@unpack δ,rel_detection_rate,hₐ = p
+    @unpack δ,υ = p
     n,n_a,n_s = size(u)
     for i = 1:n,a = 1:n_a
         ind_trans = linear_as_events[i,a,1]
         ind_EP = linear_as_events[i,a,2]
-        ind_PA = linear_as_events[i,a,3]
+        ind_EA = linear_as_events[i,a,3]
         ind_PM = linear_as_events[i,a,4]
         ind_PV = linear_as_events[i,a,5]
         ind_VH = linear_as_events[i,a,6]
@@ -239,28 +245,36 @@ function max_change(out,u,p::CoVParameters_AS)
         ind_AR = linear_as_events[i,a,8]
 
         out[ind_trans] = min(out[ind_trans],u[i,a,1])
-        out[ind_EP] = min(out[ind_EP],u[i,a,2])
+        ## out[ind_EP] = min(out[ind_EP],u[i,a,2])
         out[ind_VH] = min(out[ind_VH],u[i,a,6])
         out[ind_MR] = min(out[ind_MR],u[i,a,5])
         out[ind_AR] = min(out[ind_AR],u[i,a,4])
 
         #splitting events using multinomial sampling
-        if out[ind_PA] + out[ind_PM] + out[ind_PV] > u[i,a,3] #More transitions than actual P so all P individuals transition
+        #=if out[ind_PA] + out[ind_PM] + out[ind_PV] > u[i,a,3] #More transitions than actual P so all P individuals transition
             rel_rate_each_event = [1-(δ*rel_detection_rate[a]),δ*(1-hₐ[a])*rel_detection_rate[a],δ*hₐ[a]*rel_detection_rate[a]]
             D = rand(Multinomial(u[i, a, 3], LinearAlgebra.normalize!(rel_rate_each_event,1) )) #Draw the states of the P individuals after transition
             out[ind_PA] = D[1]
             out[ind_PM] = D[2]
             out[ind_PV] = D[3]
+        end=#
+        if out[ind_EP] + out[ind_EA] > u[i,a,2]
+            out[ind_EP] = rand(Binomial(u[i,a,2], δ[a]))
+            out[ind_EA] = u[i,a,2] - out[ind_EP]
+        end
+        if out[ind_PV] + out[ind_PM] > u[i,a,3]
+            out[ind_PV] = rand(Binomial(u[i,a,3], υ[a]))
+            out[ind_PM] = u[i,a,3] - out[ind_PV]
         end
     end
 end
 
 """
-    nonneg_tauleap(du,u,p::CoVParameters_AS,t)
+    nonneg_tauleap(du,u,p::CoVParameters3,t)
 
 This performs one in-place simulation of a time step
 """
-function nonneg_tauleap(du,u,p::CoVParameters_AS,t)
+function nonneg_tauleap(du,u,p::CoVParameters3,t)
     @unpack dc,dN,poi_rates,du_linear = p
     rates(poi_rates,u,p,t) #calculate rates of underlying Poisson processes
     PP_drivers(dN,poi_rates,p)#Generate Poisson rvs with rates scaled by time step dt
@@ -271,11 +285,11 @@ function nonneg_tauleap(du,u,p::CoVParameters_AS,t)
 end
 
 """
-    function ode_model(du,u,p::CoVParameters_AS,t)
+    function ode_model(du,u,p::CoVParameters3,t)
 
 This is the vector field of the related KenyaCoV ODE model
 """
-function ode_model(du,u,p::CoVParameters_AS,t)
+function ode_model(du,u,p::CoVParameters3,t)
     @unpack λ,γ,σ₁,σ₂,δ,τ,μ₁,χ,rel_detection_rate,hₐ = p
     calculate_infection_rates!(u,p,t)
     n,n_a,n_s = size(u)
