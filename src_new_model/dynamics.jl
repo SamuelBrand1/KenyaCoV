@@ -27,14 +27,6 @@ States:
 11-> Cumulative P->V
 12 -> Cumulative V->H
 
-13 -> Quarantine
-14 -> Q(uarantined) (se)V(ere) Qᵥ
-15 -> Quarantined Susceptibles Qₛ
-16 -> Cumulative Q ######(Q +Qᵥ+Qₛ)
-17 -> Cumulative Qᵥ
-18 -> Cumulative Qₛ
-19 -> Cumulative Qᵣ
-
 Events for each wider area and age group:
 
 1-> S to E
@@ -46,22 +38,11 @@ Events for each wider area and age group:
 7-> M to R
 8-> A to R
 
-9-> Q to R
-10-> Qₛ to S
-11-> Qᵥ to H
-12-> E to Q
-13->P to Q
-14->A to Q
-15->M to Q
-16->V to Qᵥ
-17-> R to Q
-18-> S to Qₛ
-
 """
 
 dc_age = zeros(Int64,n_wa*n_a*n_s,n_ta*n*n_a)
 
-#=function import_rate_mom(t,into_mom,global_prev)
+function import_rate_mom(t,into_mom,global_prev)
     if t+1>min(length(into_mom),length(global_prev))
         t_int=min(length(into_mom),length(global_prev))
     else
@@ -77,7 +58,7 @@ function import_rate_nai(t,into_nai,global_prev)
         t_int=Int(floor(t))+1
     end
     return into_nai[t_int]*global_prev[t_int]
-end=#
+end
 
 
 # asymp_indices = zeros(Bool,n_wa,n_a,n_s)
@@ -124,15 +105,11 @@ Inplace method for calculating the rate of each of the 8 events per spatial and 
     6-> V to H
     7-> M to R
     8-> A to R
-
-    9-> Q to R
-    10-> Qₛ to S
 The out vector is in linear index form.
 """
 function rates(out,u,p::CoVParameters3,t)
     #@unpack λ,γ,σ₁,σ₂,δ,τ,μ₁,χ,rel_detection_rate,clear_quarantine,hₐ = p
     @unpack λ, δ, α, υ, αₚ, τ, γM, γA = p
-    @unpack clearQ = p
     calculate_infection_rates!(u,p,t)
     for k = 1:length(out)
         i,a,eventtype = Tuple(index_as_events[k])
@@ -159,15 +136,6 @@ function rates(out,u,p::CoVParameters3,t)
         end
         if eventtype ==8
             out[k] = γA*u[i,a,4] # A->R
-        end
-        if eventtype ==9
-            out[k] = 1/clearQ*u[i,a,13] # Q->R
-        end
-        if eventtype ==10
-            out[k] = 1/clearQ*u[i,a,15] # Qₛ->S
-        end
-        if eventtype ==11
-            out[k] = τ*u[i,a,14] # Qᵥ to H
         end
     end
 end
@@ -239,86 +207,6 @@ function change_matrix(dc)
             dc[ind_A,k] = -1
             dc[ind_R,k] = 1
         end
-
-        # for clearing quarantine
-        if eventtype ==9 # Q->R
-            ind_Q = linear_as[i,a,13]
-            ind_R = linear_as[i,a,8]
-            dc[ind_Q,k] = -1
-            dc[ind_R,k] = 1
-        end
-        if eventtype ==10 # Qₛ->S
-            ind_Qₛ = linear_as[i,a,15]
-            ind_S = linear_as[i,a,1]
-            dc[ind_Qₛ,k] = -1
-            dc[ind_S,k] = 1
-        end
-        if eventtype ==11# # Qᵥ -> H
-            ind_Qᵥ = linear_as[i,a,14]
-            ind_H = linear_as[i,a,7]
-            ind_cumVH = linear_as[i,a,12]
-            dc[ind_Qᵥ,k] = -1
-            dc[ind_H,k] = 1
-            dc[ind_cumVH,k] = 1
-        end
-
-        #Screening AND/OR Contact contracting
-        if eventtype ==12# E->Q via screening or CT
-            ind_E = linear_as[i,a,2]
-            ind_Q = linear_as[i,a,13]
-            ind_cumQ = linear_as[i,a,16]
-            dc[ind_E,k] = -1
-            dc[ind_Q,k] = 1
-            dc[ind_cumQ,k] = 1
-        end
-        if eventtype ==13# P->Q via screening or CT
-            ind_P = linear_as[i,a,3]
-            ind_Q = linear_as[i,a,13]
-            ind_cumQ = linear_as[i,a,16]
-            dc[ind_P,k] = -1
-            dc[ind_Q,k] = 1
-            dc[ind_cumQ,k] = 1
-        end
-        if eventtype ==14# A->Q via screening or CT
-            ind_A = linear_as[i,a,4]
-            ind_Q = linear_as[i,a,13]
-            ind_cumQ = linear_as[i,a,16]
-            dc[ind_A,k] = -1
-            dc[ind_Q,k] = 1
-            dc[ind_cumQ,k] = 1
-        end
-        if eventtype ==15# M->Q via screening or CT
-            ind_M = linear_as[i,a,5]
-            ind_Q = linear_as[i,a,13]
-            ind_cumQ = linear_as[i,a,16]
-            dc[ind_M,k] = -1
-            dc[ind_Q,k] = 1
-            dc[ind_cumQ,k] = 1
-        end
-        if eventtype ==16# V->Qᵥ via screening or CT
-            ind_V = linear_as[i,a,6]
-            ind_Qᵥ = linear_as[i,a,14]
-            ind_cumQᵥ = linear_as[i,a,17]
-            dc[ind_V,k] = -1
-            dc[ind_Qᵥ,k] = 1
-            dc[ind_cumQᵥ,k] = 1
-        end
-        if eventtype ==17# R->Q via CT
-            ind_R = linear_as[i,a,8]
-            ind_Q = linear_as[i,a,13]
-            ind_cumQᵣ = linear_as[i,a,19]
-            dc[ind_R,k] = -1
-            dc[ind_Q,k] = 1
-            dc[ind_cumQᵣ,k] = 1
-        end
-        if eventtype ==18# S->Qₛ via CT
-            ind_S = linear_as[i,a,1]
-            ind_Qₛ = linear_as[i,a,15]
-            ind_cumQₛ = linear_as[i,a,18]
-            dc[ind_S,k] = -1
-            dc[ind_Qₛ,k] = 1
-            dc[ind_cumQₛ,k] = 1
-        end
     end
 end
 
@@ -378,19 +266,6 @@ function max_change(out,u,p::CoVParameters3)
             out[ind_PV] = rand(Binomial(u[i,a,3], υ[a]))
             out[ind_PM] = u[i,a,3] - out[ind_PV]
         end
-
-        # For Screening and/or CT
-        ind_QR = linear_as_events[i,a,8]
-        ind_QₛS = linear_as_events[i,a,8]
-        ind_QᵥH = linear_as_events[i,a,8]
-        ind_EQ = linear_as_events[i,a,8]
-        ind_PQ = linear_as_events[i,a,8]
-        ind_AQ = linear_as_events[i,a,8]
-        ind_MQ = linear_as_events[i,a,8]
-        ind_VQᵥ = linear_as_events[i,a,8]
-        ind_RQ = linear_as_events[i,a,8]
-        ind_VQᵥ = linear_as_events[i,a,8]
-        ind_VQᵥ = linear_as_events[i,a,8]
     end
 end
 
