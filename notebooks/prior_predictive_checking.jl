@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.18
+# v0.12.20
 
 using Markdown
 using InteractiveUtils
@@ -403,7 +403,7 @@ sum([accept_reject_params(draw_parameter_set()) for k = 1:1000])
 # ╔═╡ c1e48092-5c07-11eb-293d-2da52426657d
 begin
 	accepted_parameter_set = []
-	for k = 1:1000000
+	for k = 1:10
 		θ = draw_parameter_set()
 		if accept_reject_params(θ)
 			append!(accepted_parameter_set,[θ])
