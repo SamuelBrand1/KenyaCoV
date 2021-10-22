@@ -2,8 +2,8 @@
 
 This version of the KenyaCoV model is now depreciated. The goal of this modelling exercise was to forecast the potential size of the SARS-CoV-2 epidemic in Kenya before wide-spread transmission and under a wide range of scenarios. Since, the pandemic has arrived in Kenya we have gone forwards with modelling which has been calibrated to Kenyan data.
 
-* J. Ojal et al., Revealing the extent of the first wave of the COVID-19 pandemic in Kenya based on serological and PCR-test data. Wellcome Open Res. 6, 127 (2021) (https://wellcomeopenresearch.org/articles/6-127). With Github repository here: https://github.com/ojal/KenyaSerology.
-* S. P. C. Brand et al., COVID-19 transmission dynamics underlying epidemic waves in Kenya. Science, eabk0414 (2021) (https://www.science.org/doi/epdf/10.1126/science.abk0414). With Github repository here: https://github.com/SamuelBrand1/kenya-covid-three-waves .
+* KenyaSerology. J. Ojal et al., Revealing the extent of the first wave of the COVID-19 pandemic in Kenya based on serological and PCR-test data. Wellcome Open Res. 6, 127 (2021) (https://wellcomeopenresearch.org/articles/6-127). With Github repository here: https://github.com/ojal/KenyaSerology.
+* KenyaCoVSD. S. P. C. Brand et al., COVID-19 transmission dynamics underlying epidemic waves in Kenya. Science, eabk0414 (2021) (https://www.science.org/doi/epdf/10.1126/science.abk0414). With Github repository here: https://github.com/SamuelBrand1/kenya-covid-three-waves .
 
 **Additionally, we have the following projects ongoing:**
 
