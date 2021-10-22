@@ -10,7 +10,7 @@ This version of the KenyaCoV model is now depreciated. The goal of this modellin
 * KenyaCoVMultistrains: Mechanistic modelling of the spread of SARS-CoV-2 variants into and around Kenya.
 * KenyaCoVaccines: More detailed and realistic modelling of disease burden with vaccination rollout forecasting. 
 
-**The modelling results of the pre-print can be recovered by the new version of KenyaCoV by setting the average period of pre-symptomatic transmission to 0, and combining mild and mild-then-severe cases. Therefore, we are not maintaining a legacy version of the KenyaCoV model used in the pre-print.**
+**The legacy code in this repository has been updated from the original pre-print version to include extra realism in the possible disease pathways of infected individuals. The modelling results of the pre-print can be recovered by the new version of KenyaCoV by setting the average period of pre-symptomatic transmission to 0, and combining mild and mild-then-severe cases. Therefore, we are not maintaining a legacy version of the KenyaCoV model used in the pre-print.**
 
 This repository contains source code for transmission modelling, forecasting, and visualisation for the SARS-CoV-2/COVID-19 epidemic in Kenya.
 
